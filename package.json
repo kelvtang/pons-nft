@@ -1,0 +1,23 @@
+{
+  "name": "pons-flow-again",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tap": "^15.1.2"
+  },
+  "dependencies": {
+    "@onflow/config": "^0.0.2",
+    "@onflow/fcl": "^0.0.78-alpha.8",
+    "@onflow/sdk": "^0.0.55",
+    "@onflow/types": "^0.0.6",
+    "elliptic": "^6.5.4",
+    "flow-cadut": "^0.1.11-alpha.13",
+    "sha3": "^2.1.4"
+  }
+}
