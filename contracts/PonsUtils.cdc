@@ -36,16 +36,19 @@ pub contract PonsUtils {
 
 	pub fun prepareFlowCapability (account : AuthAccount) : Capability<&{FungibleToken.Receiver}> {
 		if account .borrow <&FlowToken.Vault> (from: /storage/flowTokenVault) == nil {
-			account .save (<- FlowToken .createEmptyVault (), to: /storage/flowTokenVault)
+			account .save (<- FlowToken .createEmptyVault (), to: /storage/flowTokenVault) }
+
+		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Receiver}> (/public/flowTokenReceiver) .check () {
 			account .link <&FlowToken.Vault{FungibleToken.Receiver}> (
 				/public/flowTokenReceiver,
-				target: /storage/flowTokenVault )
+				target: /storage/flowTokenVault ) }
 
+		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Balance}> (/public/flowTokenBalance) .check () {
 			// Create a public capability to the Vault that only exposes
 			// the balance field through the Balance interface
 			account .link <&FlowToken.Vault{FungibleToken.Balance}> (
 				/public/flowTokenBalance,
 				target: /storage/flowTokenVault ) }
 
-		return account .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenBalance) }
+		return account .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenReceiver) }
 	}

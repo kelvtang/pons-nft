@@ -2,6 +2,8 @@ import FungibleToken from 0xFUNGIBLETOKEN
 
 pub contract PonsArtistContract {
 
+	access(account) let artistAuthorityStoragePath : StoragePath
+
 	access(account) var ponsArtists : @{String: PonsArtist}
 	access(account) var ponsArtistIds : {Address: String}
 	access(account) var addresses : {String: Address}
@@ -20,7 +22,7 @@ pub contract PonsArtistContract {
 		init (ponsArtistId : String) {
 			pre {
 				PonsArtistContract .ponsArtists .containsKey (ponsArtistId):
-					"" }
+					"Not recognised Pons Artist" }
 
 			self .ponsArtistId = ponsArtistId } }
 
@@ -44,52 +46,87 @@ pub contract PonsArtistContract {
 
 
 
-	access(account) fun recognisePonsArtist
-	( ponsArtistId : String
-	, _ addressOptional : Address?
-	, metadata : {String: String}
-	, receivePaymentCap : Capability<&{FungibleToken.Receiver}>
-	) : Void {
-		pre {
-			! PonsArtistContract .ponsArtists .containsKey (ponsArtistId):
-				"Already exists" }
-		post {
-			PonsArtistContract .ponsArtists .containsKey (ponsArtistId):
-				"did not recognize?" }
-
-		var ponsArtist <- create PonsArtist (ponsArtistId: ponsArtistId)
-
-		var replacedArtistOptional <- PonsArtistContract .ponsArtists .insert (key: ponsArtistId, <- ponsArtist)
-		if replacedArtistOptional != nil {
-			panic ("") }
-		destroy replacedArtistOptional
-
-		if addressOptional != nil {
-			PonsArtistContract .ponsArtistIds .insert (key: addressOptional !, ponsArtistId)
-			PonsArtistContract .addresses .insert (key: ponsArtistId, addressOptional !) }
-
-		PonsArtistContract .metadatas .insert (key: ponsArtistId, metadata)
-		PonsArtistContract .receivePaymentCaps .insert (key: ponsArtistId, receivePaymentCap) }
 
 
 
 
 	pub fun makePonsArtistCertificate (artistAccount : AuthAccount) : @PonsArtistCertificate {
+		pre {
+			PonsArtistContract .ponsArtistIds .containsKey (artistAccount .address):
+				"No artist is known to have this address" }
 		let ponsArtistId = PonsArtistContract .ponsArtistIds [artistAccount .address] !
 		return <- create PonsArtistCertificate (ponsArtistId: ponsArtistId) }
 
-	access(account) fun makePonsArtistCertificateFromArtistRef (ponsArtistRef : &PonsArtist) : @PonsArtistCertificate {
-		return <- create PonsArtistCertificate (ponsArtistId: ponsArtistRef .ponsArtistId) }
-
-	access(account) fun makePonsArtistCertificateFromId (ponsArtistId : String) : @PonsArtistCertificate {
-		return <- create PonsArtistCertificate (ponsArtistId: ponsArtistId) }
 
 
 
+	pub resource PonsArtistAuthority {
+		pub fun borrowPonsArtists () : &{String: PonsArtist} {
+			return & PonsArtistContract .ponsArtists as &{String: PonsArtist} }
 
-	init () {
+		pub fun getPonsArtistIds () : {Address: String} {
+			return PonsArtistContract .ponsArtistIds }
+		pub fun setPonsArtistIds (_ ponsArtistIds :  {Address: String}) : Void {
+			PonsArtistContract .ponsArtistIds = ponsArtistIds }
+
+		pub fun getAddresses () : {String: Address} {
+			return PonsArtistContract .addresses }
+		pub fun setAddresses (_ addresses : {String: Address}) : Void {
+			PonsArtistContract .addresses = addresses }
+
+		pub fun getMetadatas () : {String: {String: String}} {
+			return PonsArtistContract .metadatas }
+		pub fun setMetadatas (_ metadatas : {String: {String: String}}) : Void {
+			PonsArtistContract .metadatas = metadatas }
+
+		pub fun getReceivePaymentCaps () : {String: Capability<&{FungibleToken.Receiver}>} {
+			return PonsArtistContract .receivePaymentCaps }
+		pub fun setReceivePaymentCaps (_ receivePaymentCaps : {String: Capability<&{FungibleToken.Receiver}>}) : Void {
+			PonsArtistContract .receivePaymentCaps = receivePaymentCaps }
+
+		pub fun recognisePonsArtist
+		( ponsArtistId : String
+		, _ addressOptional : Address?
+		, metadata : {String: String}
+		, receivePaymentCap : Capability<&{FungibleToken.Receiver}>
+		) : Void {
+			pre {
+				! PonsArtistContract .ponsArtists .containsKey (ponsArtistId):
+					"Pons Artist with this ponsArtistId already exists" }
+			post {
+				PonsArtistContract .ponsArtists .containsKey (ponsArtistId):
+					"Unable to recognise Pons Artist" }
+
+			var ponsArtist <- create PonsArtist (ponsArtistId: ponsArtistId)
+
+			var replacedArtistOptional <- PonsArtistContract .ponsArtists .insert (key: ponsArtistId, <- ponsArtist)
+			if replacedArtistOptional != nil {
+				panic ("Pons Artist with this ponsArtistId Already exists") }
+			destroy replacedArtistOptional
+
+			if addressOptional != nil {
+				PonsArtistContract .ponsArtistIds .insert (key: addressOptional !, ponsArtistId)
+				PonsArtistContract .addresses .insert (key: ponsArtistId, addressOptional !) }
+
+			PonsArtistContract .metadatas .insert (key: ponsArtistId, metadata)
+			PonsArtistContract .receivePaymentCaps .insert (key: ponsArtistId, receivePaymentCap) }
+
+		pub fun makePonsArtistCertificateFromArtistRef (_ ponsArtistRef : &PonsArtist) : @PonsArtistCertificate {
+			return <- create PonsArtistCertificate (ponsArtistId: ponsArtistRef .ponsArtistId) }
+
+		pub fun makePonsArtistCertificateFromId (ponsArtistId : String) : @PonsArtistCertificate {
+			return <- create PonsArtistCertificate (ponsArtistId: ponsArtistId) } }
+
+
+
+
+
+	init (artistAuthorityStoragePath : StoragePath) {
+		self .artistAuthorityStoragePath = artistAuthorityStoragePath
 		self .ponsArtists <- {}
 		self .ponsArtistIds = {}
 		self .addresses = {}
 		self .metadatas = {}
-		self .receivePaymentCaps = {} } }
+		self .receivePaymentCaps = {}
+
+        	self .account .save (<- create PonsArtistAuthority (), to: artistAuthorityStoragePath) } }

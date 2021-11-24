@@ -41,25 +41,25 @@ pub contract PonsNftContract {
 
 
 
-	pub fun getNftId (_ ponsNft : &PonsNftContractInterface.NFT) : String {
-		return ponsNft .nftId }
+	pub fun getNftId (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
+		return ponsNftRef .nftId }
 	
-	pub fun getSerialNumber (_ ponsNft : &PonsNftContractInterface.NFT) : UInt64 {
-		return ponsNft .id }
+	pub fun getSerialNumber (_ ponsNftRef : &PonsNftContractInterface.NFT) : UInt64 {
+		return ponsNftRef .id }
 
 
 
-	pub fun borrowArtist (_ ponsNft : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist {
-		return PonsNftContract .implementation .borrowArtist (ponsNft) }
+	pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist {
+		return PonsNftContract .implementation .borrowArtist (ponsNftRef) }
 
-	pub fun getRoyalty (_ ponsNft : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
-		return PonsNftContract .implementation .getRoyalty (ponsNft) }
+	pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
+		return PonsNftContract .implementation .getRoyalty (ponsNftRef) }
 
-	pub fun getEditionLabel (_ ponsNft : &PonsNftContractInterface.NFT) : String {
-		return PonsNftContract .implementation .getEditionLabel (ponsNft) }
+	pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
+		return PonsNftContract .implementation .getEditionLabel (ponsNftRef) }
 
-	pub fun getMetadata (_ ponsNft : &PonsNftContractInterface.NFT) : {String: String} {
-		return PonsNftContract .implementation .getMetadata (ponsNft) }
+	pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} {
+		return PonsNftContract .implementation .getMetadata (ponsNftRef) }
 
 
 	access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection {
@@ -105,10 +105,10 @@ pub contract PonsNftContract {
 
 
 	pub resource interface PonsNftContractImplementation {
-		pub fun borrowArtist (_ ponsNft : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist 
-		pub fun getRoyalty (_ ponsNft : &PonsNftContractInterface.NFT) : PonsUtils.Ratio 
-		pub fun getEditionLabel (_ ponsNft : &PonsNftContractInterface.NFT) : String 
-		pub fun getMetadata (_ ponsNft : &PonsNftContractInterface.NFT) : {String: String} 
+		pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist 
+		pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio 
+		pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String 
+		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} 
 
 		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection
 
@@ -125,13 +125,13 @@ pub contract PonsNftContract {
 
 
 	pub resource TrivialPonsNftContractImplementation : PonsNftContractImplementation {
-		pub fun borrowArtist (_ ponsNft : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist {
+		pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist {
 			panic ("not implemented") }
-		pub fun getRoyalty (_ ponsNft : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
+		pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
 			panic ("not implemented") }
-		pub fun getEditionLabel (_ ponsNft : &PonsNftContractInterface.NFT) : String {
+		pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
 			panic ("not implemented") }
-		pub fun getMetadata (_ ponsNft : &PonsNftContractInterface.NFT) : {String: String} {
+		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} {
 			panic ("not implemented") }
 
 		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection {

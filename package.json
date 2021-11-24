@@ -18,6 +18,7 @@
     "@onflow/types": "^0.0.6",
     "elliptic": "^6.5.4",
     "flow-cadut": "^0.1.11-alpha.13",
-    "sha3": "^2.1.4"
+    "sha3": "^2.1.4",
+    "uuid": "^8.3.2"
   }
 }

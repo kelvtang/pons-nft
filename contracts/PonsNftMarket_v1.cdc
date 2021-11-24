@@ -1,5 +1,4 @@
 import FungibleToken from 0xFUNGIBLETOKEN
-import FlowToken from 0xFLOWTOKEN
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsArtistContract from 0xPONS
 import PonsNftContractInterface from 0xPONS
@@ -120,7 +119,7 @@ pub contract PonsNftMarketContract_v1 {
 				price: salePrice )
 
 			return <- ponsListingCertificate }
-		pub fun purchase (nftId: String, _ purchaseVault : @FlowToken.Vault) : @PonsNftContractInterface.NFT {
+		pub fun purchase (nftId: String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
 			if ! self .salePrices .containsKey (nftId) {
 				panic ("Pons NFT with ID " .concat (nftId) .concat (" not on the market")) }
 
@@ -141,16 +140,21 @@ pub contract PonsNftMarketContract_v1 {
 				primarySale
 				? purchasePrice .scale (ratio: self .primaryCommissionRatio)
 				: purchasePrice .scale (ratio: self .secondaryCommissionRatio)
+			let sellerPrice =
+				purchasePrice
+				.cut (commissionPrice)
+				.cut (royalties ?? PonsUtils .FlowUnits (0.0))
 
 			if royalties != nil {
 				let artistReceivePaymentCap = PonsArtistContract .getReceivePaymentCap (PonsNftContract .borrowArtist (nftRef))
+				if ! artistReceivePaymentCap .check () {
+					panic ("The Artist address is invalid") }
 				artistReceivePaymentCap .borrow () !.deposit (from: <- purchaseVault .withdraw (amount: royalties !.flowAmount)) }
-			self .marketReceivePaymentCap .borrow () !.deposit (from: <- purchaseVault .withdraw (amount: commissionPrice .flowAmount))
 
 			let sellerReceivePaymentCap = self .saleReceivePaymentCaps [nftId] !
-			sellerReceivePaymentCap .borrow () !.deposit (from: <- purchaseVault)
+			sellerReceivePaymentCap .borrow () !.deposit (from: <- purchaseVault .withdraw (amount: sellerPrice .flowAmount))
 
-			// Seller gets excess
+			self .marketReceivePaymentCap .borrow () !.deposit (from: <- purchaseVault)
 
 			PonsNftMarketContract .emitPonsNFTSold (
 				nftId: nftId,
@@ -214,12 +218,15 @@ pub contract PonsNftMarketContract_v1 {
 			self .listingCount = listingCount } }
 
 	
-	init () {
+	init
+	( primaryCommissionRatioAmount : UFix64
+	, secondaryCommissionRatioAmount : UFix64
+	) {
 		var ponsMarketV1 <-
 			create PonsNftMarket_v1
 				( marketReceivePaymentCap : PonsUtils .prepareFlowCapability (account: self .account)
-				, primaryCommissionRatio: PonsUtils.Ratio (0.2)
-				, secondaryCommissionRatio: PonsUtils.Ratio (0.1) )
+				, primaryCommissionRatio: PonsUtils.Ratio (primaryCommissionRatioAmount)
+				, secondaryCommissionRatio: PonsUtils.Ratio (secondaryCommissionRatioAmount) )
 		PonsNftMarketContract .setPonsMarket (<- ponsMarketV1)
 
 		emit PonsNftMarketContractInit_v1 () }

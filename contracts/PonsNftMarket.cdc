@@ -1,6 +1,6 @@
 import FungibleToken from 0xFUNGIBLETOKEN
-import FlowToken from 0xFLOWTOKEN
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
+import FlowToken from 0xFLOWTOKEN
 import PonsArtistContract from 0xPONS
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
@@ -29,29 +29,6 @@ pub contract PonsNftMarketContract {
 
 
 
-	pub struct NftMintSaleDetails {
-		pub let quantity : Int
-		pub let basePrice : PonsUtils.FlowUnits
-		pub let incrementalPrice : PonsUtils.FlowUnits
-		pub let royaltyRatio : PonsUtils.Ratio
-		pub let receivePaymentCap : Capability<&{FungibleToken.Receiver}>
-
-		init
-		( quantity : Int
-		, basePrice : PonsUtils.FlowUnits
-		, incrementalPrice : PonsUtils.FlowUnits
-		, royaltyRatio : PonsUtils.Ratio
-		, receivePaymentCap : Capability<&{FungibleToken.Receiver}>
-		) {
-			self .quantity = quantity
-			self .basePrice = basePrice
-			self .incrementalPrice = incrementalPrice
-			self .royaltyRatio = royaltyRatio
-			self .receivePaymentCap = receivePaymentCap } }
-
-
-
-
 	pub resource interface PonsNftMarket {
 		pub fun getForSaleIds () : [String]
 		pub fun getPrice (nftId : String) : PonsUtils.FlowUnits?
@@ -72,7 +49,9 @@ pub contract PonsNftMarketContract {
 		pub fun listForSale (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} {
 			post {
 				result .listerAddress == before (nft .owner !.address) } }
-		pub fun purchase (nftId : String, _ purchaseVault : @FlowToken.Vault) : @PonsNftContractInterface.NFT {
+		pub fun purchase (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
+			pre {
+				purchaseVault .isInstance (Type<@FlowToken.Vault> ()) }
 			post {
 				result .nftId == nftId } }
 		pub fun unlist (_ ponsListingCertificate : @{PonsListingCertificate}) : @PonsNftContractInterface.NFT {
@@ -124,8 +103,8 @@ pub contract PonsNftMarketContract {
 	, basePrice : PonsUtils.FlowUnits
 	, incrementalPrice : PonsUtils.FlowUnits
 	, _ royaltyRatio : PonsUtils.Ratio
-	) : Void {
-		var receivePaymentCap = PonsUtils .prepareFlowCapability (account: self .account)
+	) : [String] {
+		var receivePaymentCap = PonsUtils .prepareFlowCapability (account: minter)
 
 		var artistCertificate <- PonsArtistContract .makePonsArtistCertificate (artistAccount: minter)
 		var listingCertificates <-
@@ -138,16 +117,30 @@ pub contract PonsNftMarketContract {
 				royaltyRatio,
 				receivePaymentCap )
 
+		let nftIds : [String] = []
+		var nftIndex = 0
+		while nftIndex < listingCertificates .length {
+			nftIds .append (listingCertificates [nftIndex] .nftId)
+			nftIndex = nftIndex + 1 }
+
 		destroy artistCertificate
-		PonsNftMarketContract .depositListingCertificates (minter, <- listingCertificates) }
+		PonsNftMarketContract .depositListingCertificates (minter, <- listingCertificates)
+
+		return nftIds }
 
 	pub fun listForSale (lister : AuthAccount, nftId : String, _ salePrice : PonsUtils.FlowUnits) : Void {
-		var receivePaymentCap = PonsUtils .prepareFlowCapability (account: self .account)
+		pre {
+			PonsNftContract .borrowOwnPonsCollection (collector: lister) .borrowNft (nftId: nftId) != nil:
+				"Pons NFT with this nftId does not belong to your Pons Collection" }
+		var receivePaymentCap = PonsUtils .prepareFlowCapability (account: lister)
 		var nft <- PonsNftContract .borrowOwnPonsCollection (collector: lister) .withdrawNft (nftId: nftId)
 		var listingCertificate <- PonsNftMarketContract .ponsMarket .listForSale (<- nft, salePrice, receivePaymentCap)
 		PonsNftMarketContract .depositListingCertificate (lister, <- listingCertificate) }
 
-	pub fun purchase (patron : AuthAccount, nftId : String, _ purchaseVault : @FlowToken.Vault) : Void {
+	pub fun purchase (patron : AuthAccount, nftId : String, _ purchaseVault : @FungibleToken.Vault) : Void {
+		pre {
+			self .borrowNft (nftId: nftId) != nil:
+				"Pons NFT with this nftId is not available on the market" }
 		let price = PonsNftMarketContract .getPrice (nftId: nftId) !
 		let nftRef = PonsNftMarketContract .borrowNft (nftId: nftId) !
 		let serialNumber = PonsNftContract .getSerialNumber (nftRef)
@@ -166,6 +159,15 @@ pub contract PonsNftMarketContract {
 			editionLabel: editionLabel,
 			price : price ) }
 
+	pub fun regularPurchase (patron : AuthAccount, nftId : String) : Void {
+		pre {
+			self .borrowNft (nftId: nftId) != nil:
+				"Pons NFT with this nftId is not available on the market" }
+		var paymentVault <-
+			patron .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
+				.withdraw (amount: PonsNftMarketContract .getPrice (nftId: nftId) !.flowAmount)
+		PonsNftMarketContract .purchase (patron: patron, nftId: nftId, <- paymentVault) }
+
 	pub fun unlist (lister : AuthAccount, nftId : String) : Void {
 		var listingCertificate <- PonsNftMarketContract .withdrawListingCertificate (lister, nftId: nftId)
 
@@ -180,22 +182,45 @@ pub contract PonsNftMarketContract {
 		var listingCertificatesOptional <-
 			account .load <@[{PonsListingCertificate}]>
 				( from: PonsNftMarketContract .PonsListingCertificateStoragePath )
-		var listingCertificates <- listingCertificatesOptional ?? []
 
-		listingCertificates .append (<- newListingCertificate)
+		if listingCertificatesOptional != nil {
+			var listingCertificates <- listingCertificatesOptional !
 
-		account .save (<- listingCertificates, to: PonsNftMarketContract .PonsListingCertificateStoragePath) }
+			listingCertificates .append (<- newListingCertificate)
+
+			account .save (<- listingCertificates, to: PonsNftMarketContract .PonsListingCertificateStoragePath) }
+		else {
+			destroy listingCertificatesOptional
+			
+			var listingCertificates : @[{PonsListingCertificate}] <- []
+
+			listingCertificates .append (<- newListingCertificate)
+
+			account .save (<- listingCertificates, to: PonsNftMarketContract .PonsListingCertificateStoragePath) } }
 
 	pub fun depositListingCertificates (_ account : AuthAccount, _ newListingCertificates : @[{PonsListingCertificate}]) : Void {
 		var listingCertificatesOptional <- account .load <@[{PonsListingCertificate}]> (from: PonsNftMarketContract .PonsListingCertificateStoragePath)
-		var listingCertificates <- listingCertificatesOptional ?? []
 
-		while newListingCertificates .length > 0 {
-			listingCertificates .append (<- newListingCertificates .remove (at: 0)) }
+		if listingCertificatesOptional != nil {
+			var listingCertificates <- listingCertificatesOptional !
 
-		destroy newListingCertificates
+			while newListingCertificates .length > 0 {
+				listingCertificates .append (<- newListingCertificates .remove (at: 0)) }
 
-		account .save (<- listingCertificates, to: PonsNftMarketContract .PonsListingCertificateStoragePath) }
+			destroy newListingCertificates
+
+			account .save (<- listingCertificates, to: PonsNftMarketContract .PonsListingCertificateStoragePath) }
+		else {
+			destroy listingCertificatesOptional
+
+			var listingCertificates : @[{PonsListingCertificate}] <- []
+
+			while newListingCertificates .length > 0 {
+				listingCertificates .append (<- newListingCertificates .remove (at: 0)) }
+
+			destroy newListingCertificates
+
+			account .save (<- listingCertificates, to: PonsNftMarketContract .PonsListingCertificateStoragePath)  } }
 
 	pub fun withdrawListingCertificate (_ account : AuthAccount, nftId : String) : @{PonsListingCertificate} {
 		var listingCertificates <- account .load <@[{PonsListingCertificate}]> (from: PonsNftMarketContract .PonsListingCertificateStoragePath) !
@@ -212,7 +237,7 @@ pub contract PonsNftMarketContract {
 			listingCertificateIndex = listingCertificateIndex + 1 }
 
 		destroy listingCertificates
-		panic ("") }
+		panic ("Pons Listing Certificate for this nftId not found") }
 
 
 
@@ -258,9 +283,9 @@ pub contract PonsNftMarketContract {
 			panic ("not implemented") }
 		pub fun listForSale (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} {
 			panic ("not implemented") }
-		pub fun purchase (nftId : String, _ purchaseVault : @FlowToken.Vault) : @PonsNftContractInterface.NFT {
+		pub fun purchase (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
 			panic ("not implemented") }
-		pub fun purchaseBySerialId (nftSerialId : UInt64, _ purchaseVault : @FlowToken.Vault) : @PonsNftContractInterface.NFT {
+		pub fun purchaseBySerialId (nftSerialId : UInt64, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
 			panic ("not implemented") }
 		pub fun unlist (_ ponsListingCertificate : @{PonsListingCertificate}) : @PonsNftContractInterface.NFT {
 			panic ("not implemented") } }

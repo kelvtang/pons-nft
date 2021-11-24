@@ -1,13 +1,13 @@
 import { flow_sdk_api } from './config.mjs'
-import { substitutions_of_addresses, private_keys_of_addresses } from './config.mjs'
+import { address_of_names, private_keys_of_names } from './config.mjs'
 import flow_types from '@onflow/types'
 import { authorizer_, execute_script_, send_transaction_, deploy_contract_ } from './flow.mjs'
 
 
 
-var address = substitutions_of_addresses ['0xPONS']
+var address = address_of_names ['0xPONS']
 var key_id = 0
-var private_key = private_keys_of_addresses ['0xPONS'] [key_id]
+var private_key = private_keys_of_names ['0xPONS'] [key_id]
 
 
 var response =

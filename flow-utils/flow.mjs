@@ -125,7 +125,7 @@ var deploy_contract_ = _authorizer => _contract_code => async _arguments => {
 			var _type_name =
 				(_flow_arg .xform .label === 'Path') ?
 				(_flow_arg .value .domain) .slice (0, 1) .toUpperCase () + (_flow_arg .value .domain) .slice (1) + 'Path'
-				(_flow_arg .xform .label === 'Dictionary') ?
+				: (_flow_arg .xform .label === 'Dictionary') ?
 				'{String: String}'
 				:
 				_flow_arg .xform .label
@@ -174,9 +174,7 @@ transaction (publicKey : String) {
 			publicKey: publicKey .decodeHex (),
 			signatureAlgorithm: SignatureAlgorithm .ECDSA_P256 )
 
-		let account = AuthAccount (payer: signer)
-
-		account .keys .add (
+		self .createdAccount .keys .add (
 			publicKey: key,
 			hashAlgorithm: HashAlgorithm.SHA3_256,
 			weight: 1000.0 ) } }

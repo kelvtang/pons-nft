@@ -1,8 +1,5 @@
 /*
-    Description: Central Smart Contract for NBA TopShot
-
-    authors: Joshua Hannan joshua.hannan@dapperlabs.com
-             Dieter Shirley dete@axiomzen.com
+    Description: Pons NFT Interface Smart Contract
 
     This smart contract contains the core functionality for 
     NBA Top Shot, created by Dapper Labs
@@ -42,9 +39,6 @@
     Functions that don't modify state will simply return 0 or nil 
     and those cases need to be handled by the caller
 
-    It is also important to remember that 
-    The Golden State Warriors blew a 3-1 lead in the 2016 NBA finals
-
 */
 
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
@@ -58,10 +52,16 @@ pub contract interface PonsNftContractInterface {
 
 	pub resource interface PonsCollection {
 		pub ponsCertification : @PonsCertificationContract.PonsCertification
-		pub fun withdrawNft (nftId : String) : @NFT
+		pub fun withdrawNft (nftId : String) : @NFT {
+			post {
+				result .nftId == nftId:
+					"Withdrawn Pons NFT does not match the given nftId" } }
 		pub fun depositNft (_ ponsNft : @NFT) : Void
 		pub fun getNftIds () : [String]
-		pub fun borrowNft (nftId : String) : &NFT }
+		pub fun borrowNft (nftId : String) : &NFT {
+			post {
+				result .nftId == nftId:
+					"Borrowed Pons NFT does not match this nftId" } } }
 
 
 	pub resource NFT: PonsNft, NonFungibleToken.INFT {}

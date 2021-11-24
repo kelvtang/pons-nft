@@ -40,14 +40,14 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		init (nftId : String, serialNumber : UInt64) {
 			pre {
 				! PonsNftContract_v1 .ponsNftSerialNumbers .containsKey (nftId): 
-					""
+					"Pons NFT with this nftId already taken"
 				! PonsNftContract_v1 .ponsNftIds .containsKey (serialNumber): 
-					"" }
+					"Pons NFT with this serialNumber already taken" }
 			post {
 				PonsNftContract_v1 .ponsNftSerialNumbers .containsKey (nftId): 
-					""
+					"Failed to create Pons NFT with this nftId"
 				PonsNftContract_v1 .ponsNftIds .containsKey (serialNumber): 
-					"" }
+					"Failed to create Pons NFT with this serialNumber" }
 
 			self .ponsCertification <- PonsCertificationContract .makePonsCertification ()
 			self .nftId = nftId
@@ -67,12 +67,10 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		pub fun withdrawNft (nftId : String) : @PonsNftContractInterface.NFT {
 			pre {
 				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !):
-					"" }
+					"Pons NFT with this nftId not found" }
 			post {
 				! self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !):
-					"" 
-				result .nftId == nftId:
-					"" }
+					"Failed to withdraw Pons NFT with this nftId" }
 
 			let serialNumber = PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !
 			var ponsNft : @PonsNftContractInterface.NFT <-
@@ -86,7 +84,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		pub fun depositNft (_ ponsNft : @PonsNftContractInterface.NFT) : Void {
 			pre {
 				! self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [ponsNft .nftId] !):
-					"" }
+					"Pons NFT with this nftId already in this collection" }
 			/*post {
 				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [before (ponsNft .nftId)] !):
 					"" }*/
@@ -115,10 +113,19 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			return nftIds }
 
 		pub fun borrowNft (nftId : String) : &PonsNftContractInterface.NFT {
-			post {
-				result .id != serialNumber:
-					"" }
+			pre {
+				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !):
+					"Pons NFT with this nftId not found" }
+
 			let serialNumber = PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !
+
+			destroy self .ownedNFTs .insert (
+				key: serialNumber,
+				<- (
+					PonsNftContract .updatePonsNft (
+						<- (self .ownedNFTs .remove (key: serialNumber) ! as! @PonsNftContractInterface.NFT)
+						) as! @NonFungibleToken.NFT ) )
+
 			let nftRef = & self .ownedNFTs [serialNumber] as auth &NonFungibleToken.NFT
 			let ponsNftRef = nftRef as! &PonsNftContractInterface.NFT
             		return ponsNftRef }
@@ -138,7 +145,19 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			return self .ownedNFTs .keys }
 
 		pub fun borrowNFT (id : UInt64) : &NonFungibleToken.NFT {
+			pre {
+				self .ownedNFTs .containsKey (id):
+					"Pons NFT with this serialNumber not found" }
+
 			let serialNumber = id
+
+			destroy self .ownedNFTs .insert (
+				key: serialNumber,
+				<- (
+					PonsNftContract .updatePonsNft (
+						<- (self .ownedNFTs .remove (key: serialNumber) ! as! @PonsNftContractInterface.NFT)
+						) as! @NonFungibleToken.NFT ) )
+
 			let nftRef = & self .ownedNFTs [serialNumber] as &NonFungibleToken.NFT
 			return nftRef }
 
@@ -164,12 +183,20 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 	pub resource NftMinter_v1 {
 		access(account) var nftIds : [String]
 
+		pub fun refillMintIds (mintIds : [String]) {
+			// TODO -- verify uniqueness
+			self .nftIds .appendAll (mintIds) }
+
 		pub fun mintNft
 		( _ artistCertificate : &PonsArtistContract.PonsArtistCertificate
 		, royalty : PonsUtils.Ratio
 		, editionLabel : String
 		, metadata : {String: String}
 		) : @PonsNftContractInterface.NFT {
+			pre {
+				self .nftIds .length > 0:
+					"Pons NFT Minter out of nftIds" }
+
 			let nftId = self .nftIds .remove (at: 0) !
 			let serialNumber = PonsNftContract .takeSerialNumber ()
 
@@ -201,15 +228,15 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 
 	pub resource PonsNftContractImplementation_v1 : PonsNftContract.PonsNftContractImplementation {
-		pub fun borrowArtist (_ ponsNft : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist {
-			let ponsArtistId = PonsNftContract_v1 .ponsNftArtistIds [ponsNft .nftId] !
+		pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist {
+			let ponsArtistId = PonsNftContract_v1 .ponsNftArtistIds [ponsNftRef .nftId] !
 			return PonsArtistContract .borrowArtist (ponsArtistId: ponsArtistId) }
-		pub fun getRoyalty (_ ponsNft : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
-			return PonsNftContract_v1 .ponsNftRoyalties [ponsNft .nftId] ! }
-		pub fun getEditionLabel (_ ponsNft : &PonsNftContractInterface.NFT) : String {
-			return PonsNftContract_v1 .ponsNftEditionLabels [ponsNft .nftId] ! }
-		pub fun getMetadata (_ ponsNft : &PonsNftContractInterface.NFT) : {String: String} {
-			return PonsNftContract_v1 .ponsNftMetadatas [ponsNft .nftId] ! }
+		pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
+			return PonsNftContract_v1 .ponsNftRoyalties [ponsNftRef .nftId] ! }
+		pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
+			return PonsNftContract_v1 .ponsNftEditionLabels [ponsNftRef .nftId] ! }
+		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} {
+			return PonsNftContract_v1 .ponsNftMetadatas [ponsNftRef .nftId] ! }
 
 		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection {
 			return <- create Collection () }
@@ -221,8 +248,6 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 	
 
 	init (minterStoragePath : StoragePath, minterCapabilityPath : CapabilityPath) {
-		// let minterStoragePath = /storage/ponsMinter
-		// let minterCapabilityPath = /private/ponsMinter
 		self .PonsNft_v1_Address = self .account .address
 		self .MinterStoragePath = minterStoragePath
 

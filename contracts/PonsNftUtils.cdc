@@ -5,7 +5,7 @@ pub contract PonsNftUtils {
 	pub fun normaliseCollection (nftCollection : &NonFungibleToken.Collection) : Void {
 		post {
 			nftCollection .ownedNFTs .keys .length == before (nftCollection .ownedNFTs .keys .length):
-				"" }
+				"Size of NFT collection changed" }
 
 		for id in nftCollection .ownedNFTs .keys {
 			PonsNftUtils .normaliseId (nftCollection : nftCollection, id: id) } }
@@ -21,6 +21,6 @@ pub contract PonsNftUtils {
 				PonsNftUtils .normaliseId (nftCollection : nftCollection, id: id) }
 
 			var nftBin <- nftCollection .ownedNFTs .insert (key: id, <- nft)
-			assert (nftBin == nil, message: "")
+			assert (nftBin == nil, message: "Failed to normalise NFT collection")
 			destroy nftBin } }
 	}
