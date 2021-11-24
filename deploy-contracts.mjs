@@ -1,15 +1,19 @@
 import flow_types from '@onflow/types'
-import { flow_sdk_api } from '../flow-utils/config.mjs'
-import { deploy_known_contract_ } from './utils.mjs'
-import { artist_authority_storage_path, collection_storage_path, minter_storage_path, minter_private_path, listing_certificates_storage_path } from './params.mjs'
-import { primary_commission_ratio_amount, secondary_commission_ratio_amount } from './params.mjs'
+import { deploy_known_contract_from_ } from './utils/flow.mjs'
+import { flow_sdk_api } from './config.mjs'
+import { artist_authority_storage_path, collection_storage_path, minter_storage_path, minter_private_path, listing_certificates_storage_path } from './config.mjs'
+import { primary_commission_ratio_amount, secondary_commission_ratio_amount } from './config.mjs'
+
+var __dirname = new URL ('.', import .meta .url) .pathname
+var deploy_known_contract_ = deploy_known_contract_from_ (__dirname + '/contracts/')
+
 
 ;await deploy_known_contract_ ('PonsUtils') ([])
-;await deploy_known_contract_ ('PonsNftUtils') ([])
-;await deploy_known_contract_ ('PonsCertification') ([])
 ;await deploy_known_contract_ ('PonsArtist') (
 	[ flow_sdk_api .arg ({ domain: 'storage', identifier: artist_authority_storage_path }, flow_types .Path) ] )
-;await deploy_known_contract_ ('PonsNftInterface') ([])
+;await deploy_known_contract_ ('PonsCertification') ([])
+;await deploy_known_contract_ ('PonsNftInterface') (
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: collection_storage_path }, flow_types .Path) ] )
 ;await deploy_known_contract_ ('PonsNft') (
 	[ flow_sdk_api .arg ({ domain: 'storage', identifier: collection_storage_path }, flow_types .Path) ] )
 ;await deploy_known_contract_ ('PonsNftMarket') (

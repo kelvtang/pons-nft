@@ -1,19 +1,21 @@
 import { v4 } from 'uuid'
 import flow_types from '@onflow/types'
-import { flow_sdk_api } from '../flow-utils/config.mjs'
-import { address_of_names } from '../flow-utils/config.mjs'
-import { cadencify_object_ } from './utils.mjs'
-import { deploy_known_account_, run_known_test_ } from './utils.mjs'
-import { pons_artist_id_of_names } from './params.mjs'
-import { artist_authority_storage_path, minter_storage_path } from './params.mjs'
+import { cadencify_object_ } from './utils/flow.mjs'
+import { make_known_ad_hoc_account_, run_known_test_from_ } from './utils/flow.mjs'
+import { flow_sdk_api } from './config.mjs'
+import { address_of_names, pons_artist_id_of_names } from './config.mjs'
+import { artist_authority_storage_path, minter_storage_path } from './config.mjs'
+
+var __dirname = new URL ('.', import .meta .url) .pathname
+var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 
 
 ;await
-	deploy_known_account_ ('0xARTIST_1')
+	make_known_ad_hoc_account_ ('0xARTIST_1')
 ;await
-	deploy_known_account_ ('0xPATRON_1')
+	make_known_ad_hoc_account_ ('0xPATRON_1')
 ;await
-	deploy_known_account_ ('0xRANDOM_1')
+	make_known_ad_hoc_account_ ('0xRANDOM_1')
 
 
 

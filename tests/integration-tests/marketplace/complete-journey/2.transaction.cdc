@@ -29,7 +29,7 @@ transaction
 
 		TestUtils .log ("Patron 1 regular purchase")
 
-		PonsNftMarketContract .regularPurchase (
+		PonsNftMarketContract .purchase (
 			patron: patronAccount,
 			nftId: firstNftId )
 

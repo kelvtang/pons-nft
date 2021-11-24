@@ -1,9 +1,9 @@
-import { access_node_origin } from './config.mjs'
-import { flow_sdk_api } from './config.mjs'
 import fcl_api from '@onflow/fcl'
 import flow_types from '@onflow/types'
 import * as ec_api from 'elliptic'
 import { SHA3 } from 'sha3'
+import { flow_sdk_api } from '../config.mjs'
+import { access_node_origin } from '../config.mjs'
 
 
 
@@ -35,24 +35,6 @@ var hash_ = msg => {
 
 
 
-
-
-
-
-
-
-
-var substitute_addresses_ = _substitutions_of_addresses => _cadence_code => {
-	// naive implementation, works for non-adversarial inputs
-
-	var [ _, _import_code, _post_import_code ] = _cadence_code .match (/^((?:\/\*[\s\S]*?\*\/|(?:[^\\:]|^)\/\/.*$|\s*|import\s+\S+\s+from\s+0x[0-9a-zA-Z]+)*)([^]*)$/m)
-
-	for (var _address in _substitutions_of_addresses) {
-		var _substitution = _substitutions_of_addresses [_address]
-
-		;_import_code = _import_code .split (_address) .join (_substitution) }
-
-	return _import_code + _post_import_code }
 
 
 
@@ -183,6 +165,5 @@ transaction (publicKey : String) {
 
 
 
-export { substitute_addresses_ }
 export { authorizer_ }
 export { send_transaction_, execute_script_, deploy_contract_, create_account_ }

@@ -24,7 +24,7 @@ transaction
 
 		TestUtils .log ("Random 1 regular purchase same NFT afterwards")
 
-		PonsNftMarketContract .regularPurchase (
+		PonsNftMarketContract .purchase (
 			patron: randomAccount,
 			nftId: firstNftId )
 

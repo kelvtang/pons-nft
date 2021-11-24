@@ -1,4 +1,8 @@
 import { v4 } from 'uuid'
+import flow_sdk_api from '@onflow/sdk'
+
+
+
 
 
 let artist_authority_storage_path = 'ponsArtistAuthority'
@@ -14,7 +18,16 @@ let secondary_commission_ratio_amount = '0.1'
 
 
 
-let testing_accounts =
+let address_of_names =
+	{ '0xFUNGIBLETOKEN': '0xee82856bf20e2aa6'
+	, '0xFLOWTOKEN': '0x0ae53cb6e3f42a79' 
+	, '0xNONFUNGIBLETOKEN': '0xf8d6e0586b0a20c7' 
+	, '0xPONS': '0xf8d6e0586b0a20c7' }
+let private_keys_of_names =
+	{ '0xPONS': [ '5983ba3ff97b3ab62c96c3aa35b4f08460284936fc4562cad425fcc6c97f9b3a' ] }
+
+
+let ad_hoc_accounts =
 	{ '0xARTIST_1': 
 		{ private_key: 'c11341eaa8555b5da488fbc057e6c531e7a82776a2e9e4874501e8499e56925e' 
 		, public_key: '36d01bc278e11bb32523a89598f6dd09a207772bd52959026855b9eb48deab7588afd7f11a417136da254942c868e5bd286384e933715f44f5936741c745075e' }
@@ -48,6 +61,26 @@ let pons_artist_id_of_names =
 
 
 
+
+
+let access_node_origin = /**/'http://lvh.me:8080' /*/'https://access-mainnet-beta.onflow.org'/**/
+
+
+
+
+;flow_sdk_api .config () .put ('accessNode.api', access_node_origin)
+
+
+
+
+
+export { flow_sdk_api }
+
 export { artist_authority_storage_path, collection_storage_path, minter_storage_path, minter_private_path, listing_certificates_storage_path }
 export { primary_commission_ratio_amount, secondary_commission_ratio_amount }
-export { testing_accounts, pons_artist_id_of_names }
+
+export { address_of_names, private_keys_of_names }
+export { ad_hoc_accounts, pons_artist_id_of_names }
+
+export { access_node_origin }
+

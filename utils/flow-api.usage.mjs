@@ -1,7 +1,7 @@
-import { flow_sdk_api } from './config.mjs'
-import { address_of_names, private_keys_of_names } from './config.mjs'
 import flow_types from '@onflow/types'
-import { authorizer_, execute_script_, send_transaction_, deploy_contract_ } from './flow.mjs'
+import { authorizer_, execute_script_, send_transaction_, deploy_contract_ } from './flow-api.mjs'
+import { flow_sdk_api } from '../config.mjs'
+import { address_of_names, private_keys_of_names } from '../config.mjs'
 
 
 

@@ -137,7 +137,7 @@ pub contract PonsNftMarketContract {
 		var listingCertificate <- PonsNftMarketContract .ponsMarket .listForSale (<- nft, salePrice, receivePaymentCap)
 		PonsNftMarketContract .depositListingCertificate (lister, <- listingCertificate) }
 
-	pub fun purchase (patron : AuthAccount, nftId : String, _ purchaseVault : @FungibleToken.Vault) : Void {
+	pub fun purchaseUsingVault (patron : AuthAccount, nftId : String, _ purchaseVault : @FungibleToken.Vault) : Void {
 		pre {
 			self .borrowNft (nftId: nftId) != nil:
 				"Pons NFT with this nftId is not available on the market" }
@@ -159,14 +159,14 @@ pub contract PonsNftMarketContract {
 			editionLabel: editionLabel,
 			price : price ) }
 
-	pub fun regularPurchase (patron : AuthAccount, nftId : String) : Void {
+	pub fun purchase (patron : AuthAccount, nftId : String) : Void {
 		pre {
 			self .borrowNft (nftId: nftId) != nil:
 				"Pons NFT with this nftId is not available on the market" }
 		var paymentVault <-
 			patron .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 				.withdraw (amount: PonsNftMarketContract .getPrice (nftId: nftId) !.flowAmount)
-		PonsNftMarketContract .purchase (patron: patron, nftId: nftId, <- paymentVault) }
+		PonsNftMarketContract .purchaseUsingVault (patron: patron, nftId: nftId, <- paymentVault) }
 
 	pub fun unlist (lister : AuthAccount, nftId : String) : Void {
 		var listingCertificate <- PonsNftMarketContract .withdrawListingCertificate (lister, nftId: nftId)
@@ -254,7 +254,6 @@ pub contract PonsNftMarketContract {
 
 
 	init (ponsListingCertificateStoragePath : StoragePath) {
-		//let ponsListingCertificateStoragePath = /storage/listingCertificates
 		self .historicalPonsMarkets <- []
 		self .ponsMarket <- create InvalidPonsNftMarket ()
 

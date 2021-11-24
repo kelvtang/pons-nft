@@ -146,7 +146,7 @@ pub contract PonsNftContract {
 
 
 	init (collectionStoragePath : StoragePath) {
-		self .CollectionStoragePath = collectionStoragePath // /storage/ponsCollection
+		self .CollectionStoragePath = collectionStoragePath
 
 		self .mintedCount = 0
 
