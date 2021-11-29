@@ -16,18 +16,20 @@ pub fun main
 , testInfo : {String: String}
 ) : {String: AnyStruct} {
 
-	if transactionSuccess {
-		let artistAddressString = testInfo ["First Artist address"] !
-		let marketAddressString = testInfo ["Market address"] !
+	// Verifies that freshly minted NFTs cannot be unlisted
+	// Checks the expected error
 
-		let depositsData = TestUtils .typeEvents (".TokensDeposited", transactionEvents) 
+	if ! transactionSuccess {
+
+		let expectedError = "Only the lister can redeem his Pons NFT"
+		let expectedErrorFound = TestUtils .substring (expectedError, in: transactionErrorMessage ?? "")
+
+		let verified = expectedErrorFound
 
 		return {
-			"verified": true,
-			"artistAddress": artistAddressString,
-			"marketAddress": marketAddressString,
-			"deposits": depositsData
-			} }
+			"verified": verified,
+			"expectedError": expectedError,
+			"expectedErrorFound": expectedErrorFound } }
 	else {
 		return {
 			"verified": false } } }

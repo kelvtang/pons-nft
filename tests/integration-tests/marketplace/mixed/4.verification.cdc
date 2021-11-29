@@ -1,4 +1,5 @@
 import PonsArtistContract from 0xPONS
+import PonsNftMarketContract from 0xPONS
 
 import TestUtils from 0xPONS
 
@@ -16,9 +17,17 @@ pub fun main
 , testInfo : {String: String}
 ) : {String: AnyStruct} {
 
+	// Verifies that NFTs can be listed on the marketplace
+	// Displays the listed price, to aid verification
+
 	if transactionSuccess {
+		let firstNftId = testInfo ["First NFT nftId"] !
+
+		let listedNftPrice = PonsNftMarketContract .getPrice (nftId: firstNftId) !
+
 		return {
-			"verified": true } }
+			"verified": true,
+			"listedNftPrice": listedNftPrice .flowAmount } }
 	else {
 		return {
 			"verified": false } } }

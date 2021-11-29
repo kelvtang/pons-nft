@@ -5,13 +5,16 @@ import PonsNftContract_v1 from 0xPONS
 
 import TestUtils from 0xPONS
 
+/*
+	Unlist Purchased Listing Test
+
+	Verifies that accounts can only unlist NFTs when it has not yet been purchased
+*/
 transaction 
 ( minterStoragePath : StoragePath
-, mintIds : [String]
+, mintId : String
 , metadata : {String: String}
-, quantity: Int
 , basePriceAmount : UFix64
-, incrementalPriceAmount : UFix64
 , royaltyRatioAmount : UFix64
 , transactionSuccess : Bool
 , transactionErrorMessage : String?
@@ -20,12 +23,16 @@ transaction
 ) {
 
 	prepare (ponsAccount : AuthAccount, artistAccount : AuthAccount, patronAccount : AuthAccount, randomAccount : AuthAccount) {
+
+		// 'Patron' attempts to unlist the NFT from the marketplace, even though it has been purchased by 'Random'
+		// Should fail
+
+		TestUtils .log ("Patron 1 normal tries to redeem same NFT with ListingCertificate")
+
 		let firstNftId = testInfo ["First NFT nftId"] !
 
-		TestUtils .log ("Random 1 regular purchase same NFT again")
-
-		PonsNftMarketContract .purchase (
-			patron: randomAccount,
+		PonsNftMarketContract .unlist (
+			lister: patronAccount,
 			nftId: firstNftId )
 
 		} }

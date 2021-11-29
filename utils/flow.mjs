@@ -85,7 +85,7 @@ var make_known_ad_hoc_account_ = async _named_address => {
 	var _flow_response =
 		await
 		create_account_
-		( known_account_ ('0xPONS') )
+		( known_account_ ('0xPROPOSER') )
 		( _public_key )
 	var _address =
 		_flow_response .events
@@ -106,7 +106,7 @@ var deploy_proposed_contract_ = _cadence_code => async _flow_arguments => {
 			( _cadence_code )
 	return await
 		deploy_contract_
-			( known_account_ ('0xPONS') )
+			( known_account_ ('0xPROPOSER') )
 			( _deployed_cadence_code )
 			( _flow_arguments ) }
 
@@ -158,8 +158,8 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 							var _transaction_response =
 								await
 								send_transaction_
-									( known_account_ ('0xPONS') )
-									( known_account_ ('0xPONS') )
+									( known_account_ ('0xPROPOSER') )
+									( known_account_ ('0xPROPOSER') )
 									( _authorizer_names .map (known_account_) )
 									( substitute_addresses_
 										( address_of_names )
@@ -172,10 +172,23 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 							if (Object .isPrototypeOf (_exception) && 'stack' in _exception) {
 								_transaction_response .stack = _exception .stack } }
 
-						var _latest_test_info =
-							(_transaction_response .events || [])
-							.filter (({ type }) => type .endsWith ('TestUtils.TestInfo'))
-							.map (({ data }) => data)
+						var _latest_test_info = []
+
+						var _latest_events = _transaction_response .events || []
+
+						for (var _event_index = 0; _event_index < _latest_events .length; _event_index ++) {
+							var _event = _latest_events [_event_index]
+							if (_event .type .endsWith ('TestUtils.TestInfo')) {
+								var { data } = _event
+								var { key, value } = data
+								;_test .comment ('[' + key + ']=' + value)
+								;_latest_test_info .push (data) }
+							else if (_event .type .endsWith ('TestUtils.Log')) {
+								var { data: { info } } = _event
+								;_test .comment (info) }
+							else {
+								var { type, data } = _event
+								;_test .comment ('(' + type .split ('.') .slice (-2) .join ('.') + '); ' + JSON .stringify (data)) } }
 
 						if (_latest_test_info .length > 0) {
 							if (_test_info === undefined) {

@@ -4,6 +4,11 @@ import PonsNftContract_v1 from 0xPONS
 
 import TestUtils from 0xPONS
 
+/*
+	Mint for Sale Test
+
+	Verifies that artists can mint NFTs for sale.
+*/
 transaction 
 ( minterStoragePath : StoragePath
 , mintIds : [String]
@@ -15,6 +20,9 @@ transaction
 ) {
 
 	prepare (ponsAccount : AuthAccount, artistAccount : AuthAccount) {
+
+		// Refill nftIds to the minter and call the `mintForSale ()` function
+
 		let minterRef = ponsAccount .borrow <&PonsNftContract_v1.NftMinter_v1> (from: minterStoragePath) !
 
 		minterRef .refillMintIds (mintIds: mintIds)

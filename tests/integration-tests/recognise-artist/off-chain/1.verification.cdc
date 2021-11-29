@@ -1,14 +1,13 @@
 import PonsArtistContract from 0xPONS
 
 /*
-	Recognise On-chain Artist Test
+	Recognise Off-chain Artist Test
 
-	Tests that `recognisePonsArtist ()` works for artists with a Flow account.
+	Tests that `recognisePonsArtist ()` works for artists without a Flow account.
 */
 pub fun main 
 ( artistAuthorityStoragePath : StoragePath
 , ponsArtistId : String
-, ponsArtistAddress : Address
 , metadata : {String: String}
 , transactionSuccess : Bool
 , transactionErrorMessage : String?

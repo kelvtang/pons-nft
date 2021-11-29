@@ -1,68 +1,62 @@
-/*
-    Description: Pons NFT Interface Smart Contract
-
-    This smart contract contains the core functionality for 
-    NBA Top Shot, created by Dapper Labs
-
-    The contract manages the metadata associated with all the plays
-    that are used as templates for the Moment NFTs
-
-    When a new Play wants to be added to the records, an Admin creates
-    a new Play struct that is stored in the smart contract.
-
-    Then an Admin can create new Sets. Sets consist of a public struct that 
-    contains public information about a set, and a private resource used
-    to mint new moments based off of plays that have been linked to the Set.
-
-    The admin resource has the power to do all of the important actions
-    in the smart contract and sets. When they want to call functions in a set,
-    they call their borrowSet function to get a reference 
-    to a set in the contract. 
-    Then they can call functions on the set using that reference
-
-    In this way, the smart contract and its defined resources interact 
-    with great teamwork, just like the Indiana Pacers, the greatest NBA team
-    of all time.
-    
-    When moments are minted, they are initialized with a MomentData struct and
-    are returned by the minter.
-
-    The contract also defines a Collection resource. This is an object that 
-    every TopShot NFT owner will store in their account
-    to manage their NFT Collection
-
-    The main top shot account will also have its own moment collections
-    it can use to hold its own moments that have not yet been sent to a user
-
-    Note: All state changing functions will panic if an invalid argument is
-    provided or one of its pre-conditions or post conditions aren't met.
-    Functions that don't modify state will simply return 0 or nil 
-    and those cases need to be handled by the caller
-
-*/
-
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsCertificationContract from 0xPONS
 
 
+/*
+	Pons NFT Contract Interface
+
+	This smart contract contains the core type requirements for Pons NFTs.
+	In the Pons NFT marketplace, properties of the system are enforced by types whenever possible.
+	All implementations of Pons NFTs must conform to both this interface, and the NonFungibleToken contract interface.
+
+	As a contract interface, this cannot be merged with the concrete PonsNft contract implementations.
+*/
 pub contract interface PonsNftContractInterface {
+
+/*
+	PonsNft resource interface definition
+
+	Pons NFTs must implement this in addition to the INFT from the NonFungibleToken contract.
+	PonsNft resources must contain a ponsCertification to ensure its authenticity of being created by Pons, with the type system.
+	PonsNft resources must contain a nftId, a globally unique ID identifying the Pons NFT.
+	Usage of the nftId is encouraged, as 1) it is much more difficult to unintentionally specify a nftId, and 2) the nftId is integrated with the Pons App system.
+*/
 	pub resource interface PonsNft {
 		pub ponsCertification : @PonsCertificationContract.PonsCertification
 		pub nftId : String }
 
+/*
+	PonsCollection resource interface definition
+
+	This is implemented by Pons NFT Collections. 
+	PonsCollection resources must contain a ponsCertification to ensure its authenticity of being created by Pons, with the type system.
+	Methods are provided for withdraw, deposit, borrow, and viewing the available NFTs, using the nftId as opposed to the id from NonFungibleToken.
+*/
 	pub resource interface PonsCollection {
+		/* Proof of certification from Pons */
 		pub ponsCertification : @PonsCertificationContract.PonsCertification
+
+		/* Withdraw a NFT from the PonsCollection, given its nftId */
 		pub fun withdrawNft (nftId : String) : @NFT {
 			post {
 				result .nftId == nftId:
 					"Withdrawn Pons NFT does not match the given nftId" } }
+
+		/* Deposit a NFT to the PonsCollection */
 		pub fun depositNft (_ ponsNft : @NFT) : Void
+
+		/* Get a list of nftIds stored in the PonsCollection */
 		pub fun getNftIds () : [String]
+
+		/* Borrow a reference to a NFT in the PonsCollection */
 		pub fun borrowNft (nftId : String) : &NFT {
 			post {
 				result .nftId == nftId:
 					"Borrowed Pons NFT does not match this nftId" } } }
 
 
+	/* All implementing contracts must implement the NFT resource, fulfilling requirements of PonsNft and the requirements from the NonFungibleToken contract */
 	pub resource NFT: PonsNft, NonFungibleToken.INFT {}
+
+	/* All implementing contracts must implement the Collection resource, fulfilling requirements of PonsCollection and the requirements from the NonFungibleToken contract */
 	pub resource Collection: PonsCollection, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {} }

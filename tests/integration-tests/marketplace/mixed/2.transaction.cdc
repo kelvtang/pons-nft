@@ -1,6 +1,8 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
+import PonsArtistContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
+import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 
 import TestUtils from 0xPONS
@@ -20,13 +22,17 @@ transaction
 ) {
 
 	prepare (ponsAccount : AuthAccount, artistAccount : AuthAccount, patronAccount : AuthAccount, randomAccount : AuthAccount) {
+		
+		// Tests purchasing from the market
+
+		TestUtils .log ("Patron 1 normal purchase")
+
 		let firstNftId = testInfo ["First NFT nftId"] !
+		let artistAddressString = testInfo ["Artist address"] !
+		let marketAddressString = testInfo ["Market address"] !
 
-		TestUtils .log ("Patron 1 list same NFT for 2000 FLOW")
-
-		PonsNftMarketContract .listForSale (
-			lister: patronAccount,
-			nftId: firstNftId,
-			PonsUtils.FlowUnits (2000.0) )
+		PonsNftMarketContract .purchase (
+			patron: patronAccount,
+			nftId: firstNftId )
 
 		} }

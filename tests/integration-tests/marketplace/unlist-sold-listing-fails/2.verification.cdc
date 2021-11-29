@@ -2,19 +2,25 @@ import PonsArtistContract from 0xPONS
 
 import TestUtils from 0xPONS
 
+/*
+	Unlist Purchased Listing Test
+
+	Verifies that accounts can only unlist NFTs when it has not yet been purchased
+*/
 pub fun main 
 ( minterStoragePath : StoragePath
-, mintIds : [String]
+, mintId : String
 , metadata : {String: String}
-, quantity: Int
 , basePriceAmount : UFix64
-, incrementalPriceAmount : UFix64
 , royaltyRatioAmount : UFix64
 , transactionSuccess : Bool
 , transactionErrorMessage : String?
 , transactionEvents : [{String: String}]
 , testInfo : {String: String}
 ) : {String: AnyStruct} {
+
+	// Verifies that already purchased NFTs cannot be unlisted
+	// Checks the expected error
 
 	if ! transactionSuccess {
 

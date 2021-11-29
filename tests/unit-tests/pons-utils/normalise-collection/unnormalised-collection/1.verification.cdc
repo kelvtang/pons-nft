@@ -1,9 +1,9 @@
-import PonsArtistContract from 0xPONS
+import TestUtils from 0xPONS
 
 /*
-	Mint for Sale Test
+	`normaliseCollection ()` on Unnormalised Collections Test
 
-	Verifies that artists can mint NFTs for sale.
+	Verifies that `normaliseCollection ()` properly normalises a unnormalised NFT collection.
 */
 pub fun main 
 ( minterStoragePath : StoragePath
@@ -18,9 +18,10 @@ pub fun main
 , transactionEvents : [{String: String}]
 ) : {String: AnyStruct} {
 
-	// Verifies that the minting for sale completes successfully with no failed assertions
+	// Verifies the collection normalisation completed successfully, and no assertions failed
 
 	if transactionSuccess {
+
 		return {
 			"verified": true } }
 	else {

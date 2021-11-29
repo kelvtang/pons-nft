@@ -1,6 +1,15 @@
 import PonsUtils from 0xPONS
 
+/*
+	FlowUnits `scale ()` Test
+
+	Verifies that `scale ()` from FlowUnits hold the expected properties, including being referentially transparent.
+*/
+
 pub fun main () : {String: AnyStruct} {
+
+	// Compute and compare the values of `scale ()` with the expected values
+
 	let ratio1 = PonsUtils .Ratio (0.2)
 	let ratio2 = PonsUtils .Ratio (0.1)
 	let flowUnits = PonsUtils .FlowUnits (100.0)
@@ -10,10 +19,10 @@ pub fun main () : {String: AnyStruct} {
 
 	let flowUnitsScaled2 = flowUnitsScaled1 .scale (ratio: ratio2)
 
-	let idempotentScaling = (flowUnitsScaled1 .flowAmount == flowUnitsScaled1Again .flowAmount)
+	let pureScaling = (flowUnitsScaled1 .flowAmount == flowUnitsScaled1Again .flowAmount)
 
 	let pass =
-		idempotentScaling
+		pureScaling
 		&& (flowUnitsScaled1 .flowAmount == PonsUtils .FlowUnits (20.0) .flowAmount)
 		&& (flowUnitsScaled2 .flowAmount == PonsUtils .FlowUnits (2.0) .flowAmount)
 
@@ -24,6 +33,6 @@ pub fun main () : {String: AnyStruct} {
 		"R2": ratio2,
 		"F1": flowUnits .toString (),
 
-		"Idempotent scalings": idempotentScaling,
+		"Pure scalings": pureScaling,
 		"S (R1) (F1)": flowUnitsScaled1 .toString (),
 		"S (R2) . S (R1) $ (F1)": flowUnitsScaled2 .toString () } }

@@ -1,5 +1,18 @@
 pub contract TestUtils {
 
+	pub resource TestResource {}
+	pub resource TestNestedResource {
+		pub let testResources : @[TestResource]
+
+		init () {
+			self .testResources <- [ <- create TestResource () ] }
+		destroy () {
+			destroy self .testResources } }
+	pub fun makeTestResource () : @TestResource {
+		return <- create TestResource () }
+	pub fun makeTestNestedResource () : @TestNestedResource {
+		return <- create TestNestedResource () }
+
 	pub event Log (info : String)
 
 	pub event TestInfo (key : String, value : String)

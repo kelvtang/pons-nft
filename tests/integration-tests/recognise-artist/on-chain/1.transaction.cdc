@@ -3,6 +3,11 @@ import PonsArtistContract from 0xPONS
 
 import TestUtils from 0xPONS
 
+/*
+	Recognise On-chain Artist Test
+
+	Tests that `recognisePonsArtist ()` works for artists with a Flow account.
+*/
 transaction 
 ( artistAuthorityStoragePath : StoragePath
 , ponsArtistId : String
@@ -11,15 +16,18 @@ transaction
 ) {
 
 	prepare (ponsAccount : AuthAccount) {
+
+		// Recognises the Pons artist with the provided data
+
 		let artistAuthorityRef = ponsAccount .borrow <&PonsArtistContract.PonsArtistAuthority> (from: artistAuthorityStoragePath) !
 		let artistAccount = getAccount (ponsArtistAddress)
 		let artistAccountBalanceRef = artistAccount .getCapability <&{FungibleToken.Balance}> (/public/flowTokenBalance) .borrow () !
 
 		artistAuthorityRef .recognisePonsArtist (
 			ponsArtistId: ponsArtistId,
-			ponsArtistAddress,
 			metadata : metadata,
-			receivePaymentCap: artistAccount .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenReceiver) )
+			ponsArtistAddress,
+			artistAccount .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenReceiver) )
 
 		TestUtils .log ("Recognized artist")
 

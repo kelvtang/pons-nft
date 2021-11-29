@@ -18,6 +18,15 @@ transaction
 ) {
 
 	prepare (ponsAccount : AuthAccount, artistAccount : AuthAccount, patronAccount : AuthAccount, randomAccount : AuthAccount) {
+
+		// Setup state so that marketplace mint, listing, unlisting, purchasing tests can proceed, and test minting:
+		// 1) Add untaken NFT ids to Pons NFT minter, so that NFTs can be minted for artists
+		// 2) Mint NFTs for the artist
+		// 3) Give Flow tokens to the 'Patron' and 'Random' accounts, so they may participate in purchasing
+
+		TestUtils .log ("Mint " .concat (quantity .toString () .concat (" NFTs")))
+		TestUtils .log ("Give money to Patron 1 and Random 1")
+
 		let minterRef = ponsAccount .borrow <&PonsNftContract_v1.NftMinter_v1> (from: minterStoragePath) !
 
 		minterRef .refillMintIds (mintIds: mintIds)
@@ -37,7 +46,8 @@ transaction
 
 
 		let firstNftId = nftIds [0]
-		let lastNft1Id = nftIds [nftIds .length - 1]
+		let secondNftId = nftIds [1]
+		let thirdNftId = nftIds [2]
 		
 		patronAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 		.deposit (
@@ -51,8 +61,12 @@ transaction
 
 		TestUtils .testInfo ("First NFT nftId", firstNftId)
 
+		TestUtils .testInfo ("Second NFT nftId", secondNftId)
+
+		TestUtils .testInfo ("Third NFT nftId", thirdNftId)
+
 		TestUtils .testInfo ("Market address", ponsAccount .address .toString ())
 
-		TestUtils .testInfo ("First Artist address", PonsArtistContract .getAddress (PonsNftContract .borrowArtist (PonsNftMarketContract .borrowNft (nftId: firstNftId) !)) !.toString ())
+		TestUtils .testInfo ("Artist address", PonsArtistContract .getAddress (PonsNftContract .borrowArtist (PonsNftMarketContract .borrowNft (nftId: firstNftId) !)) !.toString ())
 
 		} }

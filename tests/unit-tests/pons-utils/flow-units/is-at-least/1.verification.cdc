@@ -1,6 +1,15 @@
 import PonsUtils from 0xPONS
 
+
+/*
+	FlowUnits `isAtLeast ()` Test
+
+	Verifies that `isAtLeast ()` of FlowUtils holds the expected properties, including being reflexive and transitive.
+*/
 pub fun main () : {String: AnyStruct} {
+
+	// Compute and compare values of `isAtLeast ()` with the expected values
+
 	let flowUnits1 = PonsUtils .FlowUnits (50.0)
 	let flowUnits2 = PonsUtils .FlowUnits (50.0)
 	let flowUnits3 = PonsUtils .FlowUnits (100.0)

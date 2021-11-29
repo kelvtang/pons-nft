@@ -7,14 +7,19 @@ import flow_sdk_api from '@onflow/sdk'
 
 let artist_authority_storage_path = 'ponsArtistAuthority'
 let collection_storage_path = 'ponsCollection'
-let listing_certificates_storage_path = 'listingCertificates' 
+let listing_certificate_collection_storage_path = 'listingCertificateCollection' 
 let minter_storage_path = 'ponsMinter'
 let minter_private_path = 'ponsMinter'
 
 
 
+let minimum_minting_price = '1.0'
 let primary_commission_ratio_amount = '0.2'
 let secondary_commission_ratio_amount = '0.1'
+
+
+
+let access_node_origin = /**/'http://lvh.me:8080'/*/'https://access-testnet.onflow.org'//'https://access-mainnet-beta.onflow.org'/**/
 
 
 
@@ -22,9 +27,14 @@ let address_of_names =
 	{ '0xFUNGIBLETOKEN': '0xee82856bf20e2aa6'
 	, '0xFLOWTOKEN': '0x0ae53cb6e3f42a79' 
 	, '0xNONFUNGIBLETOKEN': '0xf8d6e0586b0a20c7' 
-	, '0xPONS': '0xf8d6e0586b0a20c7' }
+	, '0xPONS': '0xf8d6e0586b0a20c7'
+	, '0xPROPOSER': '0xf8d6e0586b0a20c7' }
 let private_keys_of_names =
-	{ '0xPONS': [ '5983ba3ff97b3ab62c96c3aa35b4f08460284936fc4562cad425fcc6c97f9b3a' ] }
+	{ '0xPONS': [ '5983ba3ff97b3ab62c96c3aa35b4f08460284936fc4562cad425fcc6c97f9b3a' ]
+	, '0xPROPOSER': [ '5983ba3ff97b3ab62c96c3aa35b4f08460284936fc4562cad425fcc6c97f9b3a' ] }
+
+
+
 
 
 let ad_hoc_accounts =
@@ -63,7 +73,6 @@ let pons_artist_id_of_names =
 
 
 
-let access_node_origin = /**/'http://lvh.me:8080' /*/'https://access-mainnet-beta.onflow.org'/**/
 
 
 
@@ -76,11 +85,10 @@ let access_node_origin = /**/'http://lvh.me:8080' /*/'https://access-mainnet-bet
 
 export { flow_sdk_api }
 
-export { artist_authority_storage_path, collection_storage_path, minter_storage_path, minter_private_path, listing_certificates_storage_path }
-export { primary_commission_ratio_amount, secondary_commission_ratio_amount }
-
-export { address_of_names, private_keys_of_names }
-export { ad_hoc_accounts, pons_artist_id_of_names }
+export { artist_authority_storage_path, collection_storage_path, minter_storage_path, minter_private_path, listing_certificate_collection_storage_path }
+export { minimum_minting_price, primary_commission_ratio_amount, secondary_commission_ratio_amount }
 
 export { access_node_origin }
 
+export { address_of_names, private_keys_of_names }
+export { ad_hoc_accounts, pons_artist_id_of_names }

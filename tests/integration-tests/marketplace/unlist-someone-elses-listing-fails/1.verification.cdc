@@ -1,24 +1,25 @@
 import PonsArtistContract from 0xPONS
 
-/*
-	Mint for Sale Test
+import TestUtils from 0xPONS
 
-	Verifies that artists can mint NFTs for sale.
+/*
+	Unlist someone else's Listing Test
+
+	Verifies that accounts can only unlist NFTs which he has listed
 */
 pub fun main 
 ( minterStoragePath : StoragePath
-, mintIds : [String]
+, mintId : String
 , metadata : {String: String}
-, quantity: Int
 , basePriceAmount : UFix64
-, incrementalPriceAmount : UFix64
 , royaltyRatioAmount : UFix64
 , transactionSuccess : Bool
 , transactionErrorMessage : String?
 , transactionEvents : [{String: String}]
+, testInfo : {String: String}
 ) : {String: AnyStruct} {
 
-	// Verifies that the minting for sale completes successfully with no failed assertions
+	// Verifies the setup and minting is successful
 
 	if transactionSuccess {
 		return {

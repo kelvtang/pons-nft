@@ -16,23 +16,9 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	make_known_ad_hoc_account_ ('0xPATRON_1')
 ;await
 	make_known_ad_hoc_account_ ('0xRANDOM_1')
+;await
+	make_known_ad_hoc_account_ ('0xRANDOM_2')
 
-
-
-//;await run_known_test_
-//	( 'unit-tests/pons-utils/flow-units/is-at-least' )
-//	( [] )
-//	( [] )
-//;await run_known_test_
-//	( 'unit-tests/pons-utils/flow-units/scale' )
-//	( [] )
-//	( [] )
-
-
-////;await run_known_test_
-////	( 'unit-tests/pons-utils/prepare-flow-capability' )
-////	( [ '0xRANDOM_1' ] )
-////	( [] )
 
 
 ;await run_known_test_
@@ -50,41 +36,48 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) ) ] )
 
 ;await run_known_test_
-	( 'integration-tests/artist-certificate/make-from-artist' )
-	( [ '0xARTIST_1' ] )
-	( [] )
-
-;await run_known_test_
-	( 'integration-tests/artist-certificate/fail-to-make-from-non-artist' )
-	( [ '0xRANDOM_1' ] )
-	( [] )
-
-;await run_known_test_
-	( 'integration-tests/artist-certificate/make-from-artist-authority' )
+	( 'integration-tests/recognise-artist/off-chain' )
 	( [ '0xPONS' ] )
 	(
 	[ flow_sdk_api .arg ({ domain: 'storage', identifier: artist_authority_storage_path }, flow_types .Path)
-	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_1'], flow_types .String) ] )
-
-;await run_known_test_
-	( 'integration-tests/direct-mint-nft' )
-	( [ '0xPONS', '0xARTIST_1' ] )
-	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
-	, flow_sdk_api .arg (v4 (), flow_types .String)
-	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_1'], flow_types .String)
-	, flow_sdk_api .arg ('0.10', flow_types .UFix64)
-	, flow_sdk_api .arg ('Only edition', flow_types .String)
+	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_2'], flow_types .String)
 	, flow_sdk_api .arg
 		( cadencify_object_ (
-			{ url: 'pons://nft-link'
-			, title: 'NFT title'
-			, description: 'NFT description' } )
+			{ first_name: 'Artist-2'
+			, last_name: 'Two'
+			, url: 'pons://artist-2' } )
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) ) ] )
 
+
 ;await run_known_test_
-	( 'integration-tests/marketplace/mint' )
-	( [ '0xPONS', '0xARTIST_1' ] )
+	( 'unit-tests/pons-utils/flow-units/is-at-least' )
+	( [] )
+	( [] )
+;await run_known_test_
+	( 'unit-tests/pons-utils/flow-units/scale' )
+	( [] )
+	( [] )
+
+;await run_known_test_
+	( 'unit-tests/pons-utils/normalise-collection/already-normalised-collection' )
+	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_2' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	, flow_sdk_api .arg ([ v4 (), v4 (), v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-1'
+			, title: 'NFT title 1'
+			, description: 'NFT description 1' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg (5, flow_types .Int)
+	, flow_sdk_api .arg ('1200.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('180.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.12', flow_types .UFix64) ] )
+
+;await run_known_test_
+	( 'unit-tests/pons-utils/normalise-collection/unnormalised-collection' )
+	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_2' ] )
 	(
 	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
 	, flow_sdk_api .arg ([ v4 (), v4 (), v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
@@ -95,21 +88,118 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 			, description: 'NFT description 2' } )
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
 	, flow_sdk_api .arg (5, flow_types .Int)
+	, flow_sdk_api .arg ('1200.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('180.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.12', flow_types .UFix64) ] )
+
+;await run_known_test_
+	( 'unit-tests/artist-certificate/make-from-artist' )
+	( [ '0xARTIST_1' ] )
+	( [] )
+
+;await run_known_test_
+	( 'unit-tests/artist-certificate/make-from-non-artist-fails' )
+	( [ '0xRANDOM_1' ] )
+	( [] )
+
+;await run_known_test_
+	( 'unit-tests/artist-certificate/make-from-artist-authority' )
+	( [ '0xPONS' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: artist_authority_storage_path }, flow_types .Path)
+	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_1'], flow_types .String) ] )
+
+
+
+;await run_known_test_
+	( 'integration-tests/minter/mint-nft' )
+	( [ '0xPONS', '0xARTIST_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	, flow_sdk_api .arg (v4 (), flow_types .String)
+	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_1'], flow_types .String)
+	, flow_sdk_api .arg ('0.10', flow_types .UFix64)
+	, flow_sdk_api .arg ('Only edition', flow_types .String)
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-3'
+			, title: 'NFT title 3'
+			, description: 'NFT description 3' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) ) ] )
+
+;await run_known_test_
+	( 'integration-tests/marketplace/mint' )
+	( [ '0xPONS', '0xARTIST_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	, flow_sdk_api .arg ([ v4 (), v4 (), v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-4'
+			, title: 'NFT title 4'
+			, description: 'NFT description 4' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg (5, flow_types .Int)
 	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('10.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 
 ;await run_known_test_
-	( 'integration-tests/marketplace/complete-journey' )
+	( 'integration-tests/marketplace/purchase-with-insufficient-funds-fails' )
+	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	, flow_sdk_api .arg (v4 (), flow_types .String)
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-5'
+			, title: 'NFT title 5'
+			, description: 'NFT description 5' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+
+;await run_known_test_
+	( 'integration-tests/marketplace/unlist-sold-listing-fails' )
+	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1', '0xRANDOM_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	, flow_sdk_api .arg (v4 (), flow_types .String)
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-6'
+			, title: 'NFT title 6'
+			, description: 'NFT description 6' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+
+;await run_known_test_
+	( 'integration-tests/marketplace/unlist-someone-elses-listing-fails' )
+	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1', '0xRANDOM_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	, flow_sdk_api .arg (v4 (), flow_types .String)
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-7'
+			, title: 'NFT title 7'
+			, description: 'NFT description 7' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+
+;await run_known_test_
+	( 'integration-tests/marketplace/mixed' )
 	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1', '0xRANDOM_1' ] )
 	(
 	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
 	, flow_sdk_api .arg ([ v4 (), v4 (), v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
 	, flow_sdk_api .arg
 		( cadencify_object_ (
-			{ url: 'pons://nft-link-3'
-			, title: 'NFT title 3'
-			, description: 'NFT description 3' } )
+			{ url: 'pons://nft-link-8'
+			, title: 'NFT title 8'
+			, description: 'NFT description 8' } )
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
 	, flow_sdk_api .arg (5, flow_types .Int)
 	, flow_sdk_api .arg ('500.0', flow_types .UFix64)

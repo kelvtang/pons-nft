@@ -44,7 +44,7 @@ var hash_ = msg => {
 
 
 var authorizer_ = _address => _key_id => _private_key => {
-	return async accountData => {
+	return accountData => {
 		return (
 			{ ... accountData
 			, tempId: _address + '-' + _key_id

@@ -1,5 +1,10 @@
 import PonsArtistContract from 0xPONS
 
+/*
+	Minter v1 Minting Test
+
+	Tests that NFT Minter v1 is able to mint NFTs as specified.
+*/
 pub fun main 
 ( minterStoragePath : StoragePath
 , mintId : String
@@ -12,9 +17,9 @@ pub fun main
 , transactionEvents : [{String: String}]
 ) : {String: AnyStruct} {
 
-	if transactionSuccess {
-		let ponsArtistRef = PonsArtistContract .borrowArtist (ponsArtistId: ponsArtistId)
+	// Verifies the test completed with no failed assertions
 
+	if transactionSuccess {
 		return {
 			"verified": true } }
 	else {

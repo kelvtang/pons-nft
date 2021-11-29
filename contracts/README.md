@@ -1,3 +1,5 @@
+# Pons NFT Contracts
+
 This directory contains all the contracts involved in the Pons NFT marketplace.
 
 On the Pons NFT marketplace, Pons certified artists can request for the marketplace to mint and list their artworks for sale, and set a royalty ratio. On purchase of the NFT, the marketplace takes a commission and the rest of the proceeds are sent to the artist. Once sold, the owner of the NFT is able to list the NFT on the Pons marketplace again, for resale. NFTs listed for resale can be unlisted by the owner.
@@ -8,19 +10,19 @@ On the Pons NFT marketplace, Pons certified artists can request for the marketpl
 In the Pons NFT marketplace system, different kinds of resources are involved:
 
 ## PonsArtist 
-The PonsArtist resource represents an artist recognised by Pons. Each PonsArtist resource is associated with a unique ponsArtistId (`String`), and also metadata (`{String: String}`), a FungibleToken Receiver Capability, and optionally a Flow Address. All PonsArtist resouces are owned by the Pons account, and everyone can borrow any PonsArtist to check their information.
+The PonsArtist resource represents an artist recognised by Pons. Each PonsArtist resource is associated with a unique ponsArtistId (`String`), and also metadata (`{String: String}`), and optionally a Flow Address and a FungibleToken Receiver Capability. All PonsArtist resouces are owned by the Pons account, and everyone can borrow any PonsArtist to check their information.
 
 ## PonsArtistCertificate 
-The PonsArtistCertificate resource represents an intent on behalf of a recognised Pons Artist. Each PonsArtistCertificate resource contains the ponsArtistId (`String`) which it is related to. PonsArtistCertificate resources can be created either by the artist himself, with the `makePonsArtistCertificate` function using their `AuthAccount`, or by the Pons account on behalf of the artist. The latter method is useful in cases for example when the artist wishes to mint an NFT, but does not yet have a Flow account.
+The PonsArtistCertificate resource represents an intent on behalf of a recognised Pons Artist. Each PonsArtistCertificate resource contains the ponsArtistId (`String`) which it is related to. PonsArtistCertificate resources can be created either by the artist himself, with the `makePonsArtistCertificate` function using their `AuthAccount`, or by the Pons account on behalf of the artist. The latter method is useful in cases for example when the artist wishes to mint a NFT, but does not yet have a Flow account.
 
 ## PonsArtistAuthority 
-The PonsArtistAuthority resource represents a controller for the information provided about each Pons Artist. Like an NFT Minter, only one instance is created, and is stored in the contract account. The PonsArtistAuthority resource is also used to create `PonsArtistCertificate`s on behalf of artists.
+The PonsArtistAuthority resource represents a controller for the information provided about each Pons Artist. Like a NFT Minter, only one instance is created, and is stored in the contract account. The PonsArtistAuthority resource is also used to create `PonsArtistCertificate`s on behalf of artists.
 
 ## PonsCertification
 The PonsCertification is a bare resource with no fields, whose only purpose is to indicate certification by Pons for the existence of a PonsNFT. Its purpose will be further elaborated on in the following section on the PonsNft resource.
 
 ## PonsNft 
-The PonsNft is the main subject of the Pons NFT system. The PonsNft is an NFT which represent artwork created by Pons Artists, implementing the Flow NonFungibleToken contract interface. To ensure authenticity of all PonsNfts that implement the PonsNft resource interface, all PonsNfts are required to possess a `PonsCertification`. This is guaranteed by virtue of the Flow type and resource system, of which the only way to obtain a PonsCertification resource is via a call made by the Pons account to the `makePonsCertification` function.
+The PonsNft is the main subject of the Pons NFT system. The PonsNft is a NFT which represent artwork created by Pons Artists, implementing the Flow NonFungibleToken contract interface. To ensure authenticity of all PonsNfts that implement the PonsNft resource interface, all PonsNfts are required to possess a `PonsCertification`. This is guaranteed by virtue of the Flow type and resource system, of which the only way to obtain a PonsCertification resource is via a call made by the Pons account to the `makePonsCertification` function.
 
 Each PonsNft is associated with a unique nftId (`String`), a unique serialNumber (`UInt64`; this is the same field as the `id` field required by the NonFungibleToken interface), and also a Pons Artist (`&PonsArtist`), a royalties rate (`Ratio`), an edition label (`String`), and any other metadata (`{String: String}`). These information are accessible to anyone with a reference to a PonsNft.
 
@@ -169,3 +171,10 @@ Emitted when the PonsNftContract_v1 contract is initialised.
 
 ### `PonsNftMarketContractInit_v1()`
 Emitted when the PonsMarketContract_v1 contract is initialised.
+
+
+# Style
+
+- In the Pons NFT marketplace, properties of the system are enforced by types whenever possible.
+- Pons functions use named arguments whenever the correctness of the argument is ambigious given its type, and names are omitted whenever the correctness of the argument is evident given its type
+- Spaces are liberally used to separate tokens

@@ -20,9 +20,13 @@ transaction
 ) {
 
 	prepare (ponsAccount : AuthAccount, artistAccount : AuthAccount, patronAccount : AuthAccount, randomAccount : AuthAccount) {
-		let firstNftId = testInfo ["First NFT nftId"] !
 
-		TestUtils .log ("Random 1 regular purchase same NFT afterwards")
+		// Tests the purchase of an already purchased NFT, which is no longer on the market.
+		// Should fail.
+
+		TestUtils .log ("Random 1 normal purchase same NFT afterwards")
+
+		let firstNftId = testInfo ["First NFT nftId"] !
 
 		PonsNftMarketContract .purchase (
 			patron: randomAccount,

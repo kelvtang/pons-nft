@@ -16,18 +16,11 @@ pub fun main
 , testInfo : {String: String}
 ) : {String: AnyStruct} {
 
+	// Verifies the setup and minting is successful
+
 	if transactionSuccess {
-		let artistAddressString = testInfo ["First Artist address"] !
-		let marketAddressString = testInfo ["Market address"] !
-
-		let depositsData = TestUtils .typeEvents (".TokensDeposited", transactionEvents) 
-
 		return {
-			"verified": true,
-			"artistAddress": artistAddressString,
-			"marketAddress": marketAddressString,
-			"deposits": depositsData
-			} }
+			"verified": true } }
 	else {
 		return {
 			"verified": false } } }
