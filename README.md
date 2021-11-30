@@ -1,6 +1,6 @@
 # Pons NFT
 
-This repository contains the Pons NFT system. Detailed documentation for the Pons NFT contracts are in the `contracts/` directory.
+This repository contains the Pons NFT system. Detailed documentation for the Pons NFT contracts are in the `contracts/` directory.. Detailed documentation for tests are in the `tests/` directory.
 
 The structure of the repository is as follow:
 
@@ -16,7 +16,7 @@ The structure of the repository is as follow:
 - contracts/
 - deploy-contracts.mjs
 
-- test/
+- tests/
 - run-test.mjs
 
 
@@ -56,9 +56,9 @@ This directory contains Cadence contracts which make up the Pons NFT system.
 
 This file can be directly run with `node deploy-contracts.mjs` to deploy the Pons NFT marketplace contracts to the Flow network specified by config.mjs.
 
-## test/
+## tests/
 
-This file contains Cadence transactions and verification scripts, which make up the unit tests and integration tests for the Pons NFT marketplace.
+This directory contains Cadence transactions and verification scripts, which make up the unit tests and integration tests for the Pons NFT marketplace.
 
 ## run-test.mjs
 

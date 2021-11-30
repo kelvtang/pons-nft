@@ -37,7 +37,7 @@ The PonsNftMarket is the main point of interaction between users and the Pons NF
 
 To ease interaction with the Pons NFT Marketplace, several top-level functions `mintForSale()`, `listForSale()`, `purchase()`, and `unlist()` are available, allowing users to interact with the Pons NFT Marketplace using a single line of Cadence code.
 
-All PonsNfts listed for sale on the Pons NFT Marketplace are available for purchase with Flow tokens. For every purchase made on the Pons NFT Marketplace, the market takes a commission. If the purchase is also a resale, a percentage of the purchase, as indicated by the royalties information of the PonsNft, is delivered to the artist. The rest of the fees are delivered to the lister or artist of the PonsNft.
+All PonsNfts listed for sale on the Pons NFT Marketplace are available for purchase with Flow tokens. For every purchase made on the Pons NFT Marketplace, the market takes a commission. If the purchase is also a resale, a percentage of the purchase, as indicated by the royalties information of the PonsNft, is delivered to the artist. The rest of the fees are delivered to the artist or lister of the PonsNft.
 
 Whenever a Pons Artist mints a PonsNft or a user lists a PonsNft for resale, he receives a PonsListingCertificate with the details of the listing or minting. If the reseller decides to unlist his PonsNft from the market, this is achieved by trading in the corresponding PonsListingCertificate to prove the listing. PonsListingCertificates issued for the minting of a PonsNft cannot be traded in for the PonsNft. Once the listed PonsNft has been purchased, the issued PonsListingCertificates become ineligible for redemption.
 
@@ -175,6 +175,7 @@ Emitted when the PonsMarketContract_v1 contract is initialised.
 
 # Style
 
-- In the Pons NFT marketplace, properties of the system are enforced by types whenever possible.
-- Pons functions use named arguments whenever the correctness of the argument is ambigious given its type, and names are omitted whenever the correctness of the argument is evident given its type
+- In the Pons NFT marketplace, properties of the system are enforced by types whenever possible
+- Functions use named arguments whenever the correctness of the argument is ambigious given its type, and names are omitted whenever the correctness of the argument is evident given its type
 - Spaces are liberally used to separate tokens
+- Lisp indentation

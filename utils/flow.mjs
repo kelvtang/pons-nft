@@ -212,14 +212,19 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 								(_test_info === undefined) ? []
 								: [ flow_sdk_api .arg (cadencify_object_ (_test_info), flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String })) ] ) ] }
 
-					var _verification_code = await readFile (_verification_path, 'utf8')
-					var _verification_response =
-						await
-						execute_script_
-							( substitute_addresses_
-								( address_of_names )
-								( _verification_code ) )
-							( [ ... _flow_arguments, ... _last_transaction_arguments ] ) 
+					try {
+						var _verification_code = await readFile (_verification_path, 'utf8')
+						var _verification_response =
+							await
+							execute_script_
+								( substitute_addresses_
+									( address_of_names )
+									( _verification_code ) )
+								( [ ... _flow_arguments, ... _last_transaction_arguments ] ) }
+					catch (_exception) {
+						if (_transaction_exists) {
+							;_test .comment (JSON .stringify ({ transaction: _transaction_response })) }
+						;throw (_exception) }
 
 					var test_result = { ... _verification_response }
 					if
