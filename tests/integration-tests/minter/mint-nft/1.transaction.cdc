@@ -1,6 +1,5 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
-import PonsArtistContract from 0xPONS
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
@@ -33,13 +32,13 @@ transaction
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 		let minterRef = ponsAccount .borrow <&PonsNftContract_v1.NftMinter_v1> (from: minterStoragePath) !
 
-		var artistCertificate <- PonsArtistContract .makePonsArtistCertificate (artistAccount : artistAccount)
+		var artistCertificate <- PonsNftContract .makePonsArtistCertificateDirectly (artist: artistAccount)
 
 		minterRef .refillMintIds (mintIds: [ mintId ])
 
 		var ponsNft <-
 			minterRef .mintNft (
-				& artistCertificate as &PonsArtistContract.PonsArtistCertificate,
+				& artistCertificate as &PonsNftContract.PonsArtistCertificate,
 				royalty: royalty,
 				editionLabel: editionLabel,
 				metadata : metadata )

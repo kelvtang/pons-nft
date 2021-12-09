@@ -1,5 +1,3 @@
-import PonsArtistContract from 0xPONS
-
 /*
 	Mint for Sale Test
 

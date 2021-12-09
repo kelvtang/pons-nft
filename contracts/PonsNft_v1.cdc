@@ -1,6 +1,5 @@
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsCertificationContract from 0xPONS
-import PonsArtistContract from 0xPONS
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsUtils from 0xPONS
@@ -283,7 +282,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 		/* Mints a new Pons NFT v1 */
 		pub fun mintNft
-		( _ artistCertificate : &PonsArtistContract.PonsArtistCertificate
+		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
 		, royalty : PonsUtils.Ratio
 		, editionLabel : String
 		, metadata : {String: String}
@@ -328,9 +327,9 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 	/* A straightforward instance of PonsNftContractImplementation which utilises PonsNftContract_v1 for all its functionality, used on initialization of the PonsNftContract_v1 contract. */
 	pub resource PonsNftContractImplementation_v1 : PonsNftContract.PonsNftContractImplementation {
-		pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsArtistContract.PonsArtist {
+		pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsNftContract.PonsArtist {
 			let ponsArtistId = PonsNftContract_v1 .ponsNftArtistIds [ponsNftRef .nftId] !
-			return PonsArtistContract .borrowArtist (ponsArtistId: ponsArtistId) }
+			return PonsNftContract .borrowArtistById (ponsArtistId: ponsArtistId) }
 		pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
 			return PonsNftContract_v1 .ponsNftRoyalties [ponsNftRef .nftId] ! }
 		pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
@@ -347,10 +346,10 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 	
 
-	init (minterStoragePath : StoragePath, minterCapabilityPath : CapabilityPath) {
+	init () {
 		// Save the account address and minter storage path
 		self .PonsNft_v1_Address = self .account .address
-		self .MinterStoragePath = minterStoragePath
+		self .MinterStoragePath = /storage/ponsMinter
 
 		self .totalSupply = 0
 
@@ -362,10 +361,10 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		self .ponsNftMetadatas = {}
 
 		// Save a NFT v1 Minter to the specified storage path
-        	self .account .save (<- create NftMinter_v1 (), to: minterStoragePath)
+        	self .account .save (<- create NftMinter_v1 (), to: /storage/ponsMinter)
 
 		// Create and save a capability to the minter for convenience
-		self .MinterCapability = self .account .link <&NftMinter_v1> (minterCapabilityPath, target: minterStoragePath) !
+		self .MinterCapability = self .account .link <&NftMinter_v1> (/private/ponsMinter, target: /storage/ponsMinter) !
 
 		// Activate PonsNftContractImplementation_v1 as the active implementation of the Pons NFT system
 		PonsNftContract .update (<- create PonsNftContractImplementation_v1 ())

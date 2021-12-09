@@ -1,15 +1,15 @@
-import PonsArtistContract from 0xPONS
+import PonsNftContract from 0xPONS
 
 import TestUtils from 0xPONS
 
 transaction (artistAuthorityStoragePath : StoragePath, ponsArtistId : String) {
 
 	prepare (ponsAccount : AuthAccount) {
-		let artistAuthorityRef = ponsAccount .borrow <&PonsArtistContract.PonsArtistAuthority> (from: artistAuthorityStoragePath) !
+		let artistAuthorityRef = ponsAccount .borrow <&PonsNftContract.PonsArtistAuthority> (from: artistAuthorityStoragePath) !
 
 		var artistCertificate1 <-
 			artistAuthorityRef .makePonsArtistCertificateFromArtistRef (
-				PonsArtistContract .borrowArtist (ponsArtistId: ponsArtistId) )
+				PonsNftContract .borrowArtistById (ponsArtistId: ponsArtistId) )
 		TestUtils .log ("artistCertificate1 id: " .concat (artistCertificate1 .ponsArtistId))
 		destroy artistCertificate1
 

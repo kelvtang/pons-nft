@@ -1,7 +1,6 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import FlowToken from 0xFLOWTOKEN
-import PonsArtistContract from 0xPONS
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsUtils from 0xPONS
@@ -70,7 +69,7 @@ pub contract PonsNftMarketContract {
 		/* When only one edition is minted, the incrementalPrice is inconsequential */
 		/* When the Pons marketplace mints multiple editions of NFTs, the market price of each succeesive NFT is incremented by the incrementalPrice */
 		pub fun mintForSale
-		( _ artistCertificate : &PonsArtistContract.PonsArtistCertificate
+		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
 		, metadata : {String: String}
 		, quantity : Int
 		, basePrice : PonsUtils.FlowUnits
@@ -188,11 +187,11 @@ pub contract PonsNftMarketContract {
 		var receivePaymentCap = PonsUtils .prepareFlowCapability (account: minter)
 
 		// Obtain an artist certificate of the minter
-		var artistCertificate <- PonsArtistContract .makePonsArtistCertificate (artistAccount: minter)
+		var artistCertificate <- PonsNftContract .makePonsArtistCertificateDirectly (artist: minter)
 		// Mint and list the specified NFT on the active Pons market, producing some listing certificates
 		var listingCertificates <-
 			PonsNftMarketContract .ponsMarket .mintForSale (
-				& artistCertificate as &PonsArtistContract.PonsArtistCertificate,
+				& artistCertificate as &PonsNftContract.PonsArtistCertificate,
 				metadata: metadata,
 				quantity: quantity,
 				basePrice: basePrice,
@@ -379,7 +378,7 @@ pub contract PonsNftMarketContract {
 
 
 
-	init (ponsListingCertificateCollectionStoragePath : StoragePath) {
+	init () {
 		self .historicalPonsMarkets <- []
 		// Activate InvalidPonsNftMarket as the active implementation of the Pons NFT market
 		self .ponsMarket <- create InvalidPonsNftMarket ()
@@ -387,7 +386,7 @@ pub contract PonsNftMarketContract {
 		// Save the market address
 		self .PonsNftMarketAddress = self .account .address
 		// Save the standardised Pons listing certificate collection storage path
-		self .PonsListingCertificateCollectionStoragePath = ponsListingCertificateCollectionStoragePath
+		self .PonsListingCertificateCollectionStoragePath = /storage/listingCertificateCollection
 
 		// Emit the PonsNftMarket initialisation event
 		emit PonsMarketContractInit () }
@@ -402,7 +401,7 @@ pub contract PonsNftMarketContract {
 			panic ("not implemented") }
 
 		pub fun mintForSale 
-		( _ artistCertificate : &PonsArtistContract.PonsArtistCertificate
+		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
 		, metadata : {String: String}
 		, quantity : Int
 		, basePrice : PonsUtils.FlowUnits

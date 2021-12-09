@@ -1,6 +1,5 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
-import PonsArtistContract from 0xPONS
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
@@ -67,7 +66,7 @@ pub contract PonsNftMarketContract_v1 {
 		/* When only one edition is minted, the incrementalPrice is inconsequential */
 		/* When the Pons marketplace mints multiple editions of NFTs, the market price of each succeesive NFT is incremented by the incrementalPrice */
 		pub fun mintForSale
-		( _ artistCertificate : &PonsArtistContract.PonsArtistCertificate
+		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
 		, metadata : {String: String}
 		, quantity : Int
 		, basePrice : PonsUtils.FlowUnits
@@ -204,7 +203,7 @@ pub contract PonsNftMarketContract_v1 {
 				// Withdraw royalties from the purchase funds
 				var royaltiesVault <- purchaseVault .withdraw (amount: royalties !.flowAmount)
 				let artistRef = PonsNftContract .borrowArtist (nftRef)
-				let artistReceivePaymentCapOptional = PonsArtistContract .getReceivePaymentCap (artistRef)
+				let artistReceivePaymentCapOptional = PonsNftContract .getArtistReceivePaymentCap (artistRef)
 
 				// If the artist's Capability for receiving Flow tokens is valid
 				if artistReceivePaymentCapOptional != nil && artistReceivePaymentCapOptional !.check () {
@@ -301,17 +300,13 @@ pub contract PonsNftMarketContract_v1 {
 			self .listingCount = listingCount } }
 
 	
-	init
-	( minimumMintingPriceAmount : UFix64
-	, primaryCommissionRatioAmount : UFix64
-	, secondaryCommissionRatioAmount : UFix64
-	) {
+	init () {
 		var ponsMarketV1 <-
 			create PonsNftMarket_v1
 				( marketReceivePaymentCap: PonsUtils .prepareFlowCapability (account: self .account)
-				, minimumMintingPrice: PonsUtils.FlowUnits (minimumMintingPriceAmount)
-				, primaryCommissionRatio: PonsUtils.Ratio (primaryCommissionRatioAmount)
-				, secondaryCommissionRatio: PonsUtils.Ratio (secondaryCommissionRatioAmount) )
+				, minimumMintingPrice: PonsUtils.FlowUnits (1.0)
+				, primaryCommissionRatio: PonsUtils.Ratio (0.2)
+				, secondaryCommissionRatio: PonsUtils.Ratio (0.1) )
 		// Activate PonsNftMarket_v1 as the active implementation of the Pons NFT marketplace
 		PonsNftMarketContract .setPonsMarket (<- ponsMarketV1)
 

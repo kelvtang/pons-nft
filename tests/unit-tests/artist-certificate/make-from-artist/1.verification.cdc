@@ -1,5 +1,3 @@
-import PonsArtistContract from 0xPONS
-
 pub fun main 
 ( transactionSuccess : Bool
 , transactionErrorMessage : String?

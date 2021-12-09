@@ -4,7 +4,6 @@ import { cadencify_object_ } from './utils/flow.mjs'
 import { make_known_ad_hoc_account_, run_known_test_from_ } from './utils/flow.mjs'
 import { flow_sdk_api } from './config.mjs'
 import { address_of_names, pons_artist_id_of_names } from './config.mjs'
-import { artist_authority_storage_path, minter_storage_path } from './config.mjs'
 
 var __dirname = new URL ('.', import .meta .url) .pathname
 var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
@@ -25,7 +24,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'integration-tests/recognise-artist/on-chain' )
 	( [ '0xPONS' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: artist_authority_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsArtistAuthority' }, flow_types .Path)
 	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_1'], flow_types .String)
 	, flow_sdk_api .arg (address_of_names ['0xARTIST_1'], flow_types .Address)
 	, flow_sdk_api .arg
@@ -39,7 +38,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'integration-tests/recognise-artist/off-chain' )
 	( [ '0xPONS' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: artist_authority_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsArtistAuthority' }, flow_types .Path)
 	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_2'], flow_types .String)
 	, flow_sdk_api .arg
 		( cadencify_object_ (
@@ -62,7 +61,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'unit-tests/pons-utils/normalise-collection/already-normalised-collection' )
 	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_2' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 	, flow_sdk_api .arg ([ v4 (), v4 (), v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
 	, flow_sdk_api .arg
 		( cadencify_object_ (
@@ -79,7 +78,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'unit-tests/pons-utils/normalise-collection/unnormalised-collection' )
 	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_2' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 	, flow_sdk_api .arg ([ v4 (), v4 (), v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
 	, flow_sdk_api .arg
 		( cadencify_object_ (
@@ -106,7 +105,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'unit-tests/artist-certificate/make-from-artist-authority' )
 	( [ '0xPONS' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: artist_authority_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsArtistAuthority' }, flow_types .Path)
 	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_1'], flow_types .String) ] )
 
 
@@ -115,7 +114,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'integration-tests/minter/mint-nft' )
 	( [ '0xPONS', '0xARTIST_1' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 	, flow_sdk_api .arg (v4 (), flow_types .String)
 	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_1'], flow_types .String)
 	, flow_sdk_api .arg ('0.10', flow_types .UFix64)
@@ -131,7 +130,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'integration-tests/marketplace/mint' )
 	( [ '0xPONS', '0xARTIST_1' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 	, flow_sdk_api .arg ([ v4 (), v4 (), v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
 	, flow_sdk_api .arg
 		( cadencify_object_ (
@@ -148,7 +147,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'integration-tests/marketplace/purchase-with-insufficient-funds-fails' )
 	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 	, flow_sdk_api .arg (v4 (), flow_types .String)
 	, flow_sdk_api .arg
 		( cadencify_object_ (
@@ -163,7 +162,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'integration-tests/marketplace/unlist-sold-listing-fails' )
 	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1', '0xRANDOM_1' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 	, flow_sdk_api .arg (v4 (), flow_types .String)
 	, flow_sdk_api .arg
 		( cadencify_object_ (
@@ -178,7 +177,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'integration-tests/marketplace/unlist-someone-elses-listing-fails' )
 	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1', '0xRANDOM_1' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 	, flow_sdk_api .arg (v4 (), flow_types .String)
 	, flow_sdk_api .arg
 		( cadencify_object_ (
@@ -193,7 +192,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	( 'integration-tests/marketplace/mixed' )
 	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1', '0xRANDOM_1' ] )
 	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: minter_storage_path }, flow_types .Path)
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 	, flow_sdk_api .arg ([ v4 (), v4 (), v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
 	, flow_sdk_api .arg
 		( cadencify_object_ (

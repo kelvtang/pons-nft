@@ -1,5 +1,5 @@
 import FungibleToken from 0xFUNGIBLETOKEN
-import PonsArtistContract from 0xPONS
+import PonsNftContract from 0xPONS
 
 import TestUtils from 0xPONS
 
@@ -18,7 +18,7 @@ transaction
 
 		// Recognises a Pons artists which does not have a Flow account
 
-		let artistAuthorityRef = ponsAccount .borrow <&PonsArtistContract.PonsArtistAuthority> (from: artistAuthorityStoragePath) !
+		let artistAuthorityRef = ponsAccount .borrow <&PonsNftContract.PonsArtistAuthority> (from: artistAuthorityStoragePath) !
 
 		artistAuthorityRef .recognisePonsArtist (
 			ponsArtistId: ponsArtistId,

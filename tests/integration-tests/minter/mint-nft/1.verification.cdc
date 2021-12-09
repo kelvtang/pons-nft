@@ -1,5 +1,3 @@
-import PonsArtistContract from 0xPONS
-
 /*
 	Minter v1 Minting Test
 

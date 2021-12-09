@@ -5,17 +5,6 @@ import flow_sdk_api from '@onflow/sdk'
 
 
 
-let artist_authority_storage_path = 'ponsArtistAuthority'
-let collection_storage_path = 'ponsCollection'
-let listing_certificate_collection_storage_path = 'listingCertificateCollection' 
-let minter_storage_path = 'ponsMinter'
-let minter_private_path = 'ponsMinter'
-
-
-
-let minimum_minting_price = '1.0'
-let primary_commission_ratio_amount = '0.2'
-let secondary_commission_ratio_amount = '0.1'
 
 
 
@@ -84,9 +73,6 @@ let pons_artist_id_of_names =
 
 
 export { flow_sdk_api }
-
-export { artist_authority_storage_path, collection_storage_path, minter_storage_path, minter_private_path, listing_certificate_collection_storage_path }
-export { minimum_minting_price, primary_commission_ratio_amount, secondary_commission_ratio_amount }
 
 export { access_node_origin }
 

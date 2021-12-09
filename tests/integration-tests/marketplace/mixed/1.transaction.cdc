@@ -1,6 +1,5 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
-import PonsArtistContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
@@ -67,6 +66,6 @@ transaction
 
 		TestUtils .testInfo ("Market address", ponsAccount .address .toString ())
 
-		TestUtils .testInfo ("Artist address", PonsArtistContract .getAddress (PonsNftContract .borrowArtist (PonsNftMarketContract .borrowNft (nftId: firstNftId) !)) !.toString ())
+		TestUtils .testInfo ("Artist address", PonsNftContract .getArtistAddress (PonsNftContract .borrowArtist (PonsNftMarketContract .borrowNft (nftId: firstNftId) !)) !.toString ())
 
 		} }

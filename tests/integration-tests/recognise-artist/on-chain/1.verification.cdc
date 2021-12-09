@@ -1,4 +1,4 @@
-import PonsArtistContract from 0xPONS
+import PonsNftContract from 0xPONS
 
 /*
 	Recognise On-chain Artist Test
@@ -18,11 +18,11 @@ pub fun main
 	// Verifies that the test completed successfully with no failed assertions, and produces a summary of the recorded artist's information for verification
 
 	if transactionSuccess {
-		let ponsArtistRef = PonsArtistContract .borrowArtist (ponsArtistId: ponsArtistId)
+		let ponsArtistRef = PonsNftContract .borrowArtistById (ponsArtistId: ponsArtistId)
 
-		let addressOptional = PonsArtistContract .getAddress (ponsArtistRef)
-		let metadata = PonsArtistContract .getMetadata (ponsArtistRef)
-		let receivePaymentCap = PonsArtistContract .getReceivePaymentCap (ponsArtistRef)
+		let addressOptional = PonsNftContract .getArtistAddress (ponsArtistRef)
+		let metadata = PonsNftContract .getArtistMetadata (ponsArtistRef)
+		let receivePaymentCap = PonsNftContract .getArtistReceivePaymentCap (ponsArtistRef)
 
 
 		return {

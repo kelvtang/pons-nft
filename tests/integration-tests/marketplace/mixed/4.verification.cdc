@@ -1,4 +1,3 @@
-import PonsArtistContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
 
 import TestUtils from 0xPONS

@@ -50,7 +50,6 @@ The PonsListingCertificate resource represents a listing or minting of a PonsNft
 The directory consists of the contracts that form the Pons NFT marketplace:
 
 - PonsUtils.cdc
-- PonsArtist.cdc
 - PonsCertification.cdc
 - PonsNftInterface.cdc
 - PonsNft.cdc
@@ -78,13 +77,6 @@ The `normaliseCollection()` function is provided for users to normalise their NF
 
 This contract declares the PonsCertification resource.
 
-## PonsArtist
-
-This contract declares the PonsArtist, PonsArtistCertificate, and PonsArtistAuthority resources. 
-
-### `borrowArtist()`, `getAddress()`, `getMetadata()`, `getReceivePaymentCap()`
-These functions are provided for anyone to browse details about Pons artists. 
-
 ## PonsNftInterface
 
 This contract is the contract interface for PonsNfts, declaring the resource interfaces for PonsNft and PonsCollection. Contracts which implement both the PonsNftInterface and NonFungibleToken interfaces require a NFT resource type which implements PonsNft, and a Collection type which implements PonsCollection, in addition to the requirements from the NonFungibleToken interface.
@@ -92,6 +84,8 @@ This contract is the contract interface for PonsNfts, declaring the resource int
 As a contract interface, this cannot be merged with the concrete PonsNft contract implementations.
 
 ## PonsNft
+
+This contract declares the PonsArtist, PonsArtistCertificate, and PonsArtistAuthority resources. 
 
 ### `CollectionStoragePath`
 CollectionStoragePath specifies the standard storage path of the PonsCollection of an account.
@@ -103,6 +97,9 @@ These functions are provided for anyone to browse details about PonsNfts.
 This function provides a mechanism for PonsNfts to be automatically updated when the contract is changed. PonsNfts are automatically updated when a PonsNft is accessed.
 
 Updates to the PonsNft mechanisms can be done by the Pons account via an implementation of the resource interface `PonsNftContractImplementation`.
+
+### `borrowArtistById()`, `getArtistMetadata()`, `getArtistAddress()`, `getArtistReceivePaymentCap()`
+These functions are provided for anyone to browse details about Pons artists. 
 
 ## PonsNftMarket
 
