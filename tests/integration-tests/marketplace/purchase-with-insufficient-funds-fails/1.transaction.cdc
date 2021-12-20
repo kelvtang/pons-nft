@@ -5,6 +5,7 @@ import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 
 import TestUtils from 0xPONS
+import PonsUsage from 0xPONS
 
 /*
 	Purchase with Insufficient Funds Fails Test
@@ -37,7 +38,7 @@ transaction
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 
 		let nftIds =
-			PonsNftMarketContract .mintForSale (
+			PonsUsage .mintForSale (
 				minter: artistAccount,
 				metadata: metadata,
 				quantity: 1,
@@ -63,7 +64,7 @@ transaction
 			patronAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 				.withdraw (amount: PonsNftMarketContract .getPrice (nftId: firstNftId) !.flowAmount * 0.99)
 
-		PonsNftMarketContract .purchaseUsingVault (
+		PonsUsage .purchaseUsingVault (
 			patron: patronAccount,
 			nftId: firstNftId,
 			<- insufficientFundsVault )

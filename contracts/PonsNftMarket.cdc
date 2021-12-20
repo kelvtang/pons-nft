@@ -46,6 +46,8 @@ pub contract PonsNftMarketContract {
 		emit PonsNFTUnlisted (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
 	access(account) fun emitPonsNFTSold (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
 		emit PonsNFTSold (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+	access(account) fun emitPonsNFTOwns (owner : Address, nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
+		emit PonsNFTOwns (owner: owner, nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
 
 
 
@@ -143,6 +145,9 @@ pub contract PonsNftMarketContract {
 		destroy () {
 			destroy self .listingCertificates } }
 
+	pub fun createPonsListingCertificateCollection () : @PonsListingCertificateCollection {
+		return <- create PonsListingCertificateCollection () }
+
 	/* Checks whether all the listing certificates provided belong to the market */
 //	pub fun certificatesOwnedByMarket (_ listingCertificatesRef : &[{PonsListingCertificate}]) : Bool {
 //		var index = 0
@@ -170,195 +175,6 @@ pub contract PonsNftMarketContract {
 	/* API to borrow the active Pons market instance */
 	pub fun borrowPonsMarket () : &{PonsNftMarket} {
 		return & self .ponsMarket as &{PonsNftMarket} }
-
-
-
-
-	/* Convenience API for Pons artists to mint new NFTs for sale */
-	pub fun mintForSale
-	( minter : AuthAccount
-	, metadata : {String: String}
-	, quantity : Int
-	, basePrice : PonsUtils.FlowUnits
-	, incrementalPrice : PonsUtils.FlowUnits
-	, _ royaltyRatio : PonsUtils.Ratio
-	) : [String] {
-		// Obtain the minter's Capability to receive Flow tokens
-		var receivePaymentCap = PonsUtils .prepareFlowCapability (account: minter)
-
-		// Obtain an artist certificate of the minter
-		var artistCertificate <- PonsNftContract .makePonsArtistCertificateDirectly (artist: minter)
-		// Mint and list the specified NFT on the active Pons market, producing some listing certificates
-		var listingCertificates <-
-			PonsNftMarketContract .ponsMarket .mintForSale (
-				& artistCertificate as &PonsNftContract.PonsArtistCertificate,
-				metadata: metadata,
-				quantity: quantity,
-				basePrice: basePrice,
-				incrementalPrice: incrementalPrice,
-				royaltyRatio,
-				receivePaymentCap )
-
-		// Iterate over the obtained listing certificates to produce the nftIds of the newly minted NFTs
-		let nftIds : [String] = []
-		var nftIndex = 0
-		while nftIndex < listingCertificates .length {
-			nftIds .append (listingCertificates [nftIndex] .nftId)
-			nftIndex = nftIndex + 1 }
-
-		// Dispose of the artist certificate
-		destroy artistCertificate
-		// Deposit the listing certificates in the minter's storage
-		PonsNftMarketContract .depositListingCertificates (minter, <- listingCertificates)
-
-		// Return list of minted nftIds
-		return nftIds }
-
-	/* Convenience API to list owned NFTs on the marketplace for sale */
-	pub fun listForSale (lister : AuthAccount, nftId : String, _ salePrice : PonsUtils.FlowUnits) : Void {
-		pre {
-			PonsNftContract .borrowOwnPonsCollection (collector: lister) .borrowNft (nftId: nftId) != nil:
-				"Pons NFT with this nftId does not belong to your Pons Collection" }
-		// Obtain the minter's Capability to receive Flow tokens
-		var receivePaymentCap = PonsUtils .prepareFlowCapability (account: lister)
-		// Withdraw the specified nft from the lister's Pons collection
-		var nft <- PonsNftContract .borrowOwnPonsCollection (collector: lister) .withdrawNft (nftId: nftId)
-		// List the NFT on the active Pons market for a listing certificate
-		var listingCertificate <- PonsNftMarketContract .ponsMarket .listForSale (<- nft, salePrice, receivePaymentCap)
-		// Deposit the listing certificate in the lister's listing certificate collection
-		PonsNftMarketContract .depositListingCertificate (lister, <- listingCertificate) }
-
-	/* Convenience API to purchase on the marketplace for sale, using a specified Flow token vault */
-	pub fun purchaseUsingVault (patron : AuthAccount, nftId : String, _ purchaseVault : @FungibleToken.Vault) : Void {
-		pre {
-			self .borrowNft (nftId: nftId) != nil:
-				"Pons NFT with this nftId is not available on the market" }
-
-		// Obtain information on the NFT to be purchased
-		let price = PonsNftMarketContract .getPrice (nftId: nftId) !
-		let nftRef = PonsNftMarketContract .borrowNft (nftId: nftId) !
-		let serialNumber = PonsNftContract .getSerialNumber (nftRef)
-		let editionLabel = PonsNftContract .getEditionLabel (nftRef)
-
-		// Purchase the NFT from the active Pons market, using the provided Flow token vault
-		var nft <-
-			PonsNftMarketContract .ponsMarket .purchase (nftId: nftId, <- purchaseVault)
-
-		// Deposit the purchased NFT in the patron's Pons collection
-		PonsNftContract .borrowOwnPonsCollection (collector: patron)
-		.depositNft (<- nft)
-
-		// Emit the Pons NFT ownership event
-		emit PonsNFTOwns (
-			owner: patron .address,
-			nftId: nftId,
-			serialNumber: serialNumber,
-			editionLabel: editionLabel,
-			price : price ) }
-
-	/* Convenience API to purchase on the marketplace for sale, using the account's default Flow token vault */
-	pub fun purchase (patron : AuthAccount, nftId : String) : Void {
-		pre {
-			self .borrowNft (nftId: nftId) != nil:
-				"Pons NFT with this nftId is not available on the market" }
-		// Obtain the Flow token vault of the patron
-		var paymentVault <-
-			patron .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
-				.withdraw (amount: PonsNftMarketContract .getPrice (nftId: nftId) !.flowAmount)
-		// Purchase the specified NFT using the Flow token vault
-		PonsNftMarketContract .purchaseUsingVault (patron: patron, nftId: nftId, <- paymentVault) }
-
-	/* Convenience API to unlist a NFT from marketplace */
-	pub fun unlist (lister : AuthAccount, nftId : String) : Void {
-		// Find the lister's listing certificate for this nftId
-		var listingCertificate <- PonsNftMarketContract .withdrawListingCertificate (lister, nftId: nftId)
-
-		// First, unlist the NFT from the market, giving the listing certificate in return for the NFT
-		// Then, deposit the NFT into the lister's Pons collection
-		PonsNftContract .borrowOwnPonsCollection (collector: lister)
-		.depositNft (
-			<- PonsNftMarketContract .ponsMarket .unlist (<- listingCertificate) ) }
-
-
-
-
-	/* Convenience API to deposit a listing certificate into the account's default listing certificate collection */
-	pub fun depositListingCertificate (_ account : AuthAccount, _ newListingCertificate : @{PonsListingCertificate}) : Void {
-		// Load the existing listing certificate collection of the account, if any
-		var listingCertificateCollectionOptional <-
-			account .load <@PonsListingCertificateCollection>
-				( from: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath )
-
-		if listingCertificateCollectionOptional != nil {
-			// If the account already has a listing certificate collection
-			// Add the new certificate and save the collection
-			var listingCertificateCollection <- listingCertificateCollectionOptional !
-
-			listingCertificateCollection .listingCertificates .append (<- newListingCertificate)
-
-			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) }
-		else {
-			// If the account does not have a listing certificate collection
-			// Create a new listing certificate collection, add the new certificate and save the collection
-			// Destroy the nil to make the resource checker happy
-			destroy listingCertificateCollectionOptional
-			
-			var listingCertificateCollection <- create PonsListingCertificateCollection ()
-
-			listingCertificateCollection .listingCertificates .append (<- newListingCertificate)
-
-			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) } }
-
-	/* Convenience API to deposit listing certificates into the account's default listing certificate collection */
-	pub fun depositListingCertificates (_ account : AuthAccount, _ newListingCertificates : @[{PonsListingCertificate}]) : Void {
-		// Load the existing listing certificate collection of the account, if any
-		var listingCertificateCollectionOptional <-
-			account .load <@PonsListingCertificateCollection>
-				( from: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath )
-
-		if listingCertificateCollectionOptional != nil {
-			// If the account already has a listing certificate collection
-			// Retrieve each new listing certificate and add it to the collection, then save the collection
-			var listingCertificateCollection <- listingCertificateCollectionOptional !
-
-			while newListingCertificates .length > 0 {
-				listingCertificateCollection .listingCertificates .append (<- newListingCertificates .remove (at: 0)) }
-
-			destroy newListingCertificates
-
-			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) }
-		else {
-			// If the account already has a listing certificate collection
-			// Create a new listing certificate collection, retrieve each new listing certificate and add it to the collection, then save the collection
-			// Destroy the nil to make the resource checker happy
-			destroy listingCertificateCollectionOptional
-
-			var listingCertificateCollection <- create PonsListingCertificateCollection ()
-
-			while newListingCertificates .length > 0 {
-				listingCertificateCollection .listingCertificates .append (<- newListingCertificates .remove (at: 0)) }
-
-			destroy newListingCertificates
-
-			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) } }
-
-	/* Convenience API to withdraw listing certificates from the account's default listing certificate collection */
-	pub fun withdrawListingCertificate (_ account : AuthAccount, nftId : String) : @{PonsListingCertificate} {
-		// Load the existing listing certificate collection of the account, which must already exist
-		var listingCertificateCollectionRef = account .borrow <&PonsListingCertificateCollection> (from: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) !
-
-		// We iterate through all listing certificate in the collection, from the end of the collection
-		// Given that we only deposit listing certificates using append, as in the convenience API deposit functions
-		// If multiple listing certificates are present with the same nftId, the last one will be the latest certificate and the previous ones will be invalid
-		var listingCertificateIndex = listingCertificateCollectionRef .listingCertificates .length - 1
-		while listingCertificateIndex >= 0 {
-			// If the NFT has the specified nftId
-			if listingCertificateCollectionRef .listingCertificates [listingCertificateIndex] .nftId == nftId {
-				// If so, retrieve the NFT and return it
-				return <- listingCertificateCollectionRef .listingCertificates .remove (at: listingCertificateIndex) }
-
-			listingCertificateIndex = listingCertificateIndex - 1 }
-		panic ("Pons Listing Certificate for this nftId not found") }
 
 
 

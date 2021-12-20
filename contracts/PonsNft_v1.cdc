@@ -14,9 +14,6 @@ import PonsUtils from 0xPONS
 */
 pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
-	/* Address to the account with this contract */
-	access(account) let PonsNft_v1_Address : Address
-
 	/* Storage path at which the Minter will be stored */
 	access(account) let MinterStoragePath : StoragePath
 
@@ -179,16 +176,14 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			let serialNumber = PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !
 
 			// First, remove the NFT from ownedNFTs
+			var nft <- self .ownedNFTs .remove (key: serialNumber) ! as! @PonsNftContractInterface.NFT
 			// Then, update it
+			var updatedNft <- PonsNftContract .updatePonsNft (<- nft)
 			// Then, insert it back to the same key
+			var nilNft <- self .ownedNFTs .insert (key: serialNumber, <- (updatedNft as! @NonFungibleToken.NFT))
 			// The insert function returns a @NFT? representing the NFT previously at the key, which we just removed the NFT from, so it is nil
 			// Destroy the nil to make the resource checker happy
-			destroy self .ownedNFTs .insert (
-				key: serialNumber,
-				<- (
-					PonsNftContract .updatePonsNft (
-						<- (self .ownedNFTs .remove (key: serialNumber) ! as! @PonsNftContractInterface.NFT)
-						) as! @NonFungibleToken.NFT ) )
+			destroy nilNft
 
 			// Get a reference to the NFT at the corresponding serialNumber, and cast it to the return type
 			let nftRef = & self .ownedNFTs [serialNumber] as auth &NonFungibleToken.NFT
@@ -221,16 +216,14 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			let serialNumber = id
 
 			// First, remove the NFT from ownedNFTs
+			var nft <- self .ownedNFTs .remove (key: serialNumber) ! as! @PonsNftContractInterface.NFT
 			// Then, update it
+			var updatedNft <- PonsNftContract .updatePonsNft (<- nft)
 			// Then, insert it back to the same key
+			var nilNft <- self .ownedNFTs .insert (key: serialNumber, <- (updatedNft as! @NonFungibleToken.NFT))
 			// The insert function returns a @NFT? representing the NFT previously at the key, which we just removed the NFT from, so it is nil
 			// Destroy the nil to make the resource checker happy
-			destroy self .ownedNFTs .insert (
-				key: serialNumber,
-				<- (
-					PonsNftContract .updatePonsNft (
-						<- (self .ownedNFTs .remove (key: serialNumber) ! as! @PonsNftContractInterface.NFT)
-						) as! @NonFungibleToken.NFT ) )
+			destroy nilNft
 
 			// Get a reference to the NFT at the corresponding serialNumber, and cast it to the return type
 			let nftRef = & self .ownedNFTs [serialNumber] as &NonFungibleToken.NFT
@@ -244,7 +237,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 		destroy () {
 			// Discourage the manipulation of Pons collections for purposes other than storage of Pons NFTs
-			if self .owner ?.address != PonsNftContract_v1 .PonsNft_v1_Address {
+			if self .owner ?.address != PonsNftContract_v1 .account .address {
 				panic ("Pons Collections cannot be destroyed") }
 
 			destroy self .ponsCertification
@@ -347,8 +340,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 	
 
 	init () {
-		// Save the account address and minter storage path
-		self .PonsNft_v1_Address = self .account .address
+		// Save the minter storage path
 		self .MinterStoragePath = /storage/ponsMinter
 
 		self .totalSupply = 0

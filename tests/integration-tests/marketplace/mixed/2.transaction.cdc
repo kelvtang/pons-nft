@@ -3,6 +3,7 @@ import PonsUtils from 0xPONS
 import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
+import PonsUsage from 0xPONS
 
 import TestUtils from 0xPONS
 
@@ -30,8 +31,9 @@ transaction
 		let artistAddressString = testInfo ["Artist address"] !
 		let marketAddressString = testInfo ["Market address"] !
 
-		PonsNftMarketContract .purchase (
+		PonsUsage .purchase (
 			patron: patronAccount,
-			nftId: firstNftId )
+			nftId: firstNftId,
+			priceLimit: nil )
 
 		} }

@@ -5,6 +5,7 @@ import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 
 import TestUtils from 0xPONS
+import PonsUsage from 0xPONS
 
 /*
 	Minter v1 Minting Test
@@ -32,7 +33,7 @@ transaction
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 		let minterRef = ponsAccount .borrow <&PonsNftContract_v1.NftMinter_v1> (from: minterStoragePath) !
 
-		var artistCertificate <- PonsNftContract .makePonsArtistCertificateDirectly (artist: artistAccount)
+		var artistCertificate <- PonsUsage .makePonsArtistCertificateDirectly (artist: artistAccount)
 
 		minterRef .refillMintIds (mintIds: [ mintId ])
 

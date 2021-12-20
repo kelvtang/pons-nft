@@ -115,35 +115,6 @@ pub contract PonsNftContract {
 
 
 
-	/* API to ensure an account has a PonsCollection, creating one if it does not exist */
-	pub fun acquirePonsCollection (collector : AuthAccount) : Void {
-		var collectionOptional <-
-			collector .load <@PonsNftContractInterface.Collection>
-				( from: PonsNftContract .CollectionStoragePath )
-
-		if collectionOptional == nil {
-			destroy collectionOptional
-			collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) }
-		else {
-			collector .save (<- collectionOptional !, to: PonsNftContract .CollectionStoragePath) } }
-
-	/* API to borrow a PonsCollection from an account, creating one if it does not exist */
-	pub fun borrowOwnPonsCollection (collector : AuthAccount) : &PonsNftContractInterface.Collection {
-		PonsNftContract .acquirePonsCollection (collector: collector)
-
-		return collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) ! }
-
-	/* API to borrow a Pons NFT from an account */
-	pub fun borrowOwnPonsNft (collector : AuthAccount, nftId : String) : &PonsNftContractInterface.NFT {
-		var collectionRef =
-			collector .borrow <&PonsNftContractInterface.Collection>
-				( from: PonsNftContract .CollectionStoragePath ) !
-		return collectionRef .borrowNft (nftId: nftId) }
-
-
-
-
-
 	/* API to produce an updated Pons NFT from any Pons NFT, so that the Pons contracts can perform any contract updates in a controlled, future-proof manner */
 	pub fun updatePonsNft (_ ponsNft : @PonsNftContractInterface.NFT) : @PonsNftContractInterface.NFT {
 		return <- PonsNftContract .implementation .updatePonsNft (<- ponsNft) }
@@ -252,7 +223,6 @@ pub contract PonsNftContract {
 
 
 
-
 	/* Create a PonsArtistCertificate authorisation resource, given his Pons Collection as proof of his identity */
 	pub fun makePonsArtistCertificate (_ artistPonsCollectionRef : &PonsNftContractInterface.Collection) : @PonsArtistCertificate {
 		pre {
@@ -263,12 +233,6 @@ pub contract PonsNftContract {
 		let ponsArtistId = PonsNftContract .ponsArtistIds [artistPonsCollectionRef .owner! .address] !
 		return <- create PonsArtistCertificate (ponsArtistId: ponsArtistId) }
 
-	/* Convenience API to create a PonsArtistCertificate authorisation resource */
-	pub fun makePonsArtistCertificateDirectly (artist : AuthAccount) : @PonsArtistCertificate {
-		PonsNftContract .acquirePonsCollection (collector: artist)
-
-		let ponsCollectionRef = PonsNftContract .borrowOwnPonsCollection (collector : artist)
-		return <- PonsNftContract .makePonsArtistCertificate (ponsCollectionRef) }
 
 
 /* 

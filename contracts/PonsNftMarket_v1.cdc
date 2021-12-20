@@ -1,4 +1,5 @@
 import FungibleToken from 0xFUNGIBLETOKEN
+import FlowToken from 0xFLOWTOKEN
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
@@ -183,6 +184,9 @@ pub contract PonsNftMarketContract_v1 {
 			var nft <- self .collection .withdrawNft (nftId: nftId)
 			let nftRef = & nft as &PonsNftContractInterface.NFT
 
+			// Record the owner of the paying Vault if any, to identify the new owner of the NFT
+			let vaultOwnerAddress = purchaseVault .owner ?.address
+
 			// Check whether the purchase is an original sale or resale, and calculate commissions and royalties accordingly
 			let primarySale = (self .listingCounts [nftId] == 0)
 			let royalties =
@@ -228,6 +232,14 @@ pub contract PonsNftMarketContract_v1 {
 				serialNumber: PonsNftContract .getSerialNumber (nftRef),
 				editionLabel: PonsNftContract .getEditionLabel (nftRef),
 				price: purchasePrice )
+			// If the purchasing account is known, emit the Pons NFT ownership event
+			if vaultOwnerAddress != nil {
+				PonsNftMarketContract .emitPonsNFTOwns (
+					owner: vaultOwnerAddress !,
+					nftId: nftId,
+					serialNumber: PonsNftContract .getSerialNumber (nftRef),
+					editionLabel: PonsNftContract .getEditionLabel (nftRef),
+					price: purchasePrice ) }
 
 			return <- nft }
 
@@ -301,9 +313,28 @@ pub contract PonsNftMarketContract_v1 {
 
 	
 	init () {
+		let account = self .account
+
+		if account .borrow <&FlowToken.Vault> (from: /storage/flowTokenVault) == nil {
+			account .save (<- FlowToken .createEmptyVault (), to: /storage/flowTokenVault) }
+
+		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Receiver}> (/public/flowTokenReceiver) .check () {
+			account .link <&FlowToken.Vault{FungibleToken.Receiver}> (
+				/public/flowTokenReceiver,
+				target: /storage/flowTokenVault ) }
+
+		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Balance}> (/public/flowTokenBalance) .check () {
+			// Create a public capability to the Vault that only exposes
+			// the balance field through the Balance interface
+			account .link <&FlowToken.Vault{FungibleToken.Balance}> (
+				/public/flowTokenBalance,
+				target: /storage/flowTokenVault ) }
+
+		let marketReceivePaymentCap = account .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenReceiver)
+
 		var ponsMarketV1 <-
 			create PonsNftMarket_v1
-				( marketReceivePaymentCap: PonsUtils .prepareFlowCapability (account: self .account)
+				( marketReceivePaymentCap: marketReceivePaymentCap
 				, minimumMintingPrice: PonsUtils.FlowUnits (1.0)
 				, primaryCommissionRatio: PonsUtils.Ratio (0.2)
 				, secondaryCommissionRatio: PonsUtils.Ratio (0.1) )

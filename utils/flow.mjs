@@ -1,5 +1,6 @@
 import * as fs from 'fs'
-import { readFile, access } from 'fs/promises'
+import * as path from 'path'
+import { readFile, writeFile, access, mkdir } from 'fs/promises'
 import { URL } from 'url'
 import flow_types from '@onflow/types'
 import test from 'tape'
@@ -17,6 +18,16 @@ var file_exists_ = async _path => {
 	return access (_path, fs .constants .F_OK)
 		.then (_ => true)
 		.catch (_ => false) }
+
+var write_file_ = _path => async _string => {
+	try {
+		;await writeFile (_path, _string) }
+	catch (_exception) {
+		if (_exception .code === 'ENOENT') {
+			;await mkdir (path .dirname (_path), { recursive: true })
+			;await writeFile (_path, _string) }
+		else {
+			;throw (_exception) } } }
 
 
 
@@ -96,6 +107,26 @@ var make_known_ad_hoc_account_ = async _named_address => {
 	;private_keys_of_names [_named_address] = [ _private_key ] }
 
 
+
+var generate_deployment_contract_from_ = _base_path => _deployment_path => async _file_name => {
+	var _cadence_code = await readFile (_base_path + '/' + _file_name + '.cdc', 'utf8')
+	var _deployed_cadence_code =
+		substitute_addresses_
+			( address_of_names )
+			( _cadence_code )
+	;await write_file_ (_deployment_path + '/' + _file_name + '.cdc') (_deployed_cadence_code) }
+
+
+var send_proposed_transaction_ = _authorizer_names => _transaction_code => async _flow_arguments => {
+	return await
+		send_transaction_
+		( known_account_ ('0xPROPOSER') )
+		( known_account_ ('0xPROPOSER') )
+		( _authorizer_names .map (known_account_) )
+		( substitute_addresses_
+			( address_of_names )
+			( _transaction_code ) )
+		( [ ... _flow_arguments ] ) }
 
 
 
@@ -244,6 +275,8 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 
 
 export { cadencify_object_, substitute_addresses_ }
+export { generate_deployment_contract_from_ }
+export { send_proposed_transaction_ }
 export { known_account_, make_known_ad_hoc_account_ }
 export { deploy_known_contract_from_ }
 export { run_known_test_from_ }

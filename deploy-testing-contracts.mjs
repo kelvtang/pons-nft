@@ -5,3 +5,4 @@ var deploy_known_contract_ = deploy_known_contract_from_ (__dirname + '/testing-
 
 
 ;await deploy_known_contract_ ('TestUtils') ([])
+;await deploy_known_contract_ ('PonsUsage') ([])

@@ -49,25 +49,6 @@ pub contract PonsUtils {
 		let flowAmount2 = flowUnits2 .flowAmount
 		return FlowUnits (flowAmount: flowAmount1 + flowAmount2) }
 
-	/* Creates Flow Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send Flow tokens to the account */
-	pub fun prepareFlowCapability (account : AuthAccount) : Capability<&{FungibleToken.Receiver}> {
-		if account .borrow <&FlowToken.Vault> (from: /storage/flowTokenVault) == nil {
-			account .save (<- FlowToken .createEmptyVault (), to: /storage/flowTokenVault) }
-
-		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Receiver}> (/public/flowTokenReceiver) .check () {
-			account .link <&FlowToken.Vault{FungibleToken.Receiver}> (
-				/public/flowTokenReceiver,
-				target: /storage/flowTokenVault ) }
-
-		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Balance}> (/public/flowTokenBalance) .check () {
-			// Create a public capability to the Vault that only exposes
-			// the balance field through the Balance interface
-			account .link <&FlowToken.Vault{FungibleToken.Balance}> (
-				/public/flowTokenBalance,
-				target: /storage/flowTokenVault ) }
-
-		return account .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenReceiver) }
-
 	/* Ensures that the NFTs in a NFT Collection are stored at the correct keys */
 	pub fun normaliseCollection (_ nftCollection : &NonFungibleToken.Collection) : Void {
 		post {

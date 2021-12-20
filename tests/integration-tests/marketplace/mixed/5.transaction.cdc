@@ -4,6 +4,7 @@ import PonsNftMarketContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 
 import TestUtils from 0xPONS
+import PonsUsage from 0xPONS
 
 transaction 
 ( minterStoragePath : StoragePath
@@ -27,8 +28,9 @@ transaction
 
 		let firstNftId = testInfo ["First NFT nftId"] !
 
-		PonsNftMarketContract .purchase (
+		PonsUsage .purchase (
 			patron: randomAccount,
-			nftId: firstNftId )
+			nftId: firstNftId,
+			priceLimit: nil )
 
 		} }

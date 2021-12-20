@@ -6,6 +6,7 @@ import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 
 import TestUtils from 0xPONS
+import PonsUsage from 0xPONS
 
 
 /*
@@ -43,7 +44,7 @@ transaction
 		TestUtils .log ("Mint NFTs")
 
 		let nftIds =
-			PonsNftMarketContract .mintForSale (
+			PonsUsage .mintForSale (
 				minter: artistAccount,
 				metadata: metadata,
 				quantity: quantity,
@@ -62,9 +63,10 @@ transaction
 
 		var nftIndex = 0
 		while nftIndex < quantity {
-			PonsNftMarketContract .purchase (
+			PonsUsage .purchase (
 				patron: randomAccount,
-				nftId: nftIds [nftIndex] )
+				nftId: nftIds [nftIndex],
+				priceLimit: nil )
 			nftIndex = nftIndex + 1 }
 
 
@@ -79,7 +81,7 @@ transaction
 		var precheckIndex = 0
 
 		while precheckIndex < quantity {
-			let nftRef = PonsNftContract .borrowOwnPonsNft (collector: randomAccount, nftId: nftIds[precheckIndex])
+			let nftRef = PonsUsage .borrowOwnPonsNft (collector: randomAccount, nftId: nftIds[precheckIndex])
 			let serialNumber = PonsNftContract .getSerialNumber (nftRef)
 
 			serialNumbers .append (serialNumber)

@@ -3,6 +3,7 @@ import PonsUtils from 0xPONS
 import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
+import PonsUsage from 0xPONS
 
 import TestUtils from 0xPONS
 
@@ -37,7 +38,7 @@ transaction
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 
 		let nftIds =
-			PonsNftMarketContract .mintForSale (
+			PonsUsage .mintForSale (
 				minter: artistAccount,
 				metadata: metadata,
 				quantity: 1,
@@ -64,17 +65,19 @@ transaction
 
 		TestUtils .testInfo ("Artist address", PonsNftContract .getArtistAddress (PonsNftContract .borrowArtist (PonsNftMarketContract .borrowNft (nftId: firstNftId) !)) !.toString ())
 
-		PonsNftMarketContract .purchase (
+		PonsUsage .purchase (
 			patron: patronAccount,
-			nftId: firstNftId )
+			nftId: firstNftId,
+			priceLimit: nil )
 
-		PonsNftMarketContract .listForSale (
+		PonsUsage .listForSale (
 			lister: patronAccount,
 			nftId: firstNftId,
 			PonsUtils.FlowUnits (2000.0) )
 
-		PonsNftMarketContract .purchase (
+		PonsUsage .purchase (
 			patron: randomAccount,
-			nftId: firstNftId )
+			nftId: firstNftId,
+			priceLimit: nil )
 
 		} }
