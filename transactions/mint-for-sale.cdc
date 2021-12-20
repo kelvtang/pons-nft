@@ -5,6 +5,7 @@ import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
 
+/* Mint new NFTs for sale */
 transaction 
 ( metadata : {String: String}
 , quantity : Int

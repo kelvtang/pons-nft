@@ -136,7 +136,12 @@ pub contract PonsNftMarketContract_v1 {
 		/* List a Pons NFT on the marketplace for sale */
 		pub fun listForSale (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsNftMarketContract.PonsListingCertificate} {
 			// Record the previous owner of the NFT
-			let ownerAddress = nft .owner !.address
+			// let ownerAddress = nft .owner !.address
+
+			// Flow implementation seems to be inconsistent regarding owners of nested resources
+			// https://github.com/onflow/cadence/issues/1320
+			// As a temporary workaround, assume the receivePaymentCap points to a vault with the lister as owner
+			let ownerAddress = receivePaymentCap .borrow () !.owner !.address
 
 			let nftId = nft .nftId
 			let nftRef = & nft as &PonsNftContractInterface.NFT

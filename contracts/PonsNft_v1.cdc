@@ -353,10 +353,10 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		self .ponsNftMetadatas = {}
 
 		// Save a NFT v1 Minter to the specified storage path
-        	self .account .save (<- create NftMinter_v1 (), to: /storage/ponsMinter)
+        	self .account .save (<- create NftMinter_v1 (), to: self .MinterStoragePath)
 
 		// Create and save a capability to the minter for convenience
-		self .MinterCapability = self .account .link <&NftMinter_v1> (/private/ponsMinter, target: /storage/ponsMinter) !
+		self .MinterCapability = self .account .link <&NftMinter_v1> (/private/ponsMinter, target: self .MinterStoragePath) !
 
 		// Activate PonsNftContractImplementation_v1 as the active implementation of the Pons NFT system
 		PonsNftContract .update (<- create PonsNftContractImplementation_v1 ())

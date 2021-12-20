@@ -5,6 +5,7 @@ import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
 
+/* Purchase a NFT from the marketplace, using the account's default Flow token vault */
 transaction
 ( nftId : String
 , priceLimit : PonsUtils.FlowUnits?

@@ -5,6 +5,7 @@ import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
 
+/* List an owned NFT on the marketplace for sale */
 transaction 
 ( nftId : String
 , _ salePrice : PonsUtils.FlowUnits

@@ -97,10 +97,13 @@ pub contract PonsNftMarketContract {
 					"Failed to mint NFTs for sale" } */ }
 
 		/* List a Pons NFT on the marketplace for sale */
-		pub fun listForSale (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} {
+		pub fun listForSale (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} /*{
+			// WORKAROUND -- ignore
+			// Flow implementation seems to be inconsistent regarding owners of nested resources
+			// https://github.com/onflow/cadence/issues/1320
 			post {
 				result .listerAddress == before (nft .owner !.address):
-					"Failed to list this Pons NFT" } }
+					"Failed to list this Pons NFT" } }*/
 
 		/* Purchase a Pons NFT from the marketplace */
 		pub fun purchase (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
@@ -118,8 +121,14 @@ pub contract PonsNftMarketContract {
 		/* Unlist a Pons NFT from the marketplace */
 		pub fun unlist (_ ponsListingCertificate : @{PonsListingCertificate}) : @PonsNftContractInterface.NFT {
 			pre {
+				// WORKAROUND -- ignore
+				/*
+				// Flow implementation seems to be inconsistent regarding owners of nested resources
+				// https://github.com/onflow/cadence/issues/1320
+				// For the moment, allow all listing certificate holders redeem...
 				ponsListingCertificate .listerAddress == ponsListingCertificate .owner !.address:
 					"Only the lister can redeem his Pons NFT"
+				*/
 				self .borrowNft (nftId: ponsListingCertificate .nftId) != nil:
 					"This Pons NFT is not on the market anymore" } } }
 /*

@@ -49,28 +49,30 @@ pub contract PonsUtils {
 		let flowAmount2 = flowUnits2 .flowAmount
 		return FlowUnits (flowAmount: flowAmount1 + flowAmount2) }
 
-	/* Ensures that the NFTs in a NFT Collection are stored at the correct keys */
-	pub fun normaliseCollection (_ nftCollection : &NonFungibleToken.Collection) : Void {
-		post {
-			nftCollection .ownedNFTs .keys .length == before (nftCollection .ownedNFTs .keys .length):
-				"Size of NFT collection changed" }
-
-		for id in nftCollection .ownedNFTs .keys {
-			PonsUtils .normaliseId (nftCollection, id: id) } }
-
-	/* Ensures that the NFT in a NFT Collection stored at a certain key occupies the key corresponding to its NFT id */
-	priv fun normaliseId (_ nftCollection : &NonFungibleToken.Collection, id : UInt64) : Void {
-		var nftOptional <- nftCollection .ownedNFTs .remove (key: id)
-
-		if nftOptional == nil {
-			destroy nftOptional }
-		else {
-			var nft <- nftOptional !
-
-			if nft .id != id {
-				PonsUtils .normaliseId (nftCollection, id: nft .id) }
-
-			var nftBin <- nftCollection .ownedNFTs .insert (key: nft .id, <- nft)
-			assert (nftBin == nil, message: "Failed to normalise NFT collection")
-			destroy nftBin } }
+// WORKAROUND -- ignore
+// For some inexplicable reason Flow is not recognising `&PonsNftContract_v1.Collection` as `&NonFungibleToken.Collection`
+//	/* Ensures that the NFTs in a NFT Collection are stored at the correct keys */
+//	pub fun normaliseCollection (_ nftCollection : &NonFungibleToken.Collection) : Void {
+//		post {
+//			nftCollection .ownedNFTs .keys .length == before (nftCollection .ownedNFTs .keys .length):
+//				"Size of NFT collection changed" }
+//
+//		for id in nftCollection .ownedNFTs .keys {
+//			PonsUtils .normaliseId (nftCollection, id: id) } }
+//
+//	/* Ensures that the NFT in a NFT Collection stored at a certain key occupies the key corresponding to its NFT id */
+//	priv fun normaliseId (_ nftCollection : &NonFungibleToken.Collection, id : UInt64) : Void {
+//		var nftOptional <- nftCollection .ownedNFTs .remove (key: id)
+//
+//		if nftOptional == nil {
+//			destroy nftOptional }
+//		else {
+//			var nft <- nftOptional !
+//
+//			if nft .id != id {
+//				PonsUtils .normaliseId (nftCollection, id: nft .id) }
+//
+//			var nftBin <- nftCollection .ownedNFTs .insert (key: nft .id, <- nft)
+//			assert (nftBin == nil, message: "Failed to normalise NFT collection")
+//			destroy nftBin } }
 	}

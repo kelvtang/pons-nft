@@ -142,6 +142,24 @@ var deploy_proposed_contract_ = _cadence_code => async _flow_arguments => {
 			( _flow_arguments ) }
 
 
+var send_known_transaction_ = _base_path => _file_name => _authorizer_names => async _flow_arguments => {
+	var _cadence_code = await readFile (_base_path + '/' + _file_name + '.cdc', 'utf8')
+	return await
+		send_proposed_transaction_
+		( _authorizer_names )
+		( substitute_addresses_
+			( address_of_names )
+			( _cadence_code ) )
+		( [ ... _flow_arguments ] ) }
+
+var execute_known_script_ = _base_path => _file_name => async _flow_arguments => {
+	var _cadence_code = await readFile (_base_path + '/' + _file_name + '.cdc', 'utf8')
+	return await
+		execute_script_
+		( substitute_addresses_
+			( address_of_names )
+			( _cadence_code ) )
+		( [ ... _flow_arguments ] ) }
 
 var deploy_known_contract_from_ = _base_path => _file_name => async _flow_arguments => {
 	;test ('deploy ' + _file_name, async _test => {
@@ -159,6 +177,9 @@ var deploy_known_contract_from_ = _base_path => _file_name => async _flow_argume
 var run_known_test_from_ = _base_path => _test_name => _authorizer_names => async _flow_arguments => {
 	;test (_test_name, async _test => {
 		var _test_path = _base_path + '/' + _test_name
+
+		var send_test_transaction_ = send_known_transaction_ (_test_path)
+		var execute_test_script_ = execute_known_script_ (_test_path)
 
 		var _step_count = 0
 		var _last_transaction_arguments = []
@@ -179,22 +200,17 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 		for (var _step = 1; _step < _step_count; _step ++) {
 			;(_step => {
 				;_test .test ('step ' + _step, async _test => {
-					var _transaction_path = _test_path + '/' + _step + '.transaction.cdc'
-					var _verification_path = _test_path + '/' + _step + '.verification.cdc'
+					var _transaction_name = _step + '.transaction'
+					var _verification_name = _step + '.verification'
 
-					var _transaction_exists = await file_exists_ (_transaction_path)
+					var _transaction_exists = await file_exists_ (_test_path + '/' + _transaction_name + '.cdc')
 					if (_transaction_exists) {
-						var _transaction_code = await readFile (_transaction_path, 'utf8')
 						try {
 							var _transaction_response =
 								await
-								send_transaction_
-									( known_account_ ('0xPROPOSER') )
-									( known_account_ ('0xPROPOSER') )
-									( _authorizer_names .map (known_account_) )
-									( substitute_addresses_
-										( address_of_names )
-										( _transaction_code ) )
+								send_test_transaction_
+									( _transaction_name )
+									( _authorizer_names )
 									( [ ... _flow_arguments, ... _last_transaction_arguments ] ) }
 						catch (_exception) {
 							var _transaction_response =
@@ -244,14 +260,11 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 								: [ flow_sdk_api .arg (cadencify_object_ (_test_info), flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String })) ] ) ] }
 
 					try {
-						var _verification_code = await readFile (_verification_path, 'utf8')
 						var _verification_response =
 							await
-							execute_script_
-								( substitute_addresses_
-									( address_of_names )
-									( _verification_code ) )
-								( [ ... _flow_arguments, ... _last_transaction_arguments ] ) }
+							execute_test_script_
+							( _verification_name )
+							( [ ... _flow_arguments, ... _last_transaction_arguments ] ) }
 					catch (_exception) {
 						if (_transaction_exists) {
 							;_test .comment (JSON .stringify ({ transaction: _transaction_response })) }
@@ -278,5 +291,5 @@ export { cadencify_object_, substitute_addresses_ }
 export { generate_deployment_contract_from_ }
 export { send_proposed_transaction_ }
 export { known_account_, make_known_ad_hoc_account_ }
-export { deploy_known_contract_from_ }
+export { send_known_transaction_, execute_known_script_, deploy_known_contract_from_ }
 export { run_known_test_from_ }

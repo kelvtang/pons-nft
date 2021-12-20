@@ -1,7 +1,7 @@
 pub contract TestUtils {
 
 	pub resource TestResource {}
-	pub resource TestNestedResource {
+	pub resource TestNestingResource {
 		pub let testResources : @[TestResource]
 
 		init () {
@@ -10,8 +10,8 @@ pub contract TestUtils {
 			destroy self .testResources } }
 	pub fun makeTestResource () : @TestResource {
 		return <- create TestResource () }
-	pub fun makeTestNestedResource () : @TestNestedResource {
-		return <- create TestNestedResource () }
+	pub fun makeTestNestingResource () : @TestNestingResource {
+		return <- create TestNestingResource () }
 
 	pub event Log (info : String)
 

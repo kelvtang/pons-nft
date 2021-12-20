@@ -2,6 +2,7 @@ import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
 
+/* Unlist a NFT from marketplace */
 transaction
 ( nftId : String
 ) {
