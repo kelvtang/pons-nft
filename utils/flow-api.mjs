@@ -137,6 +137,26 @@ transaction (name : String, code : String ${_arguments_declaration_code}) {
 		, flow_sdk_api .arg (_contract_code_hex, flow_types .String)
 		, ... _arguments ] ) }
 
+var update_contract_ = _authorizer => async _contract_code => {
+	var _contract_code_hex = Buffer .from (_contract_code, 'utf8') .toString ('hex')
+
+	var _contract_name = _contract_code .replace (/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '') .match (/contract\s+(?:interface\s+)?\b(\S+)\b/) [1]
+
+	return await
+		send_transaction_
+		( _authorizer )
+		( _authorizer )
+		( [ _authorizer ] )
+		( `
+transaction (name : String, code : String) {
+	prepare (account : AuthAccount) {
+		account .contracts .update__experimental (
+			name: name,
+			code: code .decodeHex () ) } }
+		` )
+		(
+		[ flow_sdk_api .arg (_contract_name, flow_types .String)
+		, flow_sdk_api .arg (_contract_code_hex, flow_types .String) ] ) }
 
 var create_account_ = _authorizer => async _public_key => {
 	return await
@@ -166,4 +186,4 @@ transaction (publicKey : String) {
 
 
 export { authorizer_ }
-export { send_transaction_, execute_script_, deploy_contract_, create_account_ }
+export { send_transaction_, execute_script_, deploy_contract_, update_contract_, create_account_ }

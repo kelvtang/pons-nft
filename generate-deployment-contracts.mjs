@@ -11,3 +11,4 @@ var generate_deployment_contract_ = generate_deployment_contract_from_ (__dirnam
 ;await generate_deployment_contract_ ('PonsNftMarket')
 ;await generate_deployment_contract_ ('PonsNft_v1')
 ;await generate_deployment_contract_ ('PonsNftMarket_v1')
+;await generate_deployment_contract_ ('PonsEscrow')

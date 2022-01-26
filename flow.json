@@ -6,7 +6,8 @@
     "PonsNftContract": "./deployment-contracts/PonsNft.cdc",
     "PonsNftMarketContract": "./deployment-contracts/PonsNftMarket.cdc",
     "PonsNftContract_v1": "./deployment-contracts/PonsNft_v1.cdc",
-    "PonsNftMarketContract_v1": "./deployment-contracts/PonsNftMarket_v1.cdc"
+    "PonsNftMarketContract_v1": "./deployment-contracts/PonsNftMarket_v1.cdc",
+    "PonsEscrowContract": "./deployment-contracts/PonsEscrow.cdc"
   },
   "networks": {
     "localnet": "lvh.me:3569",
@@ -36,7 +37,8 @@
         "PonsNftContract",
         "PonsNftMarketContract",
         "PonsNftContract_v1",
-        "PonsNftMarketContract_v1"
+        "PonsNftMarketContract_v1",
+        "PonsEscrowContract"
       ]
     },
     "testnet": {
@@ -47,7 +49,8 @@
         "PonsNftContract",
         "PonsNftMarketContract",
         "PonsNftContract_v1",
-        "PonsNftMarketContract_v1"
+        "PonsNftMarketContract_v1",
+        "PonsEscrowContract"
       ]
     },
     "mainnet": {
@@ -58,7 +61,8 @@
         "PonsNftContract",
         "PonsNftMarketContract",
         "PonsNftContract_v1",
-        "PonsNftMarketContract_v1"
+        "PonsNftMarketContract_v1",
+        "PonsEscrowContract"
       ]
     }
   },

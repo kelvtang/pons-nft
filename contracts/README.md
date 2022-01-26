@@ -42,6 +42,14 @@ Whenever a Pons Artist mints a PonsNft or a user lists a PonsNft for resale, he 
 ## PonsListingCertificate 
 The PonsListingCertificate resource represents a listing or minting of a PonsNft on to the Pons NFT Marketplace. If it represents a listing, it can be redeemed for the original PonsNft if it has not yet been purchased.
 
+## Escrow
+The Escrow resource represents a certain request for the Pons account to exchange resources (i.e. Pons NFTs and Flow tokens) for other resources. Anyone can submit Escrows to the Pons Escrow contract. Once submitted, the committed resources are locked-up in a Escrow resource inside the submitter's storage, until either the Escrow is terminated, or the Pons account consummates the Escrow, which grants the exchange for the desired resources. Both the submitter and the Pons account are able to terminate an Escrow, which will cause the locked-up resources to be released to the submitter. Once the Pons account decides that an Escrow no longer requires attention, the Pons account can dismiss the Escrow.
+
+Each Escrow is associated with an id (`String`), a heldResourceDescription (`EscrowResourceDescription`), a requirement (`EscrowResourceDescription`), and a fulfillment (`EscrowFulfillment`). The id is unique at any given time, among Escrows that have not yet been dismissed. This allows the Pons account to differentiate between and fulfill each individual Escrow differently. The heldResourceDescription describes the resources that are locked-up in the Escrow. The requirement describes the minimum amount of Flow tokens and the minimal set of NFTs which will be accepted in exchange for the resources locked-up in the Escrow. The fulfillment contains capabilities for the submitter to receive Flow tokens and NFTs obtained via exchange with the Escrow.
+
+## EscrowManager
+The EscrowManager resource represents the means by which the Pons account can browse, consummate, terminate, and dismiss submitted Escrows. Only one instance is created, and stored in the Pons account.
+
 
 # Contracts
 
@@ -54,6 +62,7 @@ The directory consists of the contracts that form the Pons NFT marketplace:
 - PonsNftMarket.cdc
 - PonsNft_v1.cdc
 - PonsNftMarket_v1.cdc
+- PonsEscrow.cdc
 
 ## PonsUtils
 
@@ -71,9 +80,12 @@ This contract declares the PonsCertification resource.
 
 ## PonsNftInterface
 
-This contract is the contract interface for PonsNfts, declaring the resource interfaces for PonsNft and PonsCollection. Contracts which implement both the PonsNftInterface and NonFungibleToken interfaces require a NFT resource type which implements PonsNft, and a Collection type which implements PonsCollection, in addition to the requirements from the NonFungibleToken interface.
+This contract is the contract interface for PonsNfts, declaring the resource interfaces for PonsNft, PonsCollection, and PonsNftReceiver. Contracts which implement both the PonsNftInterface and NonFungibleToken interfaces require a NFT resource type which implements PonsNft, and a Collection type which implements PonsCollection and PonsNftReceiver, in addition to the requirements from the NonFungibleToken interface.
 
 As a contract interface, this cannot be merged with the concrete PonsNft contract implementations.
+
+### `PonsNftReceiver`
+This resource interface implements only the `depositNft()` function. This interface allows the creation of a Capability that is only able to deposit NFTs into a PonsCollection, but not withdraw from it.
 
 ## PonsNft
 
@@ -113,6 +125,28 @@ This contract declares a simple implementation of the PonsNftInterface and decla
 ## PonsNftMarket_v1
 
 This contract declares a simple implementation of the PonsNftMarket resource interface that collects separate commissions for the initial minting and a resale of an NFT. On `init()`, this contract utilises the PonsNftMarket update mechanism to activate this implementation.
+
+## PonsEscrow
+
+This contract declares the EscrowResource, Escrow, and EscrowManager resources. 
+
+### `EscrowResource`
+The EscrowResource resource contains resources that are locked-up in an Escrow.
+
+### `EscrowResourceDescription`
+The EscrowResourceDescription struct type represents an amount a Flow tokens and a set of Pons NFT IDs.
+
+### `EscrowFulfillment`
+The EscrowFulfillment struct type represents capabilities to deposit Flow tokens and Pons NFTs.
+
+### `makeEscrowResource()` 
+This function allows anyone to wrap their resources into an EscrowResource.
+
+### `submitEscrow()`, `terminateEscrow()`
+This function allows anybody to submit an Escrow, and to terminate Escrows of which they have a reference.
+
+### `resourceDescription()`, `satisfiesResourceDescription()`, `fullfillResource()`
+These utility functions allow users to compare EscrowResources with EscrowResourceDescriptions, and to release EscrowResources with EscrowFulfillments.
 
 
 # Events
@@ -157,6 +191,23 @@ Emitted when the PonsNftContract_v1 contract is initialised.
 
 ### `PonsNftMarketContractInit_v1()`
 Emitted when the PonsMarketContract_v1 contract is initialised.
+
+## PonsEscrow
+
+### `PonsEscrowContractInit()`
+Emitted when the PonsEscrowContract contract is initialised.
+
+### `PonsEscrowSubmitted(id : String, address : Address, heldResourceDescription : EscrowResourceDescription, requirement : EscrowResourceDescription)`
+Emitted when an Escrow is submitted to the Pons account.
+
+### `PonsEscrowConsummated(id : String, address : Address, heldResourceDescription : EscrowResourceDescription, requirement : EscrowResourceDescription, fulfilledResourceDescription : EscrowResourceDescription)`
+Emitted when the Pons account consummates an Escrow.
+
+### `PonsEscrowTerminated(id : String, address : Address, heldResourceDescription : EscrowResourceDescription, requirement : EscrowResourceDescription)`
+Emitted when an Escrow is terminated.
+
+### `PonsEscrowDismissed(id : String, address : Address)`
+Emitted when an Escrow is dismissed.
 
 
 # Style

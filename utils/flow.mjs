@@ -4,7 +4,7 @@ import { readFile, writeFile, access, mkdir } from 'fs/promises'
 import { URL } from 'url'
 import flow_types from '@onflow/types'
 import test from 'tape'
-import { authorizer_, create_account_, execute_script_, send_transaction_, deploy_contract_ } from './flow-api.mjs'
+import { authorizer_, create_account_, execute_script_, send_transaction_, deploy_contract_, update_contract_ } from './flow-api.mjs'
 import { flow_sdk_api } from '../config.mjs'
 import { address_of_names, private_keys_of_names } from '../config.mjs'
 import { ad_hoc_accounts } from '../config.mjs'
@@ -141,6 +141,16 @@ var deploy_proposed_contract_ = _cadence_code => async _flow_arguments => {
 			( _deployed_cadence_code )
 			( _flow_arguments ) }
 
+var update_proposed_contract_ = async _cadence_code => {
+	var _deployed_cadence_code =
+		substitute_addresses_
+			( address_of_names )
+			( _cadence_code )
+	return await
+		update_contract_
+			( known_account_ ('0xPROPOSER') )
+			( _deployed_cadence_code ) }
+
 
 var send_known_transaction_ = _base_path => _file_name => _authorizer_names => async _flow_arguments => {
 	var _cadence_code = await readFile (_base_path + '/' + _file_name + '.cdc', 'utf8')
@@ -169,6 +179,15 @@ var deploy_known_contract_from_ = _base_path => _file_name => async _flow_argume
 			deploy_proposed_contract_
 				( _cadence_code )
 				( _flow_arguments )
+		;_test .comment (JSON .stringify (_flow_response)) } ) }
+
+var update_known_contract_from_ = _base_path => async _file_name => {
+	;test ('update ' + _file_name, async _test => {
+		var _cadence_code = await readFile (_base_path + '/' + _file_name + '.cdc', 'utf8')
+		var _flow_response =
+			await
+			update_proposed_contract_
+				( _cadence_code )
 		;_test .comment (JSON .stringify (_flow_response)) } ) }
 
 
@@ -291,5 +310,5 @@ export { cadencify_object_, substitute_addresses_ }
 export { generate_deployment_contract_from_ }
 export { send_proposed_transaction_ }
 export { known_account_, make_known_ad_hoc_account_ }
-export { send_known_transaction_, execute_known_script_, deploy_known_contract_from_ }
+export { send_known_transaction_, execute_known_script_, deploy_known_contract_from_, update_known_contract_from_ }
 export { run_known_test_from_ }
