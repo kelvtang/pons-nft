@@ -63,7 +63,7 @@ pub contract interface PonsNftContractInterface {
 */
 	pub resource interface PonsNftReceiver {
 		/* Proof of certification from Pons */
-		pub ponsCertification : @PonsCertificationContract.PonsCertification
+		access(account) ponsCertification : @PonsCertificationContract.PonsCertification
 
 		/* Deposit a NFT to the PonsCollection */
 		pub fun depositNft (_ ponsNft : @NFT) : Void }

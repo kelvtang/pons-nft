@@ -41,7 +41,7 @@ transaction
 			id: "consummation-test-transaction-6-artist",
 			consummation: fun (_ firstNftEscrowResource : @PonsEscrowContract.EscrowResource) : @PonsEscrowContract.EscrowResource {
 
-				var firstNft <- firstNftEscrowResource .ponsNfts .remove (at: 0)
+				var firstNft <- firstNftEscrowResource .borrowPonsNfts () .remove (at: 0)
 
 				PonsUsage .borrowOwnPonsCollection (collector: ponsAccount) .depositNft (<- firstNft)
 

@@ -133,8 +133,14 @@ This contract declares the EscrowResource, Escrow, and EscrowManager resources.
 ### `EscrowResource`
 The EscrowResource resource contains resources that are locked-up in an Escrow.
 
+### `borrowFlowVault()`, `borrowPonsNfts()`
+These utility functions allow users who possess an EscrowResource to access the contained resources.
+
 ### `EscrowResourceDescription`
 The EscrowResourceDescription struct type represents an amount a Flow tokens and a set of Pons NFT IDs.
+
+### `getPonsNftIds()`
+This function allow users who possess an EscrowResourceDescription to view the described list of Pons NFT IDs.
 
 ### `EscrowFulfillment`
 The EscrowFulfillment struct type represents capabilities to deposit Flow tokens and Pons NFTs.

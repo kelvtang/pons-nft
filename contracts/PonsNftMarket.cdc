@@ -69,7 +69,7 @@ pub contract PonsNftMarketContract {
 		/* Given a Pons artist certificate, mint new Pons NFTs on behalf of the artist and list it on the marketplace for sale */
 		/* The price of the first edition of the NFT minted is determined by the basePrice */
 		/* When only one edition is minted, the incrementalPrice is inconsequential */
-		/* When the Pons marketplace mints multiple editions of NFTs, the market price of each succeesive NFT is incremented by the incrementalPrice */
+		/* When the Pons marketplace mints multiple editions of NFTs, the market price of each successive NFT is incremented by the incrementalPrice */
 		pub fun mintForSale
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
 		, metadata : {String: String}

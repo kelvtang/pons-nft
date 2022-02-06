@@ -50,7 +50,7 @@ transaction
 		escrowManagerRef .consummateEscrow (
 			id: "consummation-test-transaction-5-random",
 			consummation: fun (_ secondNftEscrowResource : @PonsEscrowContract.EscrowResource) : @PonsEscrowContract.EscrowResource {
-				var secondNft <- secondNftEscrowResource .ponsNfts .remove (at: 0)
+				var secondNft <- secondNftEscrowResource .borrowPonsNfts () .remove (at: 0)
 
 				PonsUsage .borrowOwnPonsCollection (collector: ponsAccount) .depositNft (<- secondNft)
 

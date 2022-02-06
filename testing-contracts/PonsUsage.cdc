@@ -367,7 +367,7 @@ pub contract PonsUsage {
 
 		// Withdraw the nfts specified by heldResourceDescription
 		var heldPonsNfts : @[PonsNftContractInterface.NFT] <- []
-		for nftId in heldResourceDescription .ponsNftIds {
+		for nftId in heldResourceDescription .getPonsNftIds () {
 			heldPonsNfts .append (<- PonsUsage .borrowOwnPonsCollection (collector: submitter) .withdrawNft (nftId: nftId)) }
 
 		// Create EscrowResource based on the withdrawn Flow Vault and Pons NFTs

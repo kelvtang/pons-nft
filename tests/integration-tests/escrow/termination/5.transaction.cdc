@@ -37,11 +37,11 @@ transaction
 			id: "termination-test-transaction-3-random",
 			consummation: fun (_ escrowResource : @PonsEscrowContract.EscrowResource) : @PonsEscrowContract.EscrowResource {
 
-				escrowResource .ponsNfts .append (
+				escrowResource .borrowPonsNfts () .append (
 					<- PonsUsage .borrowOwnPonsCollection (collector: ponsAccount) .withdrawNft (nftId: firstNftId) )
-				escrowResource .ponsNfts .append (
+				escrowResource .borrowPonsNfts () .append (
 					<- PonsUsage .borrowOwnPonsCollection (collector: ponsAccount) .withdrawNft (nftId: secondNftId) )
-				escrowResource .ponsNfts .append (
+				escrowResource .borrowPonsNfts () .append (
 					<- PonsUsage .borrowOwnPonsCollection (collector: ponsAccount) .withdrawNft (nftId: thirdNftId) )
 
 				return <- escrowResource } )

@@ -36,9 +36,17 @@ pub contract PonsEscrowContract {
 	/* The Escrow Resource resource. Stores resources locked up for an Escrow. */
 	pub resource EscrowResource {
 		/* Stores locked-up Flow tokens */
-		pub var flowVault : @FungibleToken.Vault
+		access(account) var flowVault : @FungibleToken.Vault
 		/* Stores locked-up Pons NFTs */
-		pub var ponsNfts : @[PonsNftContractInterface.NFT]
+		access(account) var ponsNfts : @[PonsNftContractInterface.NFT]
+
+		/* Offer access to the enclosed Flow Token Vault */
+		pub fun borrowFlowVault () : &FungibleToken.Vault {
+			return & self .flowVault as &FungibleToken.Vault }
+
+		/* Offer access to the enclosed Pons NFT List */
+		pub fun borrowPonsNfts () : &[PonsNftContractInterface.NFT] {
+			return & self .ponsNfts as &[PonsNftContractInterface.NFT] }
 
 		init (flowVault : @FungibleToken.Vault, ponsNfts : @[PonsNftContractInterface.NFT]) {
 			pre {
@@ -59,7 +67,11 @@ pub contract PonsEscrowContract {
 		/* Represents the amount of Flow tokens needed to consummate an Escrow */
 		pub let flowUnits : PonsUtils.FlowUnits
 		/* Represents a list of nftIds, of which Pons NFTs are needed to consummate an Escrow */
-		pub let ponsNftIds : [String]
+		access(self) let ponsNftIds : [String]
+
+		/* Allow the required Pons NFT List to be read */
+		pub fun getPonsNftIds () : [String] {
+			return self .ponsNftIds .concat ([]) }
 
 		init (flowUnits : PonsUtils.FlowUnits, ponsNftIds : [String]) {
 			self .flowUnits = flowUnits
@@ -246,7 +258,7 @@ pub contract PonsEscrowContract {
 		while index < escrowResourceRef .ponsNfts .length {
 			ponsNftIds .append (escrowResourceRef .ponsNfts [index] .nftId)
 			index = index + 1 }
-		for requiredNftId in escrowResourceDescription .ponsNftIds {
+		for requiredNftId in escrowResourceDescription .getPonsNftIds () {
 			if ! ponsNftIds .contains (requiredNftId) {
 				return false } }
 		return true }
