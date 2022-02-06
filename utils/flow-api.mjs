@@ -158,6 +158,29 @@ transaction (name : String, code : String) {
 		[ flow_sdk_api .arg (_contract_name, flow_types .String)
 		, flow_sdk_api .arg (_contract_code_hex, flow_types .String) ] ) }
 
+var update_contracts_ = _authorizer => async _contract_codes => {
+	var _contract_code_hexs = _contract_codes .map (_contract_code => Buffer .from (_contract_code, 'utf8') .toString ('hex'))
+
+	var _contract_names = _contract_codes .map (_contract_code => _contract_code .replace (/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '') .match (/contract\s+(?:interface\s+)?\b(\S+)\b/) [1])
+
+	return await
+		send_transaction_
+		( _authorizer )
+		( _authorizer )
+		( [ _authorizer ] )
+		( `
+transaction (${_contract_names .map ((_, _index) => `name_${_index} : String`) .join (', ')} , ${_contract_codes .map ((_, _index) => `code_${_index} : String`) .join (', ')}) {
+	prepare (account : AuthAccount) {
+		${_contract_names .map ((_, _index) =>
+			`account .contracts .update__experimental (
+				name: name_${_index},
+				code: code_${_index} .decodeHex () )`
+		) .join ('\n')} } }
+		` )
+		(
+		[ ... _contract_names .map (_contract_name => flow_sdk_api .arg (_contract_name, flow_types .String))
+		, ... _contract_code_hexs .map (_contract_code_hex => flow_sdk_api .arg (_contract_code_hex, flow_types .String)) ] ) }
+
 var create_account_ = _authorizer => async _public_key => {
 	return await
 		send_transaction_
@@ -186,4 +209,4 @@ transaction (publicKey : String) {
 
 
 export { authorizer_ }
-export { send_transaction_, execute_script_, deploy_contract_, update_contract_, create_account_ }
+export { send_transaction_, execute_script_, deploy_contract_, update_contract_, update_contracts_, create_account_ }

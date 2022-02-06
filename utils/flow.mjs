@@ -4,7 +4,7 @@ import { readFile, writeFile, access, mkdir } from 'fs/promises'
 import { URL } from 'url'
 import flow_types from '@onflow/types'
 import test from 'tape'
-import { authorizer_, create_account_, execute_script_, send_transaction_, deploy_contract_, update_contract_ } from './flow-api.mjs'
+import { authorizer_, create_account_, execute_script_, send_transaction_, deploy_contract_, update_contract_, update_contracts_ } from './flow-api.mjs'
 import { flow_sdk_api } from '../config.mjs'
 import { address_of_names, private_keys_of_names } from '../config.mjs'
 import { ad_hoc_accounts } from '../config.mjs'
@@ -116,6 +116,13 @@ var generate_deployment_contract_from_ = _base_path => _deployment_path => async
 			( _cadence_code )
 	;await write_file_ (_deployment_path + '/' + _file_name + '.cdc') (_deployed_cadence_code) }
 
+var execute_proposed_script_ = _script_code => async _flow_arguments => {
+	return await
+		execute_script_
+		( substitute_addresses_
+			( address_of_names )
+			( _script_code ) )
+		( [ ... _flow_arguments ] ) }
 
 var send_proposed_transaction_ = _authorizer_names => _transaction_code => async _flow_arguments => {
 	return await
@@ -150,6 +157,17 @@ var update_proposed_contract_ = async _cadence_code => {
 		update_contract_
 			( known_account_ ('0xPROPOSER') )
 			( _deployed_cadence_code ) }
+
+var update_proposed_contracts_ = async _cadence_codes => {
+	var _deployed_cadence_codes =
+		_cadence_codes .map (_cadence_code =>
+			substitute_addresses_
+				( address_of_names )
+				( _cadence_code ) )
+	return await
+		update_contracts_
+			( known_account_ ('0xPROPOSER') )
+			( _deployed_cadence_codes ) }
 
 
 var send_known_transaction_ = _base_path => _file_name => _authorizer_names => async _flow_arguments => {
@@ -190,6 +208,17 @@ var update_known_contract_from_ = _base_path => async _file_name => {
 				( _cadence_code )
 		;_test .comment (JSON .stringify (_flow_response)) } ) }
 
+var update_known_contracts_from_ = _base_path => async _file_names => {
+	;test ('update ' + _file_names .join (', '), async _test => {
+		var _cadence_codes =
+			await Promise .all (
+				_file_names .map (_file_name =>
+					readFile (_base_path + '/' + _file_name + '.cdc', 'utf8') ) )
+		var _flow_response =
+			await
+			update_proposed_contracts_
+				( _cadence_codes )
+		;_test .comment (JSON .stringify (_flow_response)) } ) }
 
 
 
@@ -308,7 +337,7 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 
 export { cadencify_object_, substitute_addresses_ }
 export { generate_deployment_contract_from_ }
-export { send_proposed_transaction_ }
+export { execute_proposed_script_, send_proposed_transaction_ }
 export { known_account_, make_known_ad_hoc_account_ }
-export { send_known_transaction_, execute_known_script_, deploy_known_contract_from_, update_known_contract_from_ }
+export { send_known_transaction_, execute_known_script_, deploy_known_contract_from_, update_known_contract_from_, update_known_contracts_from_ }
 export { run_known_test_from_ }
