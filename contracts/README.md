@@ -39,6 +39,9 @@ All PonsNfts listed for sale on the Pons NFT Marketplace are available for purch
 
 Whenever a Pons Artist mints a PonsNft or a user lists a PonsNft for resale, he receives a PonsListingCertificate with the details of the listing or minting. If the reseller decides to unlist his PonsNft from the market, this is achieved by trading in the corresponding PonsListingCertificate to prove the listing. PonsListingCertificates issued for the minting of a PonsNft cannot be traded in for the PonsNft. Once the listed PonsNft has been purchased, the issued PonsListingCertificates become ineligible for redemption.
 
+## NftMarketAdmin 
+The NftMarketAdmin (specifically, the NftMarketAdmin_v1) represents the market administration interface. Only one instance is created, and stored in the Pons account. The NftMarketAdmin is used to update NFT metadata, market data, and to fulfill NFTs to buyers who have paid off-chain.
+
 ## PonsListingCertificate 
 The PonsListingCertificate resource represents a listing or minting of a PonsNft on to the Pons NFT Marketplace. If it represents a listing, it can be redeemed for the original PonsNft if it has not yet been purchased.
 
@@ -126,6 +129,10 @@ This contract declares a simple implementation of the PonsNftInterface and decla
 
 This contract declares a simple implementation of the PonsNftMarket resource interface that collects separate commissions for the initial minting and a resale of an NFT. On `init()`, this contract utilises the PonsNftMarket update mechanism to activate this implementation.
 
+## PonsNftMarketAdmin_v1
+
+This contract declares the market administration resource NftMarketAdmin_v1.
+
 ## PonsEscrow
 
 This contract declares the EscrowResource, Escrow, and EscrowManager resources. 
@@ -197,6 +204,11 @@ Emitted when the PonsNftContract_v1 contract is initialised.
 
 ### `PonsNftMarketContractInit_v1()`
 Emitted when the PonsMarketContract_v1 contract is initialised.
+
+## PonsNftMarketAdmin_v1
+
+### `PonsNftMarketAdminContractInit_v1()`
+Emitted when the PonsNftMarketAdmin_v1 contract is initialised.
 
 ## PonsEscrow
 

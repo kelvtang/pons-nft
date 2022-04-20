@@ -208,6 +208,28 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 
 ;await run_known_test_
+	( 'integration-tests/marketplace/admin' )
+	( [ '0xPONS', '0xARTIST_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
+	, flow_sdk_api .arg (v4 (), flow_types .String)
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ first_name: 'Artist'
+			, last_name: 'One'
+			, url: 'pons://artist-1' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ first_name: 'Artist'
+			, last_name: 'One'
+			, url: 'pons://artist-1.1' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg ('2.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('3.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.10', flow_types .UFix64) ] )
+
+;await run_known_test_
 	( 'integration-tests/escrow/consummation' )
 	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )
 	(
