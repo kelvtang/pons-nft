@@ -53,7 +53,7 @@ This file is the Flow CLI configuration file. It can be used to deploy the Pons 
 
 # transactions/
 
-This directory contains ready-made Cadence Flow transactions for the Pons NFT system. Users who wish to mint, purchase, list, or unlist their NFTs on Pons can directly make use of these transactions, or make any modifications which they desire.
+This directory contains ready-made Cadence Flow transactions for the Pons NFT system.  Users who wish to mint, purchase, list, or unlist their NFTs on Pons can directly make use of these transactions, or make any modifications which they desire.
 
 # scripts/
 
@@ -98,6 +98,6 @@ Before running the tests, make sure that the the testing contracts in `testing-c
 
 Make sure the Flow network of choice (emulator/Testnet) is turned on and reachable before running the tests, otherwise the Flow Node.js module is prone to conjuring an obscenely ugly error.
 
-Uses top-level awaits, recent versions of Node.js required. Windows not supported.
+Uses top-level awaits, recent versions of Node.js required. Windows10 not supported.
 
 Make sure you run `node generate-deployment-contracts.mjs` before using the Flow CLI to deploy or interact with the Pons contracts. Provide the private key to the deploying account via the environment variable PONS_PRIVATE_KEY when using the Flow CLI. The provided networks in flow.json are localnet, testnet, and mainnet.
