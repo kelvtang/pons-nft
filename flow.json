@@ -1,0 +1,75 @@
+{
+  "contracts": {
+    "PonsUtils": "./deployment-contracts/PonsUtils.cdc",
+    "PonsCertificationContract": "./deployment-contracts/PonsCertification.cdc",
+    "PonsNftContractInterface": "./deployment-contracts/PonsNftInterface.cdc",
+    "PonsNftContract": "./deployment-contracts/PonsNft.cdc",
+    "PonsNftMarketContract": "./deployment-contracts/PonsNftMarket.cdc",
+    "PonsNftContract_v1": "./deployment-contracts/PonsNft_v1.cdc",
+    "PonsNftMarketContract_v1": "./deployment-contracts/PonsNftMarket_v1.cdc",
+    "PonsEscrowContract": "./deployment-contracts/PonsEscrow.cdc"
+  },
+  "networks": {
+    "localnet": "lvh.me:3569",
+    "testnet": "access-mainnet-beta.onflow.org:3569",
+    "mainnet": "access-testnet.onflow.org:3569"
+  },
+  "accounts": {
+    "localnet-0xPONS": {
+      "address": "f8d6e0586b0a20c7",
+      "key": "$PONS_PRIVATE_KEY"
+    },
+    "testnet-0xPONS": {
+      "address": "77b1e12af8c41111",
+      "key": "$PONS_PRIVATE_KEY"
+    },
+    "mainnet-0xPONS": {
+      "address": "22667d5c9f7b01c2",
+      "key": "$PONS_PRIVATE_KEY"
+    }
+  },
+  "deployments": {
+    "localnet": {
+      "localnet-0xPONS": [
+        "PonsUtils",
+        "PonsCertificationContract",
+        "PonsNftContractInterface",
+        "PonsNftContract",
+        "PonsNftMarketContract",
+        "PonsNftContract_v1",
+        "PonsNftMarketContract_v1",
+        "PonsEscrowContract"
+      ]
+    },
+    "testnet": {
+      "testnet-0xPONS": [
+        "PonsUtils",
+        "PonsCertificationContract",
+        "PonsNftContractInterface",
+        "PonsNftContract",
+        "PonsNftMarketContract",
+        "PonsNftContract_v1",
+        "PonsNftMarketContract_v1",
+        "PonsEscrowContract"
+      ]
+    },
+    "mainnet": {
+      "mainnet-0xPONS": [
+        "PonsUtils",
+        "PonsCertificationContract",
+        "PonsNftContractInterface",
+        "PonsNftContract",
+        "PonsNftMarketContract",
+        "PonsNftContract_v1",
+        "PonsNftMarketContract_v1",
+        "PonsEscrowContract"
+      ]
+    }
+  },
+  "emulators": {
+    "default": {
+      "port": 8080,
+      "serviceAccount": "localnet-0xPONS"
+    }
+  }
+}
