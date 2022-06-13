@@ -3,3 +3,7 @@ secret
 node_modules
 ad-hoc.mjs
 deployment-contracts
+
+.env
+config_local.mjs
+flow_local.json
