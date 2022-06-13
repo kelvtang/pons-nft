@@ -56,8 +56,10 @@ pub contract PonsNftMarketAdminContract_v1 {
 
 		/* Updates the price of the Pons NFT on the marketplace */
 		pub fun updateSalePrice (nftId : String, price : PonsUtils.FlowUnits) : Void {
-			let ponsNftMarketRef = (& PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}?)!
-			let ponsNftMarketV1Ref = (ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1?)!
+			// let ponsNftMarketRef = (&PonsNftMarketContract.ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}?)!
+			// let ponsNftMarketV1Ref = (ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1?)!
+			let ponsNftMarketRef = &PonsNftMarketContract.ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
+			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
 			//ponsNftMarketV1Ref .salePrices .insert (key: nftId, price) 
 			ponsNftMarketV1Ref.insertSalesPrice(nftId:nftId, price:price);
 
@@ -65,9 +67,11 @@ pub contract PonsNftMarketAdminContract_v1 {
 
 		/* Borrows the NFT collection of the marketplace */
 		pub fun borrowCollection () : &PonsNftContract_v1.Collection {
-			let ponsNftMarketRef = (& PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}?)!
-			let ponsNftMarketV1Ref = (ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1?)!
-			return (& ponsNftMarketV1Ref .collection as &PonsNftContract_v1.Collection?)!
+			// let ponsNftMarketRef = (&PonsNftMarketContract.ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}?)!
+			// let ponsNftMarketV1Ref = (ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1?)!
+			let ponsNftMarketRef = &PonsNftMarketContract.ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
+			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
+			return (&ponsNftMarketV1Ref.collection as &PonsNftContract_v1.Collection?)!
 		} 
 	}
 
