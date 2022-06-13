@@ -19,8 +19,8 @@ let address_of_names =
 	, '0xPONS': '0xf8d6e0586b0a20c7'
 	, '0xPROPOSER': '0xf8d6e0586b0a20c7' }
 let private_keys_of_names =
-	{ '0xPONS': [ '5983ba3ff97b3ab62c96c3aa35b4f08460284936fc4562cad425fcc6c97f9b3a' ]
-	, '0xPROPOSER': [ '5983ba3ff97b3ab62c96c3aa35b4f08460284936fc4562cad425fcc6c97f9b3a' ] }
+	{ '0xPONS': [ '4b01a799da096bddda4c19d04e966cb05cfbe610df117ef9713d382483956070']//'5983ba3ff97b3ab62c96c3aa35b4f08460284936fc4562cad425fcc6c97f9b3a' ]
+	, '0xPROPOSER': [ '4b01a799da096bddda4c19d04e966cb05cfbe610df117ef9713d382483956070']}//'5983ba3ff97b3ab62c96c3aa35b4f08460284936fc4562cad425fcc6c97f9b3a' ] }
 
 
 
