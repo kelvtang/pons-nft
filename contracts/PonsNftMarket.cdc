@@ -150,9 +150,20 @@ pub contract PonsNftMarketContract {
 		pub var listingCertificates : @[{PonsListingCertificate}]
 
 		init () {
-			self .listingCertificates <- [] }
+			self .listingCertificates <- [] 
+		}
 		destroy () {
-			destroy self .listingCertificates } }
+			destroy self .listingCertificates
+		}
+
+		access(account) fun appendListingCertificates(item:@{PonsListingCertificate}):Void{
+			self.listingCertificates.append(<-item);
+		}
+		access(account) fun removeListingCertificates(at index:Int):@{PonsListingCertificate}{
+			return <-self.listingCertificates.remove(at: index);
+		}
+
+	}
 
 	pub fun createPonsListingCertificateCollection () : @PonsListingCertificateCollection {
 		return <- create PonsListingCertificateCollection () }
