@@ -60,16 +60,28 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 	/**
 	The functions below provide functionality for external contracts to insert and remove elements from dictionaries.
 	 */
-	access(account) fun insertRoyalty(nftId : String, royalty : PonsUtils.Ratio):{String: PonsUtils.Ratio}?{
+	access(account) fun insertRoyalty(nftId : String, royalty : PonsUtils.Ratio):PonsUtils.Ratio?{
 		let m = self.ponsNftRoyalties.insert(key: nftId, royalty);
 		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
 	}
-	access(account) fun insertEditionLabels(nftId : String, editionLabel : String):{String: String}?{
+	access(account) fun insertEditionLabels(nftId : String, editionLabel : String):String?{
 		let m = self.ponsNftEditionLabels.insert(key: nftId, editionLabel);
 		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
 	}
-	access(account) fun insertMetadata(nftId : String, metadata : {String: String}):{String: {String: String}}?{
+	access(account) fun insertMetadata(nftId : String, metadata : {String: String}):{String: String}?{
 		let m = self.ponsNftMetadatas.insert(key: nftId, metadata);
+		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+	}
+	access(account) fun removeRoyalty(nftId : String):PonsUtils.Ratio?{
+		let m = self.ponsNftRoyalties.remove(key: nftId);
+		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+	}
+	access(account) fun removeEditionLabels(nftId : String):String?{
+		let m = self.ponsNftEditionLabels.remove(key: nftId);
+		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+	}
+	access(account) fun removeMetadata(nftId : String):{String: String}?{
+		let m = self.ponsNftMetadatas.remove(key: nftId);
 		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
 	}
 	
