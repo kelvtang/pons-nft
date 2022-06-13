@@ -53,7 +53,7 @@ This file is the Flow CLI configuration file. It can be used to deploy the Pons 
 
 # transactions/
 
-This directory contains ready-made Cadence Flow transactions for the Pons NFT system. Users who wish to mint, purchase, list, or unlist their NFTs on Pons can directly make use of these transactions, or make any modifications which they desire.
+This directory contains ready-made Cadence Flow transactions for the Pons NFT system.  Users who wish to mint, purchase, list, or unlist their NFTs on Pons can directly make use of these transactions, or make any modifications which they desire.
 
 # scripts/
 
@@ -91,13 +91,13 @@ This directory contains Cadence transactions and verification scripts, which mak
 
 This file can be directly run with `node run-test.mjs` to run the Pons NFT marketplace tests on the Flow network specified by config.mjs. The tests produce test output in TAP format, and can be prettified by piping through TAP prettifiers such as `npx tap-spec`. The tests also produce a good amount of useful test information in the form of TAP comments.
 
-Before running the tests, make sure that the the testing contracts in `testing-contracts/`, the required Flow core contracts in `core-contracts/`, and the Pons contracts iin `contracts/` are all deployed. For example, on the emulator, before running tests, you can deploy all the required contracts with `node deploy-testing-contracts.mjs ; node deploy-core-contracts.mjs ; node deploy-contracts.mjs`.
+Before running the tests, make sure that the the testing contracts in `testing-contracts/`, the required Flow core contracts in `core-contracts/`, and the Pons contracts iin `contracts/` are all deployed. For example, on the emulator, before running tests, you can deploy all the required contracts with `node deploy-core-contracts.mjs ; node deploy-contracts.mjs ; node deploy-testing-contracts.mjs`.
 
 
 # Cavaets
 
 Make sure the Flow network of choice (emulator/Testnet) is turned on and reachable before running the tests, otherwise the Flow Node.js module is prone to conjuring an obscenely ugly error.
 
-Uses top-level awaits, recent versions of Node.js required. Windows not supported.
+Uses top-level awaits, recent versions of Node.js required. Windows10 not supported.
 
 Make sure you run `node generate-deployment-contracts.mjs` before using the Flow CLI to deploy or interact with the Pons contracts. Provide the private key to the deploying account via the environment variable PONS_PRIVATE_KEY when using the Flow CLI. The provided networks in flow.json are localnet, testnet, and mainnet.
