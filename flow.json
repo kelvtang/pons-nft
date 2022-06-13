@@ -11,8 +11,8 @@
   },
   "networks": {
     "localnet": "lvh.me:3569",
-    "testnet": "access-mainnet-beta.onflow.org:3569",
-    "mainnet": "access-testnet.onflow.org:3569"
+    "testnet": "access-testnet.onflow.org:3569",
+    "mainnet": "access-mainnet-beta.onflow.org:3569"
   },
   "accounts": {
     "localnet-0xPONS": {
