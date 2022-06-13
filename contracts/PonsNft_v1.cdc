@@ -56,33 +56,31 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 	access(account) var ponsNftMetadatas : {String: {String: String}}
 
 
-	// allow for dictionary editing
-	/**
-	The functions below provide functionality for external contracts to insert and remove elements from dictionaries.
-	 */
+	//The functions below provide functionality for external contracts to insert and remove elements from dictionaries.
+	// Allows the mutation of dictionaries, for compliance with secure cadence 0.33.
+	/* Allows the insertion in to the dictionary holding royalty values.*/
 	access(account) fun insertRoyalty(nftId : String, royalty : PonsUtils.Ratio):PonsUtils.Ratio?{
-		let m = self.ponsNftRoyalties.insert(key: nftId, royalty);
-		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+		return self.ponsNftRoyalties.insert(key: nftId, royalty);
 	}
-	access(account) fun insertEditionLabels(nftId : String, editionLabel : String):String?{
-		let m = self.ponsNftEditionLabels.insert(key: nftId, editionLabel);
-		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+	/* Allows the insertion in to the dictionary holding edition labels.*/
+	access(account) fun insertEditionLabel(nftId : String, editionLabel : String):String?{
+		return self.ponsNftEditionLabels.insert(key: nftId, editionLabel);
 	}
+	/* Allows the insertion in to the dictionary holding NFT metadata.*/
 	access(account) fun insertMetadata(nftId : String, metadata : {String: String}):{String: String}?{
-		let m = self.ponsNftMetadatas.insert(key: nftId, metadata);
-		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+		return self.ponsNftMetadatas.insert(key: nftId, metadata);
 	}
+	/* Allows the removal from the dictionary holding royalty values.*/
 	access(account) fun removeRoyalty(nftId : String):PonsUtils.Ratio?{
-		let m = self.ponsNftRoyalties.remove(key: nftId);
-		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+		return self.ponsNftRoyalties.remove(key: nftId);
 	}
-	access(account) fun removeEditionLabels(nftId : String):String?{
-		let m = self.ponsNftEditionLabels.remove(key: nftId);
-		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+	/* Allows the removal from the dictionary holding edition labels.*/
+	access(account) fun removeEditionLabel(nftId : String):String?{
+		return self.ponsNftEditionLabels.remove(key: nftId);
 	}
+	/* Allows the removal from the dictionary holding NFT metadata.*/
 	access(account) fun removeMetadata(nftId : String):{String: String}?{
-		let m = self.ponsNftMetadatas.remove(key: nftId);
-		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+		return self.ponsNftMetadatas.remove(key: nftId);
 	}
 	
 

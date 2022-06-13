@@ -99,7 +99,7 @@ pub contract PonsUsage {
 			// Add the new certificate and save the collection
 			var listingCertificateCollection <- listingCertificateCollectionOptional !
 
-			listingCertificateCollection .appendListingCertificates (item:<- newListingCertificate)
+			listingCertificateCollection .appendListingCertificate (item:<- newListingCertificate)
 
 			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) }
 		else {
@@ -110,7 +110,7 @@ pub contract PonsUsage {
 			
 			var listingCertificateCollection <- PonsNftMarketContract .createPonsListingCertificateCollection ()
 
-			listingCertificateCollection .appendListingCertificates (item:<- newListingCertificate)
+			listingCertificateCollection .appendListingCertificate (item:<- newListingCertificate)
 
 			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) } }
 
@@ -127,7 +127,7 @@ pub contract PonsUsage {
 			var listingCertificateCollection <- listingCertificateCollectionOptional !
 
 			while newListingCertificates .length > 0 {
-				listingCertificateCollection .appendListingCertificates (item:<- newListingCertificates .remove (at: 0)) }
+				listingCertificateCollection .appendListingCertificate (item:<- newListingCertificates .remove (at: 0)) }
 
 			destroy newListingCertificates
 
@@ -141,7 +141,7 @@ pub contract PonsUsage {
 			var listingCertificateCollection <- PonsNftMarketContract .createPonsListingCertificateCollection ()
 
 			while newListingCertificates .length > 0 {
-				listingCertificateCollection .appendListingCertificates (item:<- newListingCertificates .remove (at: 0)) }
+				listingCertificateCollection .appendListingCertificate (item:<- newListingCertificates .remove (at: 0)) }
 
 			destroy newListingCertificates
 
@@ -160,7 +160,7 @@ pub contract PonsUsage {
 			// If the NFT has the specified nftId
 			if listingCertificateCollectionRef .listingCertificates [listingCertificateIndex] .nftId == nftId {
 				// If so, retrieve the NFT and return it
-				return <- listingCertificateCollectionRef .removeListingCertificates (at: listingCertificateIndex) }
+				return <- listingCertificateCollectionRef .removeListingCertificate (at: listingCertificateIndex) }
 
 			listingCertificateIndex = listingCertificateIndex - 1 }
 		panic ("Pons Listing Certificate for this nftId not found") }

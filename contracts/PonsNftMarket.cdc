@@ -156,10 +156,10 @@ pub contract PonsNftMarketContract {
 			destroy self .listingCertificates
 		}
 
-		access(account) fun appendListingCertificates(item:@{PonsListingCertificate}):Void{
+		access(account) fun appendListingCertificate(item:@{PonsListingCertificate}):Void{
 			self.listingCertificates.append(<-item);
 		}
-		access(account) fun removeListingCertificates(at index:Int):@{PonsListingCertificate}{
+		access(account) fun removeListingCertificate(at index:Int):@{PonsListingCertificate}{
 			return <-self.listingCertificates.remove(at: index);
 		}
 

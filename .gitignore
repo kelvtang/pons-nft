@@ -5,5 +5,5 @@ ad-hoc.mjs
 deployment-contracts
 
 .env
-config_local.mjs
-flow_local.json
+config_global.mjs
+flow_global.json

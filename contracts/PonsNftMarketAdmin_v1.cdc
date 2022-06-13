@@ -43,7 +43,7 @@ pub contract PonsNftMarketAdminContract_v1 {
 
 		/* Updates the edition label of the Pons NFT */
 		pub fun updatePonsEditionLabel (nftId : String, editionLabel : String) : Void {
-			PonsNftContract_v1.insertEditionLabels(nftId: nftId, editionLabel:editionLabel);
+			PonsNftContract_v1.insertEditionLabel(nftId: nftId, editionLabel:editionLabel);
 		}
 
 		/* Updates the metadata of the Pons NFT */

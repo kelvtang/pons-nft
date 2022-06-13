@@ -49,17 +49,14 @@ pub contract PonsNftMarketContract_v1 {
 		access(account) var secondaryCommissionRatio : PonsUtils.Ratio
 
 
-		// allow for dictionary editing
-		/**
-		The functions below provide functionality for external contracts to insert and remove elements from dictionaries.
-		*/
+		//The functions below provide functionality for external contracts to insert and remove elements from dictionaries.
+		/* Insert into dictionary salesprice. Returns nil if key does not already exist*/
 		access(account) fun insertSalesPrice(nftId : String, price : PonsUtils.FlowUnits):PonsUtils.FlowUnits?{
-			let m = self.salePrices.insert (key: nftId, price);
-			return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+			return self.salePrices.insert (key: nftId, price);
 		}
+		/* Remove dictionary salesprice. Returns value stored if key exist*/
 		access(account) fun removeSalesPrice(nftId : String):PonsUtils.FlowUnits?{
-			let m = self.salePrices.remove (key: nftId);
-			return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+			return self.salePrices.remove (key: nftId);
 		}
 
 
