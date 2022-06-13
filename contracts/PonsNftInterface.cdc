@@ -23,7 +23,8 @@ pub contract interface PonsNftContractInterface {
 */
 	pub resource interface PonsNft {
 		pub ponsCertification : @PonsCertificationContract.PonsCertification
-		pub nftId : String }
+		pub nftId : String 
+	}
 
 /*
 	PonsCollection resource interface definition

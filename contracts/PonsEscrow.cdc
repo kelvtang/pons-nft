@@ -40,6 +40,24 @@ pub contract PonsEscrowContract {
 		/* Stores locked-up Pons NFTs */
 		access(account) var ponsNfts : @[PonsNftContractInterface.NFT]
 
+
+		/**
+		Add functionality to enable mutation of ponsNfts array.
+		*/
+		/* access(account) fun appendPonsNfts(item: PonsNftContractInterface.NFT):Void{
+			self.ponsNfts.append(item);
+		}
+		access(account) fun appendallPonsNfts(item: [PonsNftContractInterface.NFT]):Void{
+			self.ponsNfts.appendAll(item);
+		} */
+		access(account) fun removePonsNfts(at index:Int):@PonsNftContractInterface.NFT{
+			let m <- self.ponsNfts.remove(at: index);
+			return <-m;
+		}
+
+
+
+
 		/* Offer access to the enclosed Flow Token Vault */
 		pub fun borrowFlowVault () : &FungibleToken.Vault {
 			return & self .flowVault as &FungibleToken.Vault }
@@ -269,7 +287,7 @@ pub contract PonsEscrowContract {
 		fulfillment .receivePaymentCap .borrow () !.deposit (from: <- fulfillmentFlowVault)
 
 		while resources .ponsNfts .length > 0 {
-			fulfillment .receiveNftCap .borrow () !.depositNft (<- resources .ponsNfts .remove (at: 0) !) }
+			fulfillment .receiveNftCap .borrow () !.depositNft (<- resources.removePonsNfts(at: 0) !) }
 		
 		destroy resources }
 
