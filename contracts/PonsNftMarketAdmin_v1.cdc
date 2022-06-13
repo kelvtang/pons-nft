@@ -38,27 +38,38 @@ pub contract PonsNftMarketAdminContract_v1 {
 
 		/* Updates the royalty of the Pons NFT */
 		pub fun updatePonsNftRoyalty (nftId : String, royalty : PonsUtils.Ratio) : Void {
-			PonsNftContract_v1 .ponsNftRoyalties .insert (key: nftId, royalty) }
+			//PonsNftContract_v1 .ponsNftRoyalties .insert (key: nftId, royalty) 
+			PonsNftContract_v1.insertRoyalty(nftId: nftId, royalty: royalty);
+		}
 
 		/* Updates the edition label of the Pons NFT */
 		pub fun updatePonsEditionLabel (nftId : String, editionLabel : String) : Void {
-			PonsNftContract_v1 .ponsNftEditionLabels .insert (key: nftId, editionLabel) }
+			//PonsNftContract_v1 .ponsNftEditionLabels .insert (key: nftId, editionLabel) 
+			PonsNftContract_v1.insertEditionLabels(nftId: nftId, editionLabel:editionLabel);
+		}
 
 		/* Updates the metadata of the Pons NFT */
 		pub fun updatePonsNftMetadata (nftId : String, metadata : {String: String}) : Void {
-			PonsNftContract_v1 .ponsNftMetadatas .insert (key: nftId, metadata) }
+			//PonsNftContract_v1 .ponsNftMetadatas .insert (key: nftId, metadata) 
+			PonsNftContract_v1.insertMetadata(nftId: nftId, metadata:metadata);
+		}
 
 		/* Updates the price of the Pons NFT on the marketplace */
 		pub fun updateSalePrice (nftId : String, price : PonsUtils.FlowUnits) : Void {
-			let ponsNftMarketRef = & PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
-			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
-			ponsNftMarketV1Ref .salePrices .insert (key: nftId, price) }
+			let ponsNftMarketRef = (& PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}?)!
+			let ponsNftMarketV1Ref = (ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1?)!
+			//ponsNftMarketV1Ref .salePrices .insert (key: nftId, price) 
+			ponsNftMarketV1Ref.insertSalesPrice(nftId:nftId, price:price);
+
+		}
 
 		/* Borrows the NFT collection of the marketplace */
 		pub fun borrowCollection () : &PonsNftContract_v1.Collection {
-			let ponsNftMarketRef = & PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
-			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
-			return & ponsNftMarketV1Ref .collection as &PonsNftContract_v1.Collection } }
+			let ponsNftMarketRef = (& PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}?)!
+			let ponsNftMarketV1Ref = (ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1?)!
+			return (& ponsNftMarketV1Ref .collection as &PonsNftContract_v1.Collection?)!
+		} 
+	}
 
 	
 

@@ -56,6 +56,25 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 	access(account) var ponsNftMetadatas : {String: {String: String}}
 
 
+	// allow for dictionary editing
+	/**
+	The functions below provide functionality for external contracts to insert and remove elements from dictionaries.
+	 */
+	access(account) fun insertRoyalty(nftId : String, royalty : PonsUtils.Ratio):{String: PonsUtils.Ratio}?{
+		let m = self.ponsNftRoyalties.insert(key: nftId, royalty);
+		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+	}
+	access(account) fun insertEditionLabels(nftId : String, editionLabel : String):{String: String}?{
+		let m = self.ponsNftEditionLabels.insert(key: nftId, editionLabel);
+		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+	}
+	access(account) fun insertMetadata(nftId : String, metadata : {String: String}):{String: {String: String}}?{
+		let m = self.ponsNftMetadatas.insert(key: nftId, metadata);
+		return m; // m is a temporary holder. Unsure of dataflow, just to be safe.
+	}
+	
+
+
 	/* The concrete Pons NFT resource. Striaghtforward implementation of the PonsNft and INFT interfaces */
 	pub resource NFT : PonsNftContractInterface.PonsNft, NonFungibleToken.INFT {
 		/* Ensures the authenticity of this PonsNft; requirement by PonsNft */
@@ -189,7 +208,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			destroy nilNft
 
 			// Get a reference to the NFT at the corresponding serialNumber, and cast it to the return type
-			let nftRef = & self .ownedNFTs [serialNumber] as auth &NonFungibleToken.NFT
+			let nftRef = (& self .ownedNFTs [serialNumber] as auth &NonFungibleToken.NFT?)! // Cannot expect nill.
 			let ponsNftRef = nftRef as! &PonsNftContractInterface.NFT
             		return ponsNftRef }
 
@@ -198,12 +217,12 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		/* Withdraw an NFT from the PonsCollection, given its serialNumber */
 		pub fun withdraw (withdrawID : UInt64) : @NonFungibleToken.NFT {
 			let nftId = PonsNftContract_v1 .ponsNftIds [withdrawID] !
-			var nft <- self .withdrawNft (nftId: nftId) as! @NonFungibleToken.NFT
+			var nft <- (self .withdrawNft (nftId: nftId) as! @NonFungibleToken.NFT?)! // Cannot expect nill
 			return <- nft }
 
 		/* Deposit an NFT to the PonsCollection */
 		pub fun deposit (token : @NonFungibleToken.NFT) : Void {
-			var nft <- token as! @PonsNftContractInterface.NFT
+			var nft <- (token as! @PonsNftContractInterface.NFT?)!
 			self .depositNft (<- nft) }
 
 		/* Get a list of serialNumbers stored in the PonsCollection */
@@ -229,7 +248,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			destroy nilNft
 
 			// Get a reference to the NFT at the corresponding serialNumber, and cast it to the return type
-			let nftRef = & self .ownedNFTs [serialNumber] as &NonFungibleToken.NFT
+			let nftRef = (& self .ownedNFTs [serialNumber] as &NonFungibleToken.NFT?)!
 			return nftRef }
 
 
@@ -293,7 +312,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			let serialNumber = PonsNftContract .takeSerialNumber ()
 
 			var nft <- create NFT (nftId: nftId, serialNumber: serialNumber)
-			let nftRef = & nft as &PonsNftContractInterface.NFT
+			let nftRef = (& nft as &PonsNftContractInterface.NFT?)!
 
 			// Associate the specified data with the NFT
 			PonsNftContract_v1 .ponsNftArtistIds .insert (key: nftId, artistCertificate .ponsArtistId)
