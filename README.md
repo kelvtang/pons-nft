@@ -91,7 +91,7 @@ This directory contains Cadence transactions and verification scripts, which mak
 
 This file can be directly run with `node run-test.mjs` to run the Pons NFT marketplace tests on the Flow network specified by config.mjs. The tests produce test output in TAP format, and can be prettified by piping through TAP prettifiers such as `npx tap-spec`. The tests also produce a good amount of useful test information in the form of TAP comments.
 
-Before running the tests, make sure that the the testing contracts in `testing-contracts/`, the required Flow core contracts in `core-contracts/`, and the Pons contracts iin `contracts/` are all deployed. For example, on the emulator, before running tests, you can deploy all the required contracts with `node deploy-testing-contracts.mjs ; node deploy-core-contracts.mjs ; node deploy-contracts.mjs`.
+Before running the tests, make sure that the the testing contracts in `testing-contracts/`, the required Flow core contracts in `core-contracts/`, and the Pons contracts iin `contracts/` are all deployed. For example, on the emulator, before running tests, you can deploy all the required contracts with `node deploy-core-contracts.mjs ; node deploy-contracts.mjs ; node deploy-testing-contracts.mjs`.
 
 
 # Cavaets
