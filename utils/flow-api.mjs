@@ -7,6 +7,9 @@ import { access_node_origin } from '../config.mjs'
 
 
 
+var sleep_ = async _duration => {
+	return new Promise (resolve_ => setTimeout (resolve_, _duration * 1000)) }
+
 // due to FLOW_SERVICEKEYSIGALGO='ECDSA_P256' 
 var ec_service = new ec_api .default .ec ('p256')
 var sign_ = privateKey => msg => {
@@ -58,6 +61,35 @@ var authorizer_ = _address => _key_id => _private_key => {
 					, signature: sign_ (_private_key) (message) } ) } } ) } }
 
 
+var raw_transaction_response_ = 
+	_proposer_authorizer => _payer_authorizer => _authorization_authorizers =>
+	_transaction_code => async _arguments => {
+		try {
+			return await
+				fcl_api .mutate
+				(
+				{ cadence: _transaction_code
+				, args: (_arg, _t) => _arguments
+				, proposer: _proposer_authorizer
+				, authorizations: _authorization_authorizers
+				, payer: _payer_authorizer
+				, limit: 9999 } ) }
+		catch (_exception) {
+			if
+			( _exception .message .includes ('failed to get state commitment for block')
+			|| _exception .message .includes ('upstream connect error or disconnect/reset before headers. reset reason: connection failure')
+			) {
+				;await sleep_ (1)
+				return await
+					raw_transaction_response_
+					( _proposer_authorizer )
+					( _payer_authorizer )
+					( _authorization_authorizers )
+					( _transaction_code )
+					( _arguments ) }
+			else {
+				throw (_exception) } } }
+
 
 
 
@@ -70,14 +102,13 @@ var send_transaction_ =
 	_transaction_code => async _arguments => {
 		var response =
 			await
-			flow_sdk_api .send
-			(
-			[ flow_sdk_api .transaction (_transaction_code)
-			, flow_sdk_api .args (_arguments)
-			, flow_sdk_api .proposer (_proposer_authorizer)
-			, flow_sdk_api .payer (_payer_authorizer)
-			, flow_sdk_api .authorizations (_authorization_authorizers)
-			, flow_sdk_api .limit (9999) ] )
+			raw_transaction_response_
+			( _proposer_authorizer )
+			( _payer_authorizer )
+			( _authorization_authorizers )
+			( _transaction_code )
+			( _arguments )
+
 		return await
 			fcl_api .tx (response) .onceSealed () }
 

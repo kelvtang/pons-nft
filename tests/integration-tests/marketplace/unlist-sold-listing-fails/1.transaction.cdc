@@ -57,7 +57,7 @@ transaction
 		randomAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 		.deposit (
 			from: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
-					.withdraw (amount: 10000.0) )
+					.withdraw (amount: 100.0) )
 
 		TestUtils .testInfo ("First NFT nftId", firstNftId)
 
@@ -73,7 +73,7 @@ transaction
 		PonsUsage .listForSale (
 			lister: patronAccount,
 			nftId: firstNftId,
-			PonsUtils.FlowUnits (2000.0) )
+			PonsUtils.FlowUnits (100.0) )
 
 		PonsUsage .purchase (
 			patron: randomAccount,

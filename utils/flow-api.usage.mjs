@@ -21,8 +21,8 @@ pub fun main (a: Int, b: Int): String {
 	return HelloWorld .hello () .concat ((a + b) .toString ()) }
 		` )
 		(
-		[ flow_sdk_api .arg (10001, flow_types .Int)
-		, flow_sdk_api .arg (1, flow_types .Int) ] )
+		[ flow_sdk_api .arg ('10001', flow_types .Int)
+		, flow_sdk_api .arg ('1', flow_types .Int) ] )
 /*/
 	send_transaction_
 		( authorizer_ (address) (key_id) (private_key) )

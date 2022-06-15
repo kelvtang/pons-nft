@@ -1,5 +1,6 @@
 import { v4 } from 'uuid'
 import flow_sdk_api from '@onflow/sdk'
+// import { send } from '@onflow/transport-grpc'
 
 
 
@@ -8,7 +9,7 @@ import flow_sdk_api from '@onflow/sdk'
 
 
 
-let access_node_origin = /**/'http://lvh.me:8080'/*/'https://access-testnet.onflow.org'//'https://access-mainnet-beta.onflow.org'/**/
+let access_node_origin = /**/'http://lvh.me:8888'/*/'https://rest-testnet.onflow.org'//'https://rest-mainnet.onflow.org'/**/
 
 
 
@@ -66,7 +67,9 @@ let pons_artist_id_of_names =
 
 
 
-;flow_sdk_api .config () .put ('accessNode.api', access_node_origin)
+;flow_sdk_api .config ()
+	// .put ('sdk.transport', send)
+	.put ('accessNode.api', access_node_origin)
 
 
 

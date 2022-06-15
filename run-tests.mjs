@@ -71,7 +71,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 //			, title: 'NFT title 1'
 //			, description: 'NFT description 1' } )
 //		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
-//	, flow_sdk_api .arg (5, flow_types .Int)
+//	, flow_sdk_api .arg ('5', flow_types .Int)
 //	, flow_sdk_api .arg ('1200.0', flow_types .UFix64)
 //	, flow_sdk_api .arg ('180.0', flow_types .UFix64)
 //	, flow_sdk_api .arg ('0.12', flow_types .UFix64) ] )
@@ -88,7 +88,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 //			, title: 'NFT title 2'
 //			, description: 'NFT description 2' } )
 //		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
-//	, flow_sdk_api .arg (5, flow_types .Int)
+//	, flow_sdk_api .arg ('5', flow_types .Int)
 //	, flow_sdk_api .arg ('1200.0', flow_types .UFix64)
 //	, flow_sdk_api .arg ('180.0', flow_types .UFix64)
 //	, flow_sdk_api .arg ('0.12', flow_types .UFix64) ] )
@@ -140,7 +140,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 			, title: 'NFT title 4'
 			, description: 'NFT description 4' } )
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
-	, flow_sdk_api .arg (5, flow_types .Int)
+	, flow_sdk_api .arg ('5', flow_types .Int)
 	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('10.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
@@ -172,7 +172,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 			, title: 'NFT title 6'
 			, description: 'NFT description 6' } )
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
-	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('50.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 
 ;await run_known_test_
@@ -187,7 +187,7 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 			, title: 'NFT title 7'
 			, description: 'NFT description 7' } )
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
-	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('50.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 
 ;await run_known_test_
@@ -202,8 +202,8 @@ var run_known_test_ = run_known_test_from_ (__dirname + '/tests/')
 			, title: 'NFT title 8'
 			, description: 'NFT description 8' } )
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
-	, flow_sdk_api .arg (5, flow_types .Int)
-	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('5', flow_types .Int)
+	, flow_sdk_api .arg ('50.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('10.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 

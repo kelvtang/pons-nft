@@ -24,13 +24,13 @@ transaction
 
 		// Tests the marketplace listing feature
 
-		TestUtils .log ("Patron 1 list same NFT for 2000 FLOW")
+		TestUtils .log ("Patron 1 list same NFT for 200 FLOW")
 
 		let firstNftId = testInfo ["First NFT nftId"] !
 
 		PonsUsage .listForSale (
 			lister: patronAccount,
 			nftId: firstNftId,
-			PonsUtils.FlowUnits (2000.0) )
+			PonsUtils.FlowUnits (200.0) )
 
 		} }
