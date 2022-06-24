@@ -30,27 +30,21 @@ pub contract PonsUsage {
 
 	/* Ensures an account has a PonsCollection, creating one if it does not exist */
 	pub fun acquirePonsCollection (collector : AuthAccount) : Void {
-		var collectionOptional <-
-			collector .load <@PonsNftContractInterface.Collection>
+		var collectionRefOptional =
+			collector .borrow <&PonsNftContractInterface.Collection>
 				( from: PonsNftContract .CollectionStoragePath )
 
-		if collectionOptional == nil {
-			destroy collectionOptional
-			collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) }
-		else {
-			collector .save (<- collectionOptional !, to: PonsNftContract .CollectionStoragePath) } }
+		if collectionRefOptional == nil {
+			collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) } }
 
 	/* Ensures an account has a PonsCollection, creating one if it does not exist */
 	pub fun preparePonsNftReceiverCapability (collector : AuthAccount) : Capability<&{PonsNftContractInterface.PonsNftReceiver}> {
-		var collectionOptional <-
-			collector .load <@PonsNftContractInterface.Collection>
+		var collectionRefOptional =
+			collector .borrow <&PonsNftContractInterface.Collection>
 				( from: PonsNftContract .CollectionStoragePath )
 
-		if collectionOptional == nil {
-			destroy collectionOptional
+		if collectionRefOptional == nil {
 			collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) }
-		else {
-			collector .save (<- collectionOptional !, to: PonsNftContract .CollectionStoragePath) }
 
 
 		if collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) == nil {
@@ -89,24 +83,20 @@ pub contract PonsUsage {
 
 	/* Deposits a listing certificate into the account's default listing certificate collection */
 	pub fun depositListingCertificate (_ account : AuthAccount, _ newListingCertificate : @{PonsNftMarketContract.PonsListingCertificate}) : Void {
-		// Load the existing listing certificate collection of the account, if any
-		var listingCertificateCollectionOptional <-
-			account .load <@PonsNftMarketContract.PonsListingCertificateCollection>
+		// Borrow the existing listing certificate collection of the account, if any
+		var listingCertificateCollectionRefOptional =
+			account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection>
 				( from: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath )
 
-		if listingCertificateCollectionOptional != nil {
+		if listingCertificateCollectionRefOptional != nil {
 			// If the account already has a listing certificate collection
 			// Add the new certificate and save the collection
-			var listingCertificateCollection <- listingCertificateCollectionOptional !
+			var listingCertificateCollectionRef = listingCertificateCollectionRefOptional !
 
-			listingCertificateCollection .appendListingCertificate (<- newListingCertificate)
-
-			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) }
+			listingCertificateCollectionRef .appendListingCertificate (<- newListingCertificate) }
 		else {
 			// If the account does not have a listing certificate collection
 			// Create a new listing certificate collection, add the new certificate and save the collection
-			// Destroy the nil to make the resource checker happy
-			destroy listingCertificateCollectionOptional
 			
 			var listingCertificateCollection <- PonsNftMarketContract .createPonsListingCertificateCollection ()
 
@@ -116,27 +106,23 @@ pub contract PonsUsage {
 
 	/* Deposit listing certificates into the account's default listing certificate collection */
 	pub fun depositListingCertificates (_ account : AuthAccount, _ newListingCertificates : @[{PonsNftMarketContract.PonsListingCertificate}]) : Void {
-		// Load the existing listing certificate collection of the account, if any
-		var listingCertificateCollectionOptional <-
-			account .load <@PonsNftMarketContract.PonsListingCertificateCollection>
+		// Borrow the existing listing certificate collection of the account, if any
+		var listingCertificateCollectionRefOptional =
+			account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection>
 				( from: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath )
 
-		if listingCertificateCollectionOptional != nil {
+		if listingCertificateCollectionRefOptional != nil {
 			// If the account already has a listing certificate collection
 			// Retrieve each new listing certificate and add it to the collection, then save the collection
-			var listingCertificateCollection <- listingCertificateCollectionOptional !
+			var listingCertificateCollectionRef = listingCertificateCollectionRefOptional !
 
 			while newListingCertificates .length > 0 {
-				listingCertificateCollection .appendListingCertificate (<- newListingCertificates .remove (at: 0)) }
+				listingCertificateCollectionRef .appendListingCertificate (<- newListingCertificates .remove (at: 0)) }
 
-			destroy newListingCertificates
-
-			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) }
+			destroy newListingCertificates }
 		else {
 			// If the account already has a listing certificate collection
 			// Create a new listing certificate collection, retrieve each new listing certificate and add it to the collection, then save the collection
-			// Destroy the nil to make the resource checker happy
-			destroy listingCertificateCollectionOptional
 
 			var listingCertificateCollection <- PonsNftMarketContract .createPonsListingCertificateCollection ()
 
@@ -149,7 +135,7 @@ pub contract PonsUsage {
 
 	/* Withdraw listing certificates from the account's default listing certificate collection */
 	pub fun withdrawListingCertificate (_ account : AuthAccount, nftId : String) : @{PonsNftMarketContract.PonsListingCertificate} {
-		// Load the existing listing certificate collection of the account, which must already exist
+		// Borrow the existing listing certificate collection of the account, which must already exist
 		var listingCertificateCollectionRef = account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) !
 
 		// We iterate through all listing certificate in the collection, from the end of the collection
