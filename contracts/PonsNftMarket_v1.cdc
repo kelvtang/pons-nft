@@ -273,7 +273,9 @@ pub contract PonsNftMarketContract_v1 {
 			destroy ponsListingCertificate_v1
 
 			// Retrieve the NFT market data, and check that the NFT is not freshly minted
-			let salePrice = self .salePrices .remove (key: nftId) !
+			let salePrice = self .removeSalePrice (nftId: nftId) !
+
+
 			if self .listingCounts [nftId] == 0 {
 				panic
 					( "Pons NFT with ID " .concat (nftId) .concat (" had just been freshly minted on Pons market, and cannot be unlisted. ")

@@ -130,7 +130,12 @@ pub contract PonsNftMarketContract {
 					"Only the lister can redeem his Pons NFT"
 				*/
 				self .borrowNft (nftId: ponsListingCertificate .nftId) != nil:
-					"This Pons NFT is not on the market anymore" } } }
+					"This Pons NFT is not on the market anymore" 
+				}
+			
+			 
+		} 
+	}
 /*
 	Pons Listing Certificate Resource Interface
 

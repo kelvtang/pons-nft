@@ -86,15 +86,12 @@ transaction
 		/* Ensures an account has a PonsCollection, creating one if it does not exist */
 		let acquirePonsCollection =
 			fun (collector : AuthAccount) : Void {
-				var collectionOptional <-
-					collector .load <@PonsNftContractInterface.Collection>
+				var collectionRefOptional =
+					collector .borrow <&PonsNftContractInterface.Collection>
 						( from: PonsNftContract .CollectionStoragePath )
 
-				if collectionOptional == nil {
-					destroy collectionOptional
-					collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) }
-				else {
-					collector .save (<- collectionOptional !, to: PonsNftContract .CollectionStoragePath) } }
+				if collectionRefOptional == nil {
+					collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) } }
 
 		/* Borrows a PonsCollection from an account, creating one if it does not exist */
 		let borrowOwnPonsCollection =

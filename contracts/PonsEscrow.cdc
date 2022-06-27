@@ -63,6 +63,7 @@ pub contract PonsEscrowContract {
 				panic ("Non-empty EscrowResource cannot be destroyed") }
 			destroy self .flowVault
 			destroy self .ponsNfts } }
+			
 	/* Escrow ResourceDescription struct. Represents requirements for the fulfillment of an Escrow */
 	pub struct EscrowResourceDescription {
 		/* Represents the amount of Flow tokens needed to consummate an Escrow */

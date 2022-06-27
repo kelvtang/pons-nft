@@ -58,7 +58,18 @@ pub contract PonsNftMarketAdminContract_v1 {
 		pub fun borrowCollection () : &PonsNftContract_v1.Collection {
 			let ponsNftMarketRef = & PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
 			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
-			return & ponsNftMarketV1Ref .collection as &PonsNftContract_v1.Collection } }
+			return & ponsNftMarketV1Ref .collection as &PonsNftContract_v1.Collection } 
+
+		/* Delist NFT from the marketplace */
+		pub fun delistNftFromMarketplace(nftId : String) : Void{
+			let ponsNftMarketRef = & PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
+			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
+			var sale_price = ponsNftMarketV1Ref .removeSalePrice(nftId:nftId)
+			if sale_price == nil {
+				panic ("nft not included in sales list")
+			}
+		}
+	}
 
 	
 

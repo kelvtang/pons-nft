@@ -54,13 +54,13 @@ transaction
 		// Recognises the Pons artist with the provided data
 
 		let artistAuthorityRef = ponsAccount .borrow <&PonsNftContract.PonsArtistAuthority> (from: /storage/ponsArtistAuthority) !
-		let artistAccount = getAccount (0x4a31e0f05f1d471e)
+		let artistAccount = getAccount (0xf8d6e0586b0a20c7)
 		let artistAccountBalanceRef = artistAccount .getCapability <&{FungibleToken.Balance}> (/public/flowTokenBalance) .borrow () !
 
 		artistAuthorityRef .recognisePonsArtist (
 			ponsArtistId: "4176cebe-8656-414c-a6ce-158662a6ef87",		//"4176cebe-8886-414c-a6ce-15bc22a6ef87",
 			metadata : {},
-			0x4a31e0f05f1d471e,
+			0xf8d6e0586b0a20c7,
 			artistAccount .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenReceiver) )
 
 		
