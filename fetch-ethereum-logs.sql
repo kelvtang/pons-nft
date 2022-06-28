@@ -3,10 +3,9 @@ create table if not exists logs (
     topics jsonb not null,
     data bytea,
     block_number bigint not null,
-    date timeStamp not null,
-    gas_price bigint,
-    gas_used bigint,
+    block_hash text,
     log_index numeric,
+    removed boolean,
     transaction_hash text not null,
     transaction_index numeric
 );
@@ -32,14 +31,13 @@ begin
 
     create temp table temp_events(
         address text,
-        topics jsonb,
+        topics jsonb not null,
         data bytea,
-        block_number bigint,
-        date timeStamp,
-        gas_price bigint,
-        gas_used bigint,
+        block_number bigint not null,
+        block_hash text,
         log_index numeric,
-        transaction_hash text,
+        removed boolean,
+        transaction_hash text not null,
         transaction_index numeric,
         latest_block_number bigint
     );
@@ -49,9 +47,9 @@ begin
     for log_record in select * from temp_events
     loop
         if log_record.transaction_hash is not null then
-            execute 'INSERT INTO logs values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)' 
+            execute 'INSERT INTO logs values($1, $2, $3, $4, $5, $6, $7, $8, $9)' 
             using log_record.address, log_record.topics, log_record.data, log_record.block_number,
-            log_record.date, log_record.gas_price, log_record.gas_used, log_record.log_index, log_record.transaction_hash,
+            log_record.block_hash, log_record.log_index, log_record.removed, log_record.transaction_hash,
             log_record.transaction_index;
         end if;
     end loop;
@@ -87,5 +85,5 @@ end$$;
 
 -- Simple calls:
 -- call update_events()
--- call fetch_logs(15013480, "0xdef1c0ded9bec7f1a1670819833240f027b25eff");
+call fetch_logs(14038339, '0x1657E2200216ebAcB92475b69D6BC0FdAD48B068');
 
