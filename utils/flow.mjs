@@ -8,7 +8,7 @@ import { authorizer_, create_account_, execute_script_, send_transaction_, deplo
 import { flow_sdk_api } from '../config.mjs'
 import { address_of_names, private_keys_of_names } from '../config.mjs'
 import { ad_hoc_accounts } from '../config.mjs'
-
+import {exec} from 'child_process';
 
 
 
@@ -259,7 +259,10 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 								send_test_transaction_
 									( _transaction_name )
 									( _authorizer_names )
-									( [ ... _flow_arguments, ... _last_transaction_arguments ] ) }
+									( [ ... _flow_arguments, ... _last_transaction_arguments ] )
+						}
+
+
 						catch (_exception) {
 							var _transaction_response =
 								{ fail: true
@@ -312,7 +315,7 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 							await
 							execute_test_script_
 							( _verification_name )
-							( [ ... _flow_arguments, ... _last_transaction_arguments ] ) }
+							( [ ... _flow_arguments, ... _last_transaction_arguments ] )}
 					catch (_exception) {
 						if (_transaction_exists) {
 							;_test .comment (JSON .stringify ({ transaction: _transaction_response })) }
@@ -329,7 +332,153 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 
 					;_test .comment (JSON .stringify (test_result))
 					;_test .ok (test_result .verified) } )
-				} ) (_step) } } ) }
+				} ) (_step) } } )}
+
+var run_known_test_returnTransaction = _base_path => _test_name => _authorizer_names => async _flow_arguments => {
+
+	;test (_test_name, async _test => {
+		var _test_path = _base_path + '/' + _test_name
+
+		var send_test_transaction_ = send_known_transaction_ (_test_path)
+		var execute_test_script_ = execute_known_script_ (_test_path)
+
+		var _step_count = 0
+		var _last_transaction_arguments = []
+		var _test_info
+
+		while (true) {
+			;_step_count = _step_count + 1
+
+			var _verification_path = _test_path + '/' + _step_count + '.verification.cdc'
+			var _verification_exists = await file_exists_ (_verification_path)
+
+			if (! _verification_exists) {
+				if (_step_count === 1) {
+					;throw new Error ('Test ' + _test_name + ' not found') }
+				else {
+					;break } } }
+
+		for (var _step = 1; _step < _step_count; _step ++) {
+			;(_step => {
+				;_test .test ('step ' + _step, async _test => {
+					var _transaction_name = _step + '.transaction'
+					var _verification_name = _step + '.verification'
+
+					var _transaction_exists = await file_exists_ (_test_path + '/' + _transaction_name + '.cdc')
+					if (_transaction_exists) {
+						try {
+							var _transaction_response =
+								await
+								send_test_transaction_
+									( _transaction_name )
+									( _authorizer_names )
+									( [ ... _flow_arguments, ... _last_transaction_arguments ] )
+
+							
+						}
+
+
+						catch (_exception) {
+							var _transaction_response =
+								{ fail: true
+								, errorMessage: '' + _exception }
+							if (Object .isPrototypeOf (_exception) && 'stack' in _exception) {
+								_transaction_response .stack = _exception .stack } }
+
+						var _latest_test_info = []
+
+						var _latest_events = _transaction_response .events || []
+
+						for (var _event_index = 0; _event_index < _latest_events .length; _event_index ++) {
+							var _event = _latest_events [_event_index]
+							if (_event .type .endsWith ('TestUtils.TestInfo')) {
+								var { data } = _event
+								var { key, value } = data
+								;_test .comment ('[' + key + ']=' + value)
+								;_latest_test_info .push (data) }
+							else if (_event .type .endsWith ('TestUtils.Log')) {
+								var { data: { info } } = _event
+								;_test .comment (info) }
+							else {
+								var { type, data } = _event
+								;_test .comment ('(' + type .split ('.') .slice (-2) .join ('.') + '); ' + JSON .stringify (data)) } }
+
+						if (_latest_test_info .length > 0) {
+							if (_test_info === undefined) {
+								;_test_info = {} }
+
+							for (var _info_index = 0; _info_index < _latest_test_info .length; _info_index ++) {
+								var { key, value } = _latest_test_info [_info_index]
+								;_test_info [key] = value } }
+
+						;_last_transaction_arguments =
+							[ flow_sdk_api .arg
+								( ! _transaction_response .fail
+								, flow_types .Bool )
+							, flow_sdk_api .arg
+								( _transaction_response .errorMessage || null
+								, flow_types .Optional (flow_types .String) )
+							, flow_sdk_api .arg
+								( (_transaction_response .events || []) .map (({ type, data }) => ({ type, ... data })) .map (stringify_values_) .map (cadencify_object_)
+								, flow_types .Array (flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String })) )
+							, ... (
+								(_test_info === undefined) ? []
+								: [ flow_sdk_api .arg (cadencify_object_ (_test_info), flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String })) ] ) ] 
+							
+								
+								// Draw out the price of transactions.
+								let getTransaction = (transaction_id) => {
+									exec('flow transactions get '+transaction_id+' -o json',
+									function (error, stdout, stderr) {
+										if (stderr !== '' && stderr !== null){throw stderr;};
+										if (error !== null) {throw error;};
+
+										var events = JSON.parse(stdout).events;
+										events = events.filter(_event => {
+											return _event.type.split(".")[_event.type.split(".").length - 1] == "PonsNFTListed";
+										})
+
+										for(let i=0; i<events.length; i++){
+											events[i] = parseFloat(events[i].values.value.fields.filter(_obj => {
+												return _obj.name == "price";
+											})[0].value.value.fields.filter(_obj =>{
+												return _obj.name == "flowAmount";
+											})[0].value.value);
+										}
+
+										console.log({"flow price" : events});
+
+									});
+								};getTransaction(_transaction_response.events[0].transactionId);
+
+
+							}
+
+					try {
+						var _verification_response =
+							await
+							execute_test_script_
+							( _verification_name )
+							( [ ... _flow_arguments, ... _last_transaction_arguments ] )}
+					catch (_exception) {
+						if (_transaction_exists) {
+							;_test .comment (JSON .stringify ({ transaction: _transaction_response })) }
+						;throw (_exception) }
+
+					var test_result = { ... _verification_response }
+					if
+					( _transaction_exists &&
+					! ('transaction' in _verification_response)
+					) {
+						;test_result .transaction = _transaction_response }
+					if (! ('args' in _verification_response)) {
+						;test_result .args = _flow_arguments }
+
+					;_test .comment (JSON .stringify (test_result))
+					;_test .ok (test_result .verified) } )
+				} ) (_step) } } )
+
+			}
 
 
 
@@ -340,4 +489,4 @@ export { generate_deployment_contract_from_ }
 export { execute_proposed_script_, send_proposed_transaction_ }
 export { known_account_, make_known_ad_hoc_account_ }
 export { send_known_transaction_, execute_known_script_, deploy_known_contract_from_, update_known_contract_from_, update_known_contracts_from_ }
-export { run_known_test_from_ }
+export { run_known_test_from_, run_known_test_returnTransaction }
