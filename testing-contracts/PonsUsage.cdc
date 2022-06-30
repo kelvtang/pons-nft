@@ -106,31 +106,32 @@ pub contract PonsUsage {
 
 	/* Deposit listing certificates into the account's default listing certificate collection */
 	pub fun depositListingCertificates (_ account : AuthAccount, _ newListingCertificates : @[{PonsNftMarketContract.PonsListingCertificate}]) : Void {
-		// Load the existing listing certificate collection of the account, if any
-				
-				// Loop through new listing certificates.
-				while newListingCertificates .length > 0 {
-					var listingCertificateHolder <- PonsNftMarketContract .createPonsListingCertificateCollection ()
-					
-					// Move certificate to temporary variable
-					var certificate <- newListingCertificates .remove (at: 0);
+		// Borrow the existing listing certificate collection of the account, if any
+		var listingCertificateCollectionRefOptional =
+			account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection>
+				( from: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath )
 
-					// Generate unique storage path. Since no two nft can have same ID. Each path will always empty.
-					//	// Can also be used to access listing certificate like a dictionary since each id can be used like a key.
-					var counter:Int = 0;
-                    while ponsAccount .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: getPathFromID(certificate.nftId, counter)) != nil{
-                        counter = counter + 1;
-                    }
-                    var collection_storage_path = getPathFromID(certificate.nftId, counter);
+		if listingCertificateCollectionRefOptional != nil {
+			// If the account already has a listing certificate collection
+			// Retrieve each new listing certificate and add it to the collection, then save the collection
+			var listingCertificateCollectionRef = listingCertificateCollectionRefOptional !
 
-					// Store in to a listing certicate collection
-					listingCertificateHolder .appendListingCertificate(item: <- certificate );
+			while newListingCertificates .length > 0 {
+				listingCertificateCollectionRef .appendListingCertificate (<- newListingCertificates .remove (at: 0)) }
 
-					// Save to unique storage location
-					account.save (<- listingCertificateHolder, to: collection_storage_path);
-					
-				}
-				destroy newListingCertificates}
+			destroy newListingCertificates }
+		else {
+			// If the account already has a listing certificate collection
+			// Create a new listing certificate collection, retrieve each new listing certificate and add it to the collection, then save the collection
+
+			var listingCertificateCollection <- PonsNftMarketContract .createPonsListingCertificateCollection ()
+
+			while newListingCertificates .length > 0 {
+				listingCertificateCollection .appendListingCertificate (<- newListingCertificates .remove (at: 0)) }
+
+			destroy newListingCertificates
+
+			account .save (<- listingCertificateCollection, to: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) } }
 
 	/* Withdraw listing certificates from the account's default listing certificate collection */
 	pub fun withdrawListingCertificate (_ account : AuthAccount, nftId : String) : @{PonsNftMarketContract.PonsListingCertificate} {
