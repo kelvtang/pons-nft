@@ -445,9 +445,36 @@ var run_known_test_returnTransaction = _base_path => _test_name => _authorizer_n
 												return _obj.name == "flowAmount";
 											})[0].value.value);
 										}
-
+										//* Create tape test. Test for values across 3
 										console.log({"flow price" : events});
 
+										_test.test("Computational effort trend", async _test_1 => {
+											let avg = (total, _obj)=>{return total+_obj};
+
+											const number_of_windows = 2; // Two windows. Increasing will provide better detail but blur out trend.
+											const deviation_tolerance = 50; // Error tolerance, how much fluctuation we're willin to tolerate. Must also accomodate for noise
+
+											let window_size = Math.floor(events.length/number_of_windows) 
+											
+											let conv_values = [];
+											for(let i=0; (i+window_size)<(events.length+1);i+=window_size){
+												conv_values.push(events.slice(i, ((i+window_size)>events.length?null:i+window_size)).reduce(avg, 0.0)/window_size);
+											}
+
+											
+											let isTolerable = (conv, dev_tolerance)=>{
+												for (let i=0;i<(conv-1); i++){
+													if ((Math.abs(conv[i]-conv[i+1])<=dev_tolerance)===false){
+														return false;
+													}
+												} return true;
+											}
+
+											// If we change number_of_windows then we'll need to recalibrate.
+											_test_1.ok(isTolerable(conv_values, deviation_tolerance), "All adjacent window averages have difference within the tolerance.");
+											
+											_test_1.end();
+										})
 									});
 								};getTransaction(_transaction_response.events[0].transactionId);
 
