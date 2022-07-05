@@ -1,6 +1,7 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import FlowToken from 0xFLOWTOKEN
+import FUSD from 0xFUSD
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsUtils from 0xPONS
@@ -108,11 +109,11 @@ pub contract PonsNftMarketContract {
 		/* Purchase a Pons NFT from the marketplace */
 		pub fun purchase (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
 			pre {
-				// Given that the purchaseVault is a FlowToken vault, preconditions on FungibleToken and FlowToken ensure that
+				// Given that the purchaseVault is a FlowToken vault or FUSD vault, preconditions on FungibleToken and FlowToken ensure that
 				// the balance of the vault is positive, and that only amounts between zero and the balance of the vault can be withdrawn from the vault, so that
 				// attempts to game the market using unreasonable royalty ratios (e.g. < 0% or > 100%) will result in failed assertions
-				purchaseVault .isInstance (Type<@FlowToken.Vault> ()):
-					"Pons NFTs must be purchased using Flow tokens"
+				purchaseVault .isInstance (Type<@FlowToken.Vault> ()) || purchaseVault .isInstance (Type<@FUSD.Vault> ()):
+					"Pons NFTs must be purchased using Flow tokens, or FUSD"
 				self .borrowNft (nftId: nftId) != nil:
 					"This Pons NFT is not on the market anymore" }
 			post {

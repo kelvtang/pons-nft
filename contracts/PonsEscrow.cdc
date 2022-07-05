@@ -1,5 +1,6 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import FlowToken from 0xFLOWTOKEN
+import FUSD from 0xFUSD
 import PonsNftContractInterface from 0xPONS
 import PonsUtils from 0xPONS
 
@@ -51,8 +52,8 @@ pub contract PonsEscrowContract {
 
 		init (flowVault : @FungibleToken.Vault, ponsNfts : @[PonsNftContractInterface.NFT]) {
 			pre {
-				flowVault .isInstance (Type<@FlowToken.Vault> ()):
-					"Only Flow tokens and Pons NFTs are accepted in EscrowResource" }
+				flowVault .isInstance (Type<@FlowToken.Vault> ()) || flowVault .isInstance (Type<@FUSD.Vault> ()):
+					"Only Flow tokens, FUSD and Pons NFTs are accepted in EscrowResource" }
 			self .flowVault <- flowVault
 			self .ponsNfts <- ponsNfts }
 
@@ -232,8 +233,6 @@ pub contract PonsEscrowContract {
 			panic ("No active Escrow with the ID `" .concat (id) .concat ("` exists")) }
 		let escrowCap = PonsEscrowContract .escrowCaps .remove (key: id) !
 		emit PonsEscrowDismissed (id: id, address: escrowCap .address) }
-
-
 
 	/* Gets the EscrowResourceDescription corresponding to resources in an EscrowResource */
 	pub fun resourceDescription (_ escrowResourceRef : &EscrowResource) : EscrowResourceDescription {

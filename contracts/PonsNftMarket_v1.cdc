@@ -1,5 +1,6 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import FlowToken from 0xFLOWTOKEN
+import FUSD from 0xFUSD
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
@@ -30,6 +31,7 @@ pub contract PonsNftMarketContract_v1 {
 
 		/* Capability for the market to receive payment */
 		access(account) var marketReceivePaymentCap : Capability<&{FungibleToken.Receiver}>
+		access(account) var marketReceivePaymentCap_fusd : Capability<&{FungibleToken.Receiver}>
 
 		/* Sales prices for each nftId */
 		access(account) var salePrices : {String: PonsUtils.FlowUnits}
@@ -230,14 +232,29 @@ pub contract PonsNftMarketContract_v1 {
 					// If the artist does not have a valid Capability to receive payments, hold the funds on behalf of the artist
 					// Emit the funds held on behalf of artist event
 					emit FundsHeldOnBehalfOfArtist (ponsArtistId: artistRef .ponsArtistId, nftId: nftId, flowUnits: royalties !)
-					self .marketReceivePaymentCap .borrow () !.deposit (from: <- royaltiesVault) } }
+					
+					// Safety can be assumed as type testing occured in interface
+					if purchaseVault .isInstance (Type<@FlowToken.Vault> ()){
+						// If we're dealing with flow token the we must use the appropriate capability
+						self .marketReceivePaymentCap .borrow () !.deposit (from: <- royaltiesVault)
+					}else{
+						// If we're dealing with fusd the we must use the appropriate capability
+						self .marketReceivePaymentCap_fusd .borrow () !.deposit (from: <- royaltiesVault)
+					}}}
 
 			// Pay the seller the amount due
 			let sellerReceivePaymentCap = self .saleReceivePaymentCaps [nftId] !
 			sellerReceivePaymentCap .borrow () !.deposit (from: <- purchaseVault .withdraw (amount: sellerPrice .flowAmount))
 
 			// Market takes the rest as commission
-			self .marketReceivePaymentCap .borrow () !.deposit (from: <- purchaseVault)
+			// Safety can be assumed as type testing occured in interface
+			if purchaseVault .isInstance (Type<@FlowToken.Vault> ()){
+				// If we're dealing with flow token the we must use the appropriate capability
+				self .marketReceivePaymentCap .borrow () !.deposit (from: <- purchaseVault)
+			}else{
+				// If we're dealing with fusd the we must use the appropriate capability
+				self .marketReceivePaymentCap_fusd .borrow () !.deposit (from: <- purchaseVault)
+			}
 
 			// Emit the Pons NFT Market sold event
 			PonsNftMarketContract .emitPonsNFTSold (
@@ -296,6 +313,7 @@ pub contract PonsNftMarketContract_v1 {
 
 		init
 		( marketReceivePaymentCap : Capability<&{FungibleToken.Receiver}>
+		, marketReceivePaymentCap_fusd : Capability<&{FungibleToken.Receiver}>
 		, minimumMintingPrice : PonsUtils.FlowUnits
 		, primaryCommissionRatio : PonsUtils.Ratio
 		, secondaryCommissionRatio : PonsUtils.Ratio
@@ -303,6 +321,7 @@ pub contract PonsNftMarketContract_v1 {
 			self .collection <- PonsNftContract_v1 .createEmptyCollection ()
 
 			self .marketReceivePaymentCap = marketReceivePaymentCap
+			self .marketReceivePaymentCap_fusd = marketReceivePaymentCap_fusd
 
 			self .salePrices = {}
 			self .saleReceivePaymentCaps = {}
@@ -330,13 +349,23 @@ pub contract PonsNftMarketContract_v1 {
 	init () {
 		let account = self .account
 
+		/* create and initialize an empty flow token vault */
 		if account .borrow <&FlowToken.Vault> (from: /storage/flowTokenVault) == nil {
 			account .save (<- FlowToken .createEmptyVault (), to: /storage/flowTokenVault) }
+
+		/* create and initialize an empty fusd vault */
+		if account .borrow <&FUSD.Vault> (from: /storage/fusdVault) == nil {
+			account .save (<- FUSD .createEmptyVault (), to: /storage/fusdVault) }
 
 		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Receiver}> (/public/flowTokenReceiver) .check () {
 			account .link <&FlowToken.Vault{FungibleToken.Receiver}> (
 				/public/flowTokenReceiver,
 				target: /storage/flowTokenVault ) }
+
+		if ! account .getCapability <&FUSD.Vault{FungibleToken.Receiver}> (/public/fusdReceiver) .check () {
+			account .link <&FUSD.Vault{FungibleToken.Receiver}> (
+				/public/fusdReceiver,
+				target: /storage/fusdVault ) }
 
 		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Balance}> (/public/flowTokenBalance) .check () {
 			// Create a public capability to the Vault that only exposes
@@ -345,11 +374,20 @@ pub contract PonsNftMarketContract_v1 {
 				/public/flowTokenBalance,
 				target: /storage/flowTokenVault ) }
 
+		if ! account .getCapability <&FUSD.Vault{FungibleToken.Balance}> (/public/fusdBalance) .check () {
+			// Create a public capability to the Vault that only exposes
+			// the balance field through the Balance interface
+			account .link <&FUSD.Vault{FungibleToken.Balance}> (
+				/public/fusdBalance,
+				target: /storage/fusdVault ) }
+
 		let marketReceivePaymentCap = account .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenReceiver)
+		let marketReceivePaymentCap_fusd = account .getCapability <&{FungibleToken.Receiver}> (/public/fusdReceiver)
 
 		var ponsMarketV1 <-
 			create PonsNftMarket_v1
 				( marketReceivePaymentCap: marketReceivePaymentCap
+				, marketReceivePaymentCap_fusd: marketReceivePaymentCap_fusd
 				, minimumMintingPrice: PonsUtils.FlowUnits (1.0)
 				, primaryCommissionRatio: PonsUtils.Ratio (0.2)
 				, secondaryCommissionRatio: PonsUtils.Ratio (0.1) )
