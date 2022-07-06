@@ -4,7 +4,6 @@ import NonFungibleToken from 0xNONFUNGIBLETOKEN
 
 /*
 	Pons Utils Contract
-
 	This smart contract contains useful type definitions and convenience methods.
 */
 pub contract PonsUtils {
@@ -34,6 +33,33 @@ pub contract PonsUtils {
 		pub fun toString () : String {
 			return self .flowAmount .toString () .concat (" FLOW") } }
 
+	/* FUSD Units struct */
+	pub struct FUSDUnits {
+		/* Represents the amount of Flow tokens */
+		pub let fusdAmount : UFix64 
+
+		init (fusdAmount : UFix64) {
+			self .fusdAmount = fusdAmount }
+
+		/* Check whether the amount is at least the amount of another FlowUnits */
+		pub fun isAtLeast (_ fusdUnits : FUSDUnits) : Bool {
+			return self .fusdAmount >= fusdUnits .fusdAmount }
+
+		/* Make another FlowUnits equivalent to the amount being scaled by a ratio */
+		pub fun scale (ratio : Ratio) : FUSDUnits {
+			return FUSDUnits (fusdAmount: self .fusdAmount * ratio .amount) }
+
+		/* Make another FlowUnits equivalent to the amount being subtracted by another amount of FlowUnits */
+		pub fun cut (_ fusdUnits : FUSDUnits) : FUSDUnits {
+			return FUSDUnits (fusdAmount: self .fusdAmount - fusdUnits .fusdAmount) }
+
+
+		/* Produce a string representation in a format like "1234.56 FLOW" */
+		pub fun toString () : String {
+			return self .fusdAmount .toString () .concat (" FUSD") } }
+
+	
+
 	/* Ratio struct */
 	pub struct Ratio {
 		/* Represents the numerical ratio, so that for example 0.1 represents 10%, and 1.0 represents 100% */
@@ -48,6 +74,12 @@ pub contract PonsUtils {
 		let flowAmount1 = flowUnits1 .flowAmount
 		let flowAmount2 = flowUnits2 .flowAmount
 		return FlowUnits (flowAmount: flowAmount1 + flowAmount2) }
+
+	/* Produce a FUSDUnits equivalent to the sum of the two separate amounts of FUSDUnits */
+	pub fun sumFUSDUnits (_ fusdUnits1 : FUSDUnits, _ fusdUnits2 : FUSDUnits) : FUSDUnits {
+		let fusdAmount1 = fusdUnits1 .fusdAmount
+		let fusdAmount2 = fusdUnits2 .fusdAmount
+		return FUSDUnits (fusdAmount: fusdAmount1 + fusdAmount2) }
 
 // WORKAROUND -- ignore
 // For some inexplicable reason Flow is not recognising `&PonsNftContract_v1.Collection` as `&NonFungibleToken.Collection`

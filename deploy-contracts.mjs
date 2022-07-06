@@ -1,9 +1,10 @@
 import flow_types from '@onflow/types'
-import { deploy_known_contract_from_ } from './utils/flow.mjs'
+import { deploy_known_contract_from_, update_known_contract_from_ } from './utils/flow.mjs'
 import { flow_sdk_api } from './config.mjs'
 
 var __dirname = new URL ('.', import .meta .url) .pathname
 var deploy_known_contract_ = deploy_known_contract_from_ (__dirname + '/contracts/')
+var update_known_contract_ = update_known_contract_from_ (__dirname + '/contracts/')
 
 
 ;await deploy_known_contract_ ('PonsUtils') ([])
@@ -15,3 +16,5 @@ var deploy_known_contract_ = deploy_known_contract_from_ (__dirname + '/contract
 ;await deploy_known_contract_ ('PonsNftMarket_v1') ([])
 ;await deploy_known_contract_ ('PonsNftMarketAdmin_v1') ([])
 ;await deploy_known_contract_ ('PonsEscrow') ([])
+
+// ; await update_known_contract_ ('PonsUtils')

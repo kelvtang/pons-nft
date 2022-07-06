@@ -428,7 +428,8 @@ var run_known_test_returnTransaction = _base_path => _test_name => _authorizer_n
 								
 								// Draw out the price of transactions.
 								let getTransaction = (transaction_id) => {
-									exec('flow transactions get '+transaction_id+' -o json --network testnet',
+									// extra safety against injection acttacks
+									exec('flow transactions get '+transaction_id.match(/[A-Z, a-z, 0-9]/g).join("")+' -o json --network testnet',
 									function (error, stdout, stderr) {
 										if (stderr !== '' && stderr !== null){throw stderr;};
 										if (error !== null) {throw error;};
