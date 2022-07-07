@@ -191,7 +191,7 @@ pub contract PonsNftMarketContract_v1 {
 
 			// Check that the sufficient funds of Flow tokens have been provided
 			let purchasePrice = self .salePrices .remove (key: nftId) !
-			if ! PonsUtils .FlowUnits (purchaseVault .balance) .isAtLeast (purchasePrice) {
+			if ! PonsUtils .FlowUnits (purchaseVault .balance, purchaseVault .isInstance (Type<@FUSD.Vault> ())?"FUSD":"Flow Token") .isAtLeast (purchasePrice) {
 				panic ("Pons NFT with ID " .concat (nftId) .concat (" is on sale for ") .concat (purchasePrice .toString ()) .concat (", insufficient funds provided")) }
 
 
@@ -208,6 +208,8 @@ pub contract PonsNftMarketContract_v1 {
 				primarySale
 				? (nil as! PonsUtils.FlowUnits?)
 				: purchasePrice .scale (ratio: PonsNftContract .getRoyalty (nftRef))
+
+
 			let commissionPrice =
 				primarySale
 				? purchasePrice .scale (ratio: self .primaryCommissionRatio)
@@ -215,7 +217,7 @@ pub contract PonsNftMarketContract_v1 {
 			let sellerPrice =
 				purchasePrice
 				.cut (commissionPrice)
-				.cut (royalties ?? PonsUtils .FlowUnits (0.0))
+				.cut (royalties ?? PonsUtils .FlowUnits (0.0, purchaseVault .isInstance (Type<@FUSD.Vault> ())?"FUSD":"Flow Token"))
 
 			// If royalties are due, pay the royalties
 			if royalties != nil {
@@ -388,7 +390,8 @@ pub contract PonsNftMarketContract_v1 {
 			create PonsNftMarket_v1
 				( marketReceivePaymentCap: marketReceivePaymentCap
 				, marketReceivePaymentCap_fusd: marketReceivePaymentCap_fusd
-				, minimumMintingPrice: PonsUtils.FlowUnits (1.0)
+				, minimumMintingPrice: PonsUtils.FlowUnits (1.0, "FUSD") // Hardcoding fusd into market
+				// , minimumMintingPrice: PonsUtils.FlowUnits (1.0, "Flow Token")
 				, primaryCommissionRatio: PonsUtils.Ratio (0.2)
 				, secondaryCommissionRatio: PonsUtils.Ratio (0.1) )
 		// Activate PonsNftMarket_v1 as the active implementation of the Pons NFT marketplace

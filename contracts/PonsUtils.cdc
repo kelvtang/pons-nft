@@ -19,13 +19,15 @@ pub contract PonsUtils {
 		/* Holds Type of currency */
 		pub var token:String;
 
-		init (flowAmount : UFix64) {
-			self .flowAmount = flowAmount 
-
+		init (flowAmount : UFix64, tokenType: String) {
 			self .currency = ["Flow Token", "FUSD"];
-			// By default each token is Flow Token
-			self .token = self .currency[0]
-			}
+
+			self .flowAmount = flowAmount
+			if self .currency .contains(tokenType){
+				self .token = tokenType
+			}else{
+				panic ("Currency Not Recognized")
+			}}
 
 		/* Function to toggle token to FUSD */
 		pub fun setFusd(){
@@ -44,11 +46,11 @@ pub contract PonsUtils {
 
 		/* Make another FlowUnits equivalent to the amount being scaled by a ratio */
 		pub fun scale (ratio : Ratio) : FlowUnits {
-			return FlowUnits (flowAmount: self .flowAmount * ratio .amount) }
+			return FlowUnits (flowAmount: self .flowAmount * ratio .amount, tokenType: self .token) }
 
 		/* Make another FlowUnits equivalent to the amount being subtracted by another amount of FlowUnits */
 		pub fun cut (_ flowUnits : FlowUnits) : FlowUnits {
-			return FlowUnits (flowAmount: self .flowAmount - flowUnits .flowAmount) }
+			return FlowUnits (flowAmount: self .flowAmount - flowUnits .flowAmount, tokenType: self .token) }
 
 
 		/* Produce a string representation in a format like "1234.56 FLOW" */
@@ -71,8 +73,7 @@ pub contract PonsUtils {
 		}
 		let flowAmount1 = flowUnits1 .flowAmount
 		let flowAmount2 = flowUnits2 .flowAmount
-		var res = FlowUnits (flowAmount: flowAmount1 + flowAmount2);
-		res .setToken(flowUnits1.token);
+		var res = FlowUnits (flowAmount: flowAmount1 + flowAmount2, tokenType:flowUnits1.token);
 		return res;}
 
 // WORKAROUND -- ignore

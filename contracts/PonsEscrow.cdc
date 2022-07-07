@@ -79,6 +79,7 @@ pub contract PonsEscrowContract {
 		init (flowUnits : PonsUtils.FlowUnits, ponsNftIds : [String]) {
 			self .flowUnits = flowUnits
 			self .ponsNftIds = ponsNftIds } }
+
 	/* Escrow Fulfillment struct. Represents fulfillment capabilities for an Escrow */
 	pub struct EscrowFulfillment {
 		/* Represents the Capability for receiving demanded Flow tokens of an Escrow */
@@ -236,7 +237,8 @@ pub contract PonsEscrowContract {
 
 	/* Gets the EscrowResourceDescription corresponding to resources in an EscrowResource */
 	pub fun resourceDescription (_ escrowResourceRef : &EscrowResource) : EscrowResourceDescription {
-		let flowUnits = PonsUtils.FlowUnits (escrowResourceRef .flowVault .balance)
+		let flowUnits = PonsUtils.FlowUnits (escrowResourceRef .flowVault .balance, escrowResourceRef .flowVault .isInstance (Type<@FUSD.Vault> ())?"FUSD":"Flow Token")
+
 		let ponsNftIds : [String] = []
 
 		var index = 0
@@ -251,7 +253,7 @@ pub contract PonsEscrowContract {
 	( _ escrowResourceRef : &EscrowResource
 	, _ escrowResourceDescription : EscrowResourceDescription
 	) : Bool {
-		if ! PonsUtils.FlowUnits (escrowResourceRef .flowVault .balance) .isAtLeast (escrowResourceDescription .flowUnits) {
+		if ! PonsUtils.FlowUnits (escrowResourceRef .flowVault .balance, escrowResourceRef .flowVault .isInstance (Type<@FUSD.Vault> ())?"FUSD":"Flow Token") .isAtLeast (escrowResourceDescription .flowUnits) {
 			return false }
 		let ponsNftIds : [String] = []
 
