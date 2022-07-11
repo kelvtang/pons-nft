@@ -168,23 +168,19 @@ pub contract PonsUsage {
 		while account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) != nil{
 			counter = counter + 1;
 			collection_storage_path = PonsUsage .getPathFromID(nftId, counter: counter);
-		}; collection_storage_path = PonsUsage .getPathFromID(nftId, counter: (counter-1));
+		}; 
+		if counter == 0{
+			panic ("Pons Listing Certificate Collection for this nftId not found");
+		}
+		collection_storage_path = PonsUsage .getPathFromID(nftId, counter: (counter-1));
 
 		// Borrow the existing listing certificate collection of the account, which must already exist
-		var listingCertificateCollectionRef = account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) !//PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) !
+		var listingCertificateCollectionRef = account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) !
 
-		// We iterate through all listing certificate in the collection, from the end of the collection
-		// Given that we only deposit listing certificates using append, as in the deposit functions
-		// If multiple listing certificates are present with the same nftId, the last one will be the latest certificate and the previous ones will be invalid
-		var listingCertificateIndex = listingCertificateCollectionRef .listingCertificates .length - 1
-		while listingCertificateIndex >= 0 {
-			// If the NFT has the specified nftId
-			if listingCertificateCollectionRef .listingCertificates [listingCertificateIndex] .nftId == nftId {
-				// If so, retrieve the NFT and return it
-				return <- listingCertificateCollectionRef .removeListingCertificate (at: listingCertificateIndex) }
-
-			listingCertificateIndex = listingCertificateIndex - 1 }
-		panic ("Pons Listing Certificate for this nftId not found") }
+		// Only one certificate in each collection, at index zero
+		return <- listingCertificateCollectionRef .removeListingCertificate (at: 0)
+		
+		}
 
 
 
