@@ -5,3 +5,4 @@ var deploy_known_contract_ = deploy_known_contract_from_ (__dirname + '/core-con
 
 
 ;await deploy_known_contract_ ('NonFungibleToken') ([])
+;await deploy_known_contract_ ('FUSD') ([])

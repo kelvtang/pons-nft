@@ -16,7 +16,8 @@ let access_node_origin = /**/'http://lvh.me:8888'/*/'https://rest-testnet.onflow
 let address_of_names =
 	{ '0xFUNGIBLETOKEN': '0xee82856bf20e2aa6'
 	, '0xFLOWTOKEN': '0x0ae53cb6e3f42a79' 
-	, '0xNONFUNGIBLETOKEN': '0xf8d6e0586b0a20c7' 
+	, '0xNONFUNGIBLETOKEN': '0xf8d6e0586b0a20c7'
+	, '0xFUSD':'0xf8d6e0586b0a20c7' 
 	, '0xPONS': '0xf8d6e0586b0a20c7'
 	, '0xPROPOSER': '0xf8d6e0586b0a20c7' }
 let private_keys_of_names =
@@ -24,16 +25,17 @@ let private_keys_of_names =
 	, '0xPROPOSER': [ '4b01a799da096bddda4c19d04e966cb05cfbe610df117ef9713d382483956070' ] }
 
 
-// /*Testnet*/
+/*Testnet*/
 // let address_of_names =
 //         { '0xFUNGIBLETOKEN': '0x9a0766d93b6608b7'
 //         , '0xFLOWTOKEN': '0x7e60df042a9c0868'
 //         , '0xNONFUNGIBLETOKEN': '0x631e88ae7f1d7c20'
-//         , '0xPONS': '0x4a31e0f05f1d471e'
-//         , '0xPROPOSER': '0x4a31e0f05f1d471e'}
+// 		   , '0xFUSD':'0xe223d8a629e49c68'
+//         , '0xPONS': '0x9c41d8ea4c088c6d'
+//         , '0xPROPOSER': '0x9c41d8ea4c088c6d'}
 // let private_keys_of_names =
-//         { '0xPONS': [ 'e6e1daca9a1b7f97ce2671097d92f21e20e781f3be58a5139b64cf999792d4b6']
-//         , '0xPROPOSER': [ 'e6e1daca9a1b7f97ce2671097d92f21e20e781f3be58a5139b64cf999792d4b6']}
+//         { '0xPONS': [ 'be7c7412844fd3c013f71550e2ad7588f7c19f4b7da0a9e6e0d692283e03a60d']
+//         , '0xPROPOSER': [ 'be7c7412844fd3c013f71550e2ad7588f7c19f4b7da0a9e6e0d692283e03a60d']}
 
 
 

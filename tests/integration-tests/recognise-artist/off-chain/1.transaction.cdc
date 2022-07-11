@@ -24,6 +24,7 @@ transaction
 			ponsArtistId: ponsArtistId,
 			metadata : metadata,
 			nil,
+			nil,
 			nil )
 
 		TestUtils .log ("Recognised artist") } }

@@ -233,6 +233,8 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 		var _last_transaction_arguments = []
 		var _test_info
 
+		console.log(`\n\n\tTestname: ${_test_name}`)
+
 		while (true) {
 			;_step_count = _step_count + 1
 
@@ -245,6 +247,7 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 				else {
 					;break } } }
 
+
 		for (var _step = 1; _step < _step_count; _step ++) {
 			;(_step => {
 				;_test .test ('step ' + _step, async _test => {
@@ -253,6 +256,9 @@ var run_known_test_from_ = _base_path => _test_name => _authorizer_names => asyn
 
 					var _transaction_exists = await file_exists_ (_test_path + '/' + _transaction_name + '.cdc')
 					if (_transaction_exists) {
+
+						console.log(`\n\n\t\tTransaction Name: ${_transaction_name}`)
+
 						try {
 							var _transaction_response =
 								await
@@ -346,6 +352,8 @@ var run_known_test_returnTransaction = _base_path => _test_name => _authorizer_n
 		var _last_transaction_arguments = []
 		var _test_info
 
+		console.log(`\n\n\tTestname: ${_test_name}`)
+
 		while (true) {
 			;_step_count = _step_count + 1
 
@@ -366,6 +374,9 @@ var run_known_test_returnTransaction = _base_path => _test_name => _authorizer_n
 
 					var _transaction_exists = await file_exists_ (_test_path + '/' + _transaction_name + '.cdc')
 					if (_transaction_exists) {
+						
+						console.log(`\n\n\t\tTransaction Name: ${_transaction_name}`)
+
 						try {
 							var _transaction_response =
 								await
@@ -428,7 +439,7 @@ var run_known_test_returnTransaction = _base_path => _test_name => _authorizer_n
 								
 								// Draw out the price of transactions.
 								let getTransaction = (transaction_id) => {
-									exec('flow transactions get '+transaction_id+' -o json',
+									exec('flow transactions get '+transaction_id+' -o json --network testnet',
 									function (error, stdout, stderr) {
 										if (stderr !== '' && stderr !== null){throw stderr;};
 										if (error !== null) {throw error;};

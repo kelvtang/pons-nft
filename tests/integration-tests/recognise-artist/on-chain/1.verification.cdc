@@ -22,7 +22,7 @@ pub fun main
 
 		let addressOptional = PonsNftContract .getArtistAddress (ponsArtistRef)
 		let metadata = PonsNftContract .getArtistMetadata (ponsArtistRef)
-		let receivePaymentCap = PonsNftContract .getArtistReceivePaymentCap (ponsArtistRef)
+		let receivePaymentCap = PonsNftContract .getArtistReceivePaymentCapFlow (ponsArtistRef)
 
 
 		return {
