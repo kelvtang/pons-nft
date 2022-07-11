@@ -95,12 +95,9 @@ pub contract PonsUsage {
 		// Pure string is a string following two conditions
 		//  // 1) must only contain alphanumerical characters
 		//  // 2) must always start with an alphabet charater
-			var pureString:String = "nftid".concat(mintID.slice(from:0,upTo:8).concat(
-			mintID.slice(from: 9, upTo: 13).concat(
-				mintID.slice(from: 14, upTo: 18).concat(
-					mintID.slice(from: 19, upTo: 23).concat(
-						mintID.slice(from: 24, upTo: 36).concat(
-							count!.toString()))))));
+		var pureString:String = "nftid".concat(String.encodeHex(HashAlgorithm.SHA3_256.hash(mintID.utf8)).concat(count!.toString()));
+
+
 		return StoragePath(identifier:pureString)!;}
 		
 
@@ -146,6 +143,7 @@ pub contract PonsUsage {
 				counter = counter + 1;
 				collection_storage_path = PonsUsage .getPathFromID(certificate.nftId, counter: counter);
 			}
+			
 
 			// Store in to a listing certicate collection
 			listingCertificateHolder .appendListingCertificate(<- certificate );
@@ -162,8 +160,18 @@ pub contract PonsUsage {
 	
 	/* Withdraw listing certificates from the account's default listing certificate collection */
 	pub fun withdrawListingCertificate (_ account : AuthAccount, nftId : String) : @{PonsNftMarketContract.PonsListingCertificate} {
+		
+		// Generate unique storage path. Since no two nft can have same ID. Each path will always empty.
+		//	// Can also be used to access listing certificate like a dictionary since each id can be used like a key.
+		var counter:Int = 0;
+		var collection_storage_path = PonsUsage .getPathFromID(nftId, counter: counter);
+		while account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) != nil{
+			counter = counter + 1;
+			collection_storage_path = PonsUsage .getPathFromID(nftId, counter: counter);
+		}; collection_storage_path = PonsUsage .getPathFromID(nftId, counter: (counter-1));
+
 		// Borrow the existing listing certificate collection of the account, which must already exist
-		var listingCertificateCollectionRef = account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) !
+		var listingCertificateCollectionRef = account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) !//PonsNftMarketContract .PonsListingCertificateCollectionStoragePath) !
 
 		// We iterate through all listing certificate in the collection, from the end of the collection
 		// Given that we only deposit listing certificates using append, as in the deposit functions
