@@ -37,10 +37,10 @@ transaction
 			submitter: randomAccount,
 			id: "consummation-test-transaction-5-random",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
+				flowUnits: PonsUtils.FlowUnits (0.0, "Flow Token"),
 				ponsNftIds: [ secondNftId ] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
+				flowUnits: PonsUtils.FlowUnits (0.0, "Flow Token"),
 				ponsNftIds: [] ) )
 
 

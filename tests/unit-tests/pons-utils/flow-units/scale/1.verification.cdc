@@ -12,7 +12,7 @@ pub fun main () : {String: AnyStruct} {
 
 	let ratio1 = PonsUtils .Ratio (0.2)
 	let ratio2 = PonsUtils .Ratio (0.1)
-	let flowUnits = PonsUtils .FlowUnits (100.0)
+	let flowUnits = PonsUtils .FlowUnits (100.0, "Flow Token")
 
 	let flowUnitsScaled1 = flowUnits .scale (ratio: ratio1)
 	let flowUnitsScaled1Again = flowUnits .scale (ratio: ratio1)
@@ -23,8 +23,8 @@ pub fun main () : {String: AnyStruct} {
 
 	let pass =
 		pureScaling
-		&& (flowUnitsScaled1 .flowAmount == PonsUtils .FlowUnits (20.0) .flowAmount)
-		&& (flowUnitsScaled2 .flowAmount == PonsUtils .FlowUnits (2.0) .flowAmount)
+		&& (flowUnitsScaled1 .flowAmount == PonsUtils .FlowUnits (20.0, "Flow Token") .flowAmount)
+		&& (flowUnitsScaled2 .flowAmount == PonsUtils .FlowUnits (2.0, "Flow Token") .flowAmount)
 
 	return {
 		"verified": pass,

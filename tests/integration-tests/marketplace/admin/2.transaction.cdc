@@ -43,7 +43,7 @@ transaction
 		let originalPrice = PonsNftMarketContract .getPrice (nftId: firstNftId) !
 		TestUtils .log ("Original price: " .concat (originalPrice .flowAmount .toString ()))
 
-		let changedPrice = PonsUtils.FlowUnits (changedPriceAmount)
+		let changedPrice = PonsUtils.FlowUnits (changedPriceAmount, "Flow Token")
 		nftAdminRef .updateSalePrice (nftId: firstNftId, price: changedPrice)
 
 		let updatedPrice = PonsNftMarketContract .getPrice (nftId: firstNftId) !

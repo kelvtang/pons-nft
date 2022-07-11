@@ -37,10 +37,10 @@ transaction
 			submitter: artistAccount,
 			id: "consummation-test-transaction-6-artist",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
+				flowUnits: PonsUtils.FlowUnits (0.0, "Flow Token"),
 				ponsNftIds: [ firstNftId ] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (5.0),
+				flowUnits: PonsUtils.FlowUnits (5.0, "Flow Token"),
 				ponsNftIds: [ secondNftId ] ) )
 
 		} }

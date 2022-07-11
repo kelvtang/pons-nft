@@ -10,9 +10,9 @@ pub fun main () : {String: AnyStruct} {
 
 	// Compute and compare values of `isAtLeast ()` with the expected values
 
-	let flowUnits1 = PonsUtils .FlowUnits (50.0)
-	let flowUnits2 = PonsUtils .FlowUnits (50.0)
-	let flowUnits3 = PonsUtils .FlowUnits (100.0)
+	let flowUnits1 = PonsUtils .FlowUnits (50.0, "Flow Token")
+	let flowUnits2 = PonsUtils .FlowUnits (50.0, "Flow Token")
+	let flowUnits3 = PonsUtils .FlowUnits (100.0, "Flow Token")
 
 	let is1AtLeast1 = flowUnits1 .isAtLeast (flowUnits1)
 	let is1AtLeast2 = flowUnits1 .isAtLeast (flowUnits2)

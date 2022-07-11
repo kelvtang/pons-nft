@@ -28,8 +28,8 @@ transaction
 
 		minterRef .refillMintIds (mintIds: mintIds)
 
-		let basePrice = PonsUtils.FlowUnits (basePriceAmount)
-		let incrementalPrice = PonsUtils.FlowUnits (incrementalPriceAmount)
+		let basePrice = PonsUtils.FlowUnits (basePriceAmount, "Flow Token")
+		let incrementalPrice = PonsUtils.FlowUnits (incrementalPriceAmount, "Flow Token")
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 
 		let nftIds =

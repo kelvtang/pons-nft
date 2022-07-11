@@ -31,8 +31,8 @@ transaction
 		// 2) Mint an NFT
 		// 3) Give FLOW to 'Random' account to purchase all the NFTs
 
-		let basePrice = PonsUtils.FlowUnits (basePriceAmount)
-		let incrementalPrice = PonsUtils.FlowUnits (incrementalPriceAmount)
+		let basePrice = PonsUtils.FlowUnits (basePriceAmount, "Flow Token")
+		let incrementalPrice = PonsUtils.FlowUnits (incrementalPriceAmount, "Flow Token")
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 
 		TestUtils .log ("Refill " .concat (quantity .toString ()) .concat (" NFT ids"))

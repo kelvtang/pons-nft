@@ -265,6 +265,22 @@ var run_known_test_getTransaction_ = run_known_test_returnTransaction (__dirname
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 
 ;await run_known_test_
+	( 'integration-tests/escrow/consummation_v2' )
+	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
+	, flow_sdk_api .arg ([ v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-9'
+			, title: 'NFT title 9'
+			, description: 'NFT description 9' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg ('5.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+
+;await run_known_test_
 	( 'integration-tests/escrow/termination' )
 	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )
 	(

@@ -34,7 +34,7 @@ transaction
 
 		minterRef .refillMintIds (mintIds: [ mintId ])
 
-		let basePrice = PonsUtils.FlowUnits (basePriceAmount)
+		let basePrice = PonsUtils.FlowUnits (basePriceAmount, "Flow Token")
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 
 		let nftIds =
@@ -43,7 +43,7 @@ transaction
 				metadata: metadata,
 				quantity: 1,
 				basePrice: basePrice,
-				incrementalPrice: PonsUtils.FlowUnits (0.0),
+				incrementalPrice: PonsUtils.FlowUnits (0.0, "Flow Token"),
 				royalty )
 
 
@@ -73,7 +73,7 @@ transaction
 		PonsUsage .listForSale (
 			lister: patronAccount,
 			nftId: firstNftId,
-			PonsUtils.FlowUnits (100.0) )
+			PonsUtils.FlowUnits (100.0, "Flow Token") )
 
 		PonsUsage .purchase (
 			patron: randomAccount,

@@ -37,10 +37,10 @@ transaction
 			submitter: artistAccount,
 			id: "termination-test-transaction-7-artist",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (2.0),
+				flowUnits: PonsUtils.FlowUnits (2.0, "Flow Token"),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
+				flowUnits: PonsUtils.FlowUnits (0.0, "Flow Token"),
 				ponsNftIds: [ firstNftId, secondNftId, thirdNftId ] ) )
 
 		PonsEscrowContract .terminateEscrow (

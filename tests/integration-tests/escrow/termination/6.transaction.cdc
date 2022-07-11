@@ -43,10 +43,10 @@ transaction
 			submitter: ponsAccount,
 			id: "termination-test-transaction-6-pons",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
+				flowUnits: PonsUtils.FlowUnits (0.0, "Flow Token"),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
+				flowUnits: PonsUtils.FlowUnits (0.0, "Flow Token"),
 				ponsNftIds: [] ) )
 
 		let escrowRef = escrowManagerRef .escrow (id: "termination-test-transaction-6-pons") !

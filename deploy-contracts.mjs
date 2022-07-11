@@ -17,4 +17,12 @@ var update_known_contract_ = update_known_contract_from_ (__dirname + '/contract
 ;await deploy_known_contract_ ('PonsNftMarketAdmin_v1') ([])
 ;await deploy_known_contract_ ('PonsEscrow') ([])
 
-// ; await update_known_contract_ ('PonsUtils')
+// ;await update_known_contract_ ('PonsUtils') 
+// ;await update_known_contract_ ('PonsCertification') 
+// ;await update_known_contract_ ('PonsNftInterface') 
+// ;await update_known_contract_ ('PonsNft') 
+// ;await update_known_contract_ ('PonsNftMarket') 
+// ;await update_known_contract_ ('PonsNft_v1') 
+// ;await update_known_contract_ ('PonsNftMarket_v1') 
+// ;await update_known_contract_ ('PonsNftMarketAdmin_v1') 
+// ;await update_known_contract_ ('PonsEscrow') 
