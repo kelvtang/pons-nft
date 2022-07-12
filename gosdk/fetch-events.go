@@ -9,14 +9,23 @@ import (
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/access/grpc"
+	"github.com/onflow/flow-go-sdk/client"
+	"google.golang.org/grpc"
+	// "github.com/onflow/flow-go-sdk/access/grpc"
 )
 
 func main() {
 	ctx := context.Background()
 
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(20 * 1024 * 1024)),
+	}
+
 	// initialize client
-	flowClient, err := grpc.NewClient("access-001.mainnet17.nodes.onflow.org:9000")
+	c, err := client.New("access-001.mainnet15.nodes.onflow.org:9000", opts...)
+	// flowClient, err := grpc.NewClient("access-001.mainnet15.nodes.onflow.org:9000")
 	handleError(err)
 
 	// Get starting block height
@@ -25,15 +34,9 @@ func main() {
 	startHeight := uint64(signedHeight)
 
 	var endHeight uint64
-	if os.Args[2] != "-1" {
-		signedHeight, err := strconv.ParseInt(os.Args[2], 10, 64)
-		handleError(err)
-		endHeight = uint64(signedHeight)
-	} else {
-		latestBlock, err := flowClient.GetLatestBlock(ctx, true)
-		handleError(err)
-		endHeight = latestBlock.Height
-	}
+	latestBlock, err := c.GetLatestBlock(ctx, true)
+	handleError(err)
+	endHeight = latestBlock.Height
 
 	// Different channels
 	collectionChannel := make(chan collectionPayload)
@@ -59,7 +62,7 @@ func main() {
 		}
 
 		for _, height := range blockHeights {
-			go getBlockCollections(height, collectionChannel, ctx, flowClient)
+			go getBlockCollections(height, collectionChannel, ctx, c)
 		}
 
 		collectionGuarantees := make([]collectionPayload, len(blockHeights))
@@ -68,7 +71,7 @@ func main() {
 			collectionGuarantees[i] = <-collectionChannel
 
 			for _, collection := range collectionGuarantees[i].collectionGuarantees {
-				go getCollectionTransactions(collectionGuarantees[i].height, collection.CollectionID, transactionChannel, ctx, flowClient)
+				go getCollectionTransactions(collectionGuarantees[i].height, collection.CollectionID, transactionChannel, ctx, c)
 
 			}
 
@@ -76,10 +79,8 @@ func main() {
 
 			for i := range collectionTransactions {
 				collectionTransactions[i] = <-transactionChannel
-
 				for _, transactionId := range collectionTransactions[i].transactionIDs {
-					go getTransactionsEvents(collectionTransactions[i].height, transactionId, eventsChannel, ctx, flowClient)
-
+					go getTransactionsEvents(collectionTransactions[i].height, transactionId, eventsChannel, ctx, c)
 				}
 				// fmt.Println(collectionTransactions[i].transactionIDs)
 				transactionEvents := make([]eventPayload, len(collectionTransactions[i].transactionIDs))
@@ -89,13 +90,14 @@ func main() {
 
 					for _, e := range transactionEvents[i].events {
 						if strings.HasPrefix(e.Value.EventType.QualifiedIdentifier, "Pons") {
+							// fmt.Println(e)
 							// fmt.Println(e.Value.EventType.Fields)
 							eventData := make(map[string]string)
 							for k, v := range e.Value.EventType.Fields {
 								eventData[v.Identifier] = e.Value.Fields[k].String()
 							}
 							// fmt.Println(eventData)
-							eventInformation, _ := json.Marshal(eventData)
+							eventInformation, _ := json.MarshalIndent(eventData, "", " ")
 							values := strings.SplitN(e.Value.String(), "(", 2)
 							eventType := strings.Split(values[0], ".")
 							payload := event{
@@ -117,13 +119,13 @@ func main() {
 	}
 	responseMap := make(map[string][]event)
 	responseMap["events"] = eventsData
-	eventsJson, _ := json.Marshal(responseMap)
+	eventsJson, _ := json.MarshalIndent(responseMap, "", " ")
 	fmt.Println(string(eventsJson))
 }
 
-func getBlockCollections(height uint64, collectionChannel chan collectionPayload, ctx context.Context, flowClient *grpc.Client) {
+func getBlockCollections(height uint64, collectionChannel chan collectionPayload, ctx context.Context, c *client.Client) {
 
-	blockInformation, err := flowClient.GetBlockByHeight(ctx, height)
+	blockInformation, err := c.GetBlockByHeight(ctx, height)
 	handleError(err)
 	payload := collectionPayload{
 		height:               blockInformation.Height,
@@ -132,8 +134,8 @@ func getBlockCollections(height uint64, collectionChannel chan collectionPayload
 	collectionChannel <- payload
 }
 
-func getCollectionTransactions(height uint64, collectionId flow.Identifier, transactionChannel chan transactionPayload, ctx context.Context, flowClient *grpc.Client) {
-	collectionInformation, err := flowClient.GetCollection(ctx, collectionId)
+func getCollectionTransactions(height uint64, collectionId flow.Identifier, transactionChannel chan transactionPayload, ctx context.Context, c *client.Client) {
+	collectionInformation, err := c.GetCollection(ctx, collectionId)
 	handleError(err)
 	payload := transactionPayload{
 		height:         height,
@@ -142,8 +144,8 @@ func getCollectionTransactions(height uint64, collectionId flow.Identifier, tran
 	transactionChannel <- payload
 }
 
-func getTransactionsEvents(height uint64, transactionId flow.Identifier, eventChannel chan eventPayload, ctx context.Context, flowClient *grpc.Client) {
-	transactionInformation, err := flowClient.GetTransactionResult(ctx, transactionId)
+func getTransactionsEvents(height uint64, transactionId flow.Identifier, eventChannel chan eventPayload, ctx context.Context, c *client.Client) {
+	transactionInformation, err := c.GetTransactionResult(ctx, transactionId)
 	handleError(err)
 	payload := eventPayload{
 		height: height,

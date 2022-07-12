@@ -1,11 +1,11 @@
 create type escrowContractStatus as enum ('Submitted', 'Consummated', 'Terminated', 'Dismissed');
 
-drop table if exists nft cascade;
-drop table if exists account cascade;
-drop table if exists nft_ownership cascade;
-drop table if exists escrow_contract cascade;
-drop table if exists events cascade;
-drop table if exists latest_block_height cascade;
+-- drop table events cascade;
+-- drop table latest_block_height cascade;
+-- drop table account cascade;
+-- drop table nft cascade;
+-- drop table nft_ownership cascade;
+-- drop table escrow_contract cascade;
 
 create table if not exists events (
     contract_address text,
@@ -14,6 +14,10 @@ create table if not exists events (
     transaction_id text,
     data jsonb,
     block_height bigint
+);
+
+create table if not exists latest_block_height (
+    height bigint
 );
 
 create table if not exists nft (

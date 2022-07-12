@@ -1,17 +1,4 @@
-create table if not exists events (
-    contract_address text,
-    contract_name text,
-    event_type text,
-    transaction_id text,
-    data jsonb,
-    block_height bigint
-);
-
-create table if not exists latest_block_height (
-    height bigint
-);
-
-create or replace procedure fetch_events(block_height bigint, end_height bigint default -1)
+create or replace procedure fetch_events(block_height bigint)
 language plpgsql
 as $$
 declare 
@@ -28,7 +15,8 @@ begin
         latest_block_height bigint,
         new_event boolean
     );
-    execute format('copy temp_events from program ''/mnt/c/Users/abdel/Desktop/PONS.ai/pons-nft/gosdk/fetch-events.sh %s %s'' with (format ''csv'', header ''on'')', block_height, end_height);
+    execute format('copy temp_events from program ''/mnt/c/Users/abdel/Desktop/PONS.ai/pons-nft/gosdk/fetch-events.sh %s'' with (format ''csv'', header ''on'')', block_height);
+    -- execute format('copy temp_events from program ''/home/ubuntu/abdel/gosdk/fetch-events.sh %s'' with (format ''csv'', header ''on'')', block_height);
 
     lock table events in exclusive mode;
     
@@ -41,7 +29,7 @@ begin
         end if;
     end loop;
  
-    -- execute 'INSERT INTO latest_block_height values($1)' using CAST(event_record.latest_block_height as bigint);
+    execute 'INSERT INTO latest_block_height values($1)' using event_record.latest_block_height;
     
 end$$;
 
@@ -52,10 +40,9 @@ declare
     latest_height bigint;
 begin
     latest_height := (select max(height) from latest_block_height);
-    call fetch_event(latest_height);
+    call fetch_events(latest_height);
 end$$;
 
 
-call fetch_events(30801493, 30801494);
-
-
+call fetch_events(22349785);
+-- call update_events();

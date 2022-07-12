@@ -15,8 +15,8 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.12 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381 // indirect
 	github.com/onflow/atree v0.3.1-0.20220531231935-525fbc26f40a // indirect
-	github.com/onflow/cadence v0.24.3 // indirect
-	github.com/onflow/flow-go-sdk v0.26.2 // indirect
+	github.com/onflow/cadence v0.20.2 // indirect
+	github.com/onflow/flow-go-sdk v0.24.0 // indirect
 	github.com/onflow/flow-go/crypto v0.24.3 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.2.5 // indirect
 	github.com/onflow/sdks v0.4.4 // indirect
