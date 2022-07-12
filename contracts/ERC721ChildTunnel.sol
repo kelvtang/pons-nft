@@ -150,7 +150,7 @@ contract FxMintableERC721ChildTunnel is Ownable, FxBaseChildTunnel, Create2, IER
 
         // deposit tokens
         FxERC721 childTokenContract = FxERC721(childToken);
-        childTokenContract.mint(msg.sender, tokenId, depositData);
+        childTokenContract.mint(to, tokenId, depositData);
 
     }
 

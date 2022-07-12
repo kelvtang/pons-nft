@@ -44,13 +44,7 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
         require(rootToChildTokens[rootToken] != address(0x0), "FxMintableERC721RootTunnel: NO_MAPPING_FOUND");
 
         // transfer from depositor to this contract
-        FxERC721(rootToken).safeTransferFrom(
-            msg.sender, // depositor
-            address(this), // manager contract
-            tokenId,
-            data
-        );
-
+        FxERC721(rootToken).burn(tokenId);
         // DEPOSIT, encode(rootToken, depositor, user, tokenId, extra data)
         bytes memory message = abi.encode(DEPOSIT, abi.encode(rootToken, msg.sender, user, tokenId, data));
         _sendMessageToChild(message);
