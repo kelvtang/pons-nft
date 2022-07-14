@@ -34,6 +34,8 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
         return this.onERC721Received.selector;
     }
 
+
+    // before calling, need to prompt user to accept adding us as approved owner from js 
     function deposit(
         address rootToken,
         address user,
@@ -44,7 +46,13 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
         require(rootToChildTokens[rootToken] != address(0x0), "FxMintableERC721RootTunnel: NO_MAPPING_FOUND");
 
         // transfer from depositor to this contract
-        FxERC721(rootToken).burn(tokenId);
+        FxERC721(rootToken).safeTransferFrom(
+            msg.sender, // depositor
+            address(this), // manager contract
+            tokenId,
+            data
+        );
+  
         // DEPOSIT, encode(rootToken, depositor, user, tokenId, extra data)
         bytes memory message = abi.encode(DEPOSIT, abi.encode(rootToken, msg.sender, user, tokenId, data));
         _sendMessageToChild(message);
@@ -71,16 +79,18 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
         FxERC721 tokenObj = FxERC721(rootToken);
 
         //approve token transfer
-        tokenObj.mint(address(this), tokenId, syncData);
-        tokenObj.approve(to, tokenId);
-
-        // transfer from tokens
-        FxERC721(rootToken).safeTransferFrom(
-            address(this),
-            to,
-            tokenId,
-            syncData
-        );
+        if (!tokenObj.exists(tokenId)) {
+            FxERC721(rootToken).setApproval(true, tokenId);
+            tokenObj.mint(to, tokenId, syncData);
+        } else {
+            // transfer from tokens
+            tokenObj.safeTransferFrom(
+                address(this),
+                to,
+                tokenId,
+                syncData
+            );
+        }
     }
 
     function _deployRootToken(
@@ -92,6 +102,7 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
         bytes32 salt = keccak256(abi.encodePacked(childToken));
         address rootToken = createClone(salt, rootTokenTemplate);
         FxERC721(rootToken).initialize(address(this), rootToken, name, symbol);
+        // FxERC721(rootToken).transferOwnership(msg.sender);
 
         // add into mapped tokens
         rootToChildTokens[rootToken] = childToken;

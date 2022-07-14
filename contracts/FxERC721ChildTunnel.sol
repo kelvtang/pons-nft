@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 import {FxBaseChildTunnel} from "./FxBaseChildTunnel.sol";
 import {Create2} from "./Create2.sol";
-import {Ownable} from "./Ownable.sol";
 import {FxERC721} from "./FxERC721.sol";
 import {IERC721Receiver} from "./IERC721Receiver.sol";
+import {Ownable} from "./Ownable.sol";
 
-contract FxMintableERC721ChildTunnel is Ownable, FxBaseChildTunnel, Create2, IERC721Receiver {
+contract FxERC721ChildTunnel is Ownable, FxBaseChildTunnel, Create2, IERC721Receiver {
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     //bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
 
@@ -19,19 +19,6 @@ contract FxMintableERC721ChildTunnel is Ownable, FxBaseChildTunnel, Create2, IER
     address public childTokenTemplate;
     // root token tempalte code hash
     bytes32 public rootTokenTemplateCodeHash;
-
-
-    // TODO: Needs to be implemented correctly based on what we get from flow
-    struct EventInformation {
-        bool approved;
-    }
-
-    mapping(uint256 => EventInformation) private _EventInfo;
-    
-    // TODO: Needs to be implemented correctly based on what we get from flow
-    function setMintInfo(bool approval, uint256 tokenId) public onlyOwner {
-        _EventInfo[tokenId].approved = approval;
-    }
 
     constructor(
         address _fxChild,
@@ -51,6 +38,12 @@ contract FxMintableERC721ChildTunnel is Ownable, FxBaseChildTunnel, Create2, IER
         bytes calldata /* data */
     ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
+    }
+
+
+    // TODO: Needs to be implemented correctly based on what we get from flow
+    function sendApproval(address childToken, bool approval, uint256 tokenId) public onlyOwner {
+        FxERC721(childToken).setApproval(approval, tokenId);
     }
 
     // deploy child token with unique id
@@ -74,10 +67,11 @@ contract FxMintableERC721ChildTunnel is Ownable, FxBaseChildTunnel, Create2, IER
 
         // initialize child token with all parameters
         FxERC721(childToken).initialize(address(this), rootToken, name, symbol);
+        // FxERC721(childToken).transferOwnership(msg.sender);
     }
 
     //To mint tokens on child chain
-    function mintToken(address childToken, uint256 tokenId, bytes memory data) public onlyOwner {
+    function mintToken(address childToken, uint256 tokenId, bytes memory data) public {
         FxERC721 childTokenContract = FxERC721(childToken);
         // child token contract will have root token
         address rootToken = childTokenContract.connectedToken();
@@ -86,12 +80,6 @@ contract FxMintableERC721ChildTunnel is Ownable, FxBaseChildTunnel, Create2, IER
         require(
             childToken != address(0x0) && rootToken != address(0x0) && childToken == rootToChildToken[rootToken],
             "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
-        );
-
-        // TODO: Needs to be implemented correctly based on what we get from flow
-        require(
-          _EventInfo[tokenId].approved == true,
-          "Token not approved for minting on polygon Blockchain"  
         );
 
         //mint token
@@ -150,6 +138,7 @@ contract FxMintableERC721ChildTunnel is Ownable, FxBaseChildTunnel, Create2, IER
 
         // deposit tokens
         FxERC721 childTokenContract = FxERC721(childToken);
+        childTokenContract.setApproval(true, tokenId);
         childTokenContract.mint(to, tokenId, depositData);
 
     }
