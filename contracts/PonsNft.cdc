@@ -326,7 +326,7 @@ pub contract PonsNftContract {
 
 			// Save the artist's Capability to receive Flow tokens
 			if receivePaymentCapOptionalFlow != nil {
-				PonsNftContract .receivePaymentCaps .insert (key: ponsArtistId, receivePaymentCapOptionalFlow !) }
+				PonsNftContract .receivePaymentCapsFlow .insert (key: ponsArtistId, receivePaymentCapOptionalFlow !) }
 
 			// Save the artist's Capability to receive FUSD tokens
 			if receivePaymentCapOptionalFusd != nil {

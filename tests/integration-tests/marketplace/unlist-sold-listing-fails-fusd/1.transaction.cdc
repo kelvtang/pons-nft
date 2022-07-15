@@ -1,6 +1,6 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
-import PonsNftMarketContractFusd from 0xPONS
+import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 import PonsUsage from 0xPONS
@@ -25,10 +25,10 @@ transaction
 		// Setup state for the test
 		// 1) Add an untaken nftId to Pons NFT minter, so that NFTs can be minted for artists
 		// 2) Mint NFT for the artist
-		// 3) Give Flow tokens to the 'Patron' and 'Random' accounts, so they may participate in purchasing
+		// 3) Give Fusd tokens to the 'Patron' and 'Random' accounts, so they may participate in purchasing
 		// 4) 'Patron' buys the NFT, and lists it on the market 
 
-		TestUtils .log ("Give FUSD to Patron 1 and Random 1")
+		TestUtils .log ("Give Fusd to Patron 1 and Random 1")
 
 		let minterRef = ponsAccount .borrow <&PonsNftContract_v1.NftMinter_v1> (from: minterStoragePath) !
 
@@ -52,7 +52,7 @@ transaction
 		patronAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
 		.deposit (
 			from: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
-					.withdraw (amount: PonsNftMarketContractFusd .getPrice (nftId: firstNftId) !.fusdAmount) )
+					.withdraw (amount: PonsNftMarketContract .getPriceFusd (nftId: firstNftId) !.fusdAmount) )
 
 		randomAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
 		.deposit (
@@ -63,7 +63,7 @@ transaction
 
 		TestUtils .testInfo ("Market address", ponsAccount .address .toString ())
 
-		TestUtils .testInfo ("Artist address", PonsNftContract .getArtistAddress (PonsNftContract .borrowArtist (PonsNftMarketContractFusd .borrowNft (nftId: firstNftId) !)) !.toString ())
+		TestUtils .testInfo ("Artist address", PonsNftContract .getArtistAddress (PonsNftContract .borrowArtist (PonsNftMarketContract .borrowNft (nftId: firstNftId) !)) !.toString ())
 
 		PonsUsage .purchaseFusd (
 			patron: patronAccount,
@@ -75,9 +75,9 @@ transaction
 			nftId: firstNftId,
 			PonsUtils.FusdUnits (100.0) )
 
-		// PonsUsage .purchaseFusd (
-		// 	patron: randomAccount,
-		// 	nftId: firstNftId,
-		// 	priceLimit: nil )
+		PonsUsage .purchaseFusd (
+			patron: randomAccount,
+			nftId: firstNftId,
+			priceLimit: nil )
 
 		} }

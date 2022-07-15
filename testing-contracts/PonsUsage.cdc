@@ -5,7 +5,6 @@ import PonsUtils from 0xPONS
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
-// import PonsNftMarketContractFusd from 0xPONS
 import PonsEscrowContract from 0xPONS
 import PonsEscrowContractFusd from 0xPONS
 
@@ -436,10 +435,10 @@ pub contract PonsUsage {
 		var listingCertificate <- PonsUsage .withdrawListingCertificate (lister, nftId: nftId)
 
 		// First, unlist the NFT from the market, giving the listing certificate in return for the NFT
+		var nft <- PonsNftMarketContract .ponsMarket .unlist (<- listingCertificate)
+		
 		// Then, deposit the NFT into the lister's Pons collection
-		PonsUsage .borrowOwnPonsCollection (collector: lister)
-		.depositNft (
-			<- PonsNftMarketContract .ponsMarket .unlist (<- listingCertificate) ) 
+		PonsUsage .borrowOwnPonsCollection (collector: lister) .depositNft ( <- nft ) 
 	}
 	
 	/* Get a free Capability Path to store a Capability to an Escrow */

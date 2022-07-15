@@ -1,6 +1,4 @@
-import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
-import PonsNftMarketContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 
 import TestUtils from 0xPONS
@@ -28,7 +26,7 @@ transaction
 
 		let firstNftId = testInfo ["First NFT nftId"] !
 
-		PonsUsage .listForSale (
+		PonsUsage .listForSaleFlow (
 			lister: patronAccount,
 			nftId: firstNftId,
 			PonsUtils.FlowUnits (200.0) )

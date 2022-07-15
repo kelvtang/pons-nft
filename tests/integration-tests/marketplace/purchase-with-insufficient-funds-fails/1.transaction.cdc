@@ -38,7 +38,7 @@ transaction
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 
 		let nftIds =
-			PonsUsage .mintForSale (
+			PonsUsage .mintForSaleFlow (
 				minter: artistAccount,
 				metadata: metadata,
 				quantity: 1,
@@ -52,7 +52,7 @@ transaction
 		patronAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 		.deposit (
 			from: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
-					.withdraw (amount: PonsNftMarketContract .getPrice (nftId: firstNftId) !.flowAmount) )
+					.withdraw (amount: PonsNftMarketContract .getPriceFlow (nftId: firstNftId) !.flowAmount) )
 
 		TestUtils .testInfo ("First NFT nftId", firstNftId)
 
@@ -62,9 +62,9 @@ transaction
 
 		var insufficientFundsVault <-
 			patronAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
-				.withdraw (amount: PonsNftMarketContract .getPrice (nftId: firstNftId) !.flowAmount * 0.99)
+				.withdraw (amount: PonsNftMarketContract .getPriceFlow (nftId: firstNftId) !.flowAmount * 0.99)
 
-		PonsUsage .purchaseUsingVault (
+		PonsUsage .purchaseUsingVaultFlow (
 			patron: patronAccount,
 			nftId: firstNftId,
 			<- insufficientFundsVault )

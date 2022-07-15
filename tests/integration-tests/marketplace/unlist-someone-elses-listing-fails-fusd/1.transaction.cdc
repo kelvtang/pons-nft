@@ -1,7 +1,6 @@
 import FungibleToken from 0xFUNGIBLETOKEN
-import FUSD from 0xFUSD
 import PonsUtils from 0xPONS
-import PonsNftMarketContractFusd from 0xPONS
+import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 
@@ -26,11 +25,11 @@ transaction
 		// Setup state for the test
 		// 1) Add an untaken nftId to Pons NFT minter, so that NFTs can be minted for artists
 		// 2) Mint NFT for the artist
-		// 3) Give Flow tokens to the 'Patron' and 'Random' accounts, so they may participate in purchasing
+		// 3) Give Fusd tokens to the 'Patron' and 'Random' accounts, so they may participate in purchasing
 		// 4) 'Patron' buys the NFT, and lists it on the market 
 		// 5) 'Random' buys the NFT, and lists it on the market 
 
-		TestUtils .log ("Give FUSD to Patron 1 and Random 1")
+		TestUtils .log ("Give Fusd to Patron 1 and Random 1")
 
 		let minterRef = ponsAccount .borrow <&PonsNftContract_v1.NftMinter_v1> (from: minterStoragePath) !
 
@@ -51,15 +50,11 @@ transaction
 
 		let firstNftId = nftIds [0]
 		
-		// Enable Fusd vault manually, as it is not available by default
-		PonsUsage .prepareFusd(account: patronAccount);
 		patronAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
 		.deposit (
 			from: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
-					.withdraw (amount: PonsNftMarketContractFusd .getPrice (nftId: firstNftId) !.fusdAmount) )
+					.withdraw (amount: PonsNftMarketContract .getPriceFusd (nftId: firstNftId) !.fusdAmount) )
 
-		// Enable Fusd vault manually, as it is not available by default
-		PonsUsage .prepareFusd(account: randomAccount);
 		randomAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
 		.deposit (
 			from: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
@@ -69,9 +64,8 @@ transaction
 
 		TestUtils .testInfo ("Market address", ponsAccount .address .toString ())
 
-		TestUtils .testInfo ("Artist address", PonsNftContract .getArtistAddress (PonsNftContract .borrowArtist (PonsNftMarketContractFusd .borrowNft (nftId: firstNftId) !)) !.toString ())
+		TestUtils .testInfo ("Artist address", PonsNftContract .getArtistAddress (PonsNftContract .borrowArtist (PonsNftMarketContract .borrowNft (nftId: firstNftId) !)) !.toString ())
 
-		// error below, nft is listed under different wallet
 		PonsUsage .purchaseFusd (
 			patron: patronAccount,
 			nftId: firstNftId,
@@ -87,9 +81,9 @@ transaction
 			nftId: firstNftId,
 			priceLimit: nil )
 
-		// PonsUsage .listForSaleFusd (
-		// 	lister: randomAccount,
-		// 	nftId: firstNftId,
-		// 	PonsUtils.FusdUnits (90.0) )
+		PonsUsage .listForSaleFusd (
+			lister: randomAccount,
+			nftId: firstNftId,
+			PonsUtils.FusdUnits (90.0) )
 
 		} }

@@ -23,7 +23,7 @@ pub fun main
 		let marketAddressString = testInfo ["Market address"] !
 
 		let depositsData = TestUtils .typeEvents (".TokensDeposited", transactionEvents) 
-		let unlistsData = TestUtils .typeEvents (".PonsNFTUnlisted", transactionEvents)
+		let unlistsData = TestUtils .typeEvents (".PonsNFTUnlistedFlow", transactionEvents)
 
 		let unlisted = unlistsData .length == 1
 

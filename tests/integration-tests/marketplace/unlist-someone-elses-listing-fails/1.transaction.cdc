@@ -39,7 +39,7 @@ transaction
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 
 		let nftIds =
-			PonsUsage .mintForSale (
+			PonsUsage .mintForSaleFlow (
 				minter: artistAccount,
 				metadata: metadata,
 				quantity: 1,
@@ -53,7 +53,7 @@ transaction
 		patronAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 		.deposit (
 			from: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
-					.withdraw (amount: PonsNftMarketContract .getPrice (nftId: firstNftId) !.flowAmount) )
+					.withdraw (amount: PonsNftMarketContract .getPriceFlow (nftId: firstNftId) !.flowAmount) )
 
 		randomAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 		.deposit (
@@ -66,22 +66,22 @@ transaction
 
 		TestUtils .testInfo ("Artist address", PonsNftContract .getArtistAddress (PonsNftContract .borrowArtist (PonsNftMarketContract .borrowNft (nftId: firstNftId) !)) !.toString ())
 
-		PonsUsage .purchase (
+		PonsUsage .purchaseFlow (
 			patron: patronAccount,
 			nftId: firstNftId,
 			priceLimit: nil )
 
-		PonsUsage .listForSale (
+		PonsUsage .listForSaleFlow (
 			lister: patronAccount,
 			nftId: firstNftId,
 			PonsUtils.FlowUnits (90.0) )
 
-		PonsUsage .purchase (
+		PonsUsage .purchaseFlow (
 			patron: randomAccount,
 			nftId: firstNftId,
 			priceLimit: nil )
 
-		PonsUsage .listForSale (
+		PonsUsage .listForSaleFlow (
 			lister: randomAccount,
 			nftId: firstNftId,
 			PonsUtils.FlowUnits (90.0) )

@@ -22,7 +22,8 @@ transaction
 		let artistAuthorityRef = ponsAccount .borrow <&PonsNftContract.PonsArtistAuthority> (from: artistAuthorityStoragePath) !
 		let artistAccount = getAccount (ponsArtistAddress)
 		
-		let artistAccountBalanceRef = artistAccount .getCapability <&{FungibleToken.Balance}> (/public/flowTokenBalance) .borrow () !
+		let artistAccountBalanceRefFlow = artistAccount .getCapability <&{FungibleToken.Balance}> (/public/flowTokenBalance) .borrow () !
+		let artistAccountBalanceRefFusd = artistAccount .getCapability <&{FungibleToken.Balance}> (/public/fusdBalance) .borrow () !
 
 		artistAuthorityRef .recognisePonsArtist (
 			ponsArtistId: ponsArtistId,
@@ -34,7 +35,6 @@ transaction
 
 		TestUtils .log ("Recognized artist")
 
-		let artistBalance = artistAccountBalanceRef .balance
-
-		TestUtils .log ("Artist balance: " .concat (artistBalance .toString ()))
+		TestUtils .log ("Artist Flow balance: " .concat (artistAccountBalanceRefFlow .balance .toString ()))
+		TestUtils .log ("Artist Fusd balance: " .concat (artistAccountBalanceRefFusd .balance .toString ()))
 		} }

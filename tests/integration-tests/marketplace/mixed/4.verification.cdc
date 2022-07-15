@@ -22,7 +22,7 @@ pub fun main
 	if transactionSuccess {
 		let firstNftId = testInfo ["First NFT nftId"] !
 
-		let listedNftPrice = PonsNftMarketContract .getPrice (nftId: firstNftId) !
+		let listedNftPrice = PonsNftMarketContract .getPriceFlow (nftId: firstNftId) !
 
 		return {
 			"verified": true,

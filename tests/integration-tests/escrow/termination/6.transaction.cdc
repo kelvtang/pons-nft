@@ -1,6 +1,4 @@
-import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
-import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 import PonsEscrowContract from 0xPONS
@@ -39,7 +37,7 @@ transaction
 		escrowManagerRef .dismissEscrow (id: "termination-test-transaction-3-random")
 
 
-		PonsUsage .submitEscrow (
+		PonsUsage .submitEscrowFlow (
 			submitter: ponsAccount,
 			id: "termination-test-transaction-6-pons",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (

@@ -1,6 +1,4 @@
-import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
-import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 
@@ -32,12 +30,12 @@ transaction
 		let marketAddressString = testInfo ["Market address"] !
 
 		TestUtils .log ("Purchasing")
-		PonsUsage .purchase (
+		PonsUsage .purchaseFlow (
 			patron: randomAccount,
 			nftId: thirdNftId,
 			priceLimit: nil )
 		TestUtils .log ("Listing")
-		PonsUsage .listForSale (
+		PonsUsage .listForSaleFlow (
 			lister: randomAccount,
 			nftId: thirdNftId,
 			PonsUtils.FlowUnits (1.0) )

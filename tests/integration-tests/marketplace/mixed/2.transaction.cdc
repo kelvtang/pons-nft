@@ -1,6 +1,3 @@
-import FungibleToken from 0xFUNGIBLETOKEN
-import PonsUtils from 0xPONS
-import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 import PonsUsage from 0xPONS
@@ -31,7 +28,7 @@ transaction
 		let artistAddressString = testInfo ["Artist address"] !
 		let marketAddressString = testInfo ["Market address"] !
 
-		PonsUsage .purchase (
+		PonsUsage .purchaseFlow (
 			patron: patronAccount,
 			nftId: firstNftId,
 			priceLimit: nil )
