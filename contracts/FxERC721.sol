@@ -40,7 +40,7 @@ contract FxERC721 is IFxERC721, ERC721, ERC721Enumerable, ERC721URIStorage, ERC7
     }
 
     function _baseURI() internal view virtual override(ERC721, ERC721URIStorage) returns (string memory) {
-        return super._baseURI();
+        return "ipfs://";
     }
 
     function _beforeTokenTransfer(
@@ -76,7 +76,7 @@ contract FxERC721 is IFxERC721, ERC721, ERC721Enumerable, ERC721URIStorage, ERC7
     }
 
     function tokenURI(uint256 tokenId) public view virtual override(ERC721, ERC721URIStorage) returns (string memory) {
-        return super.tokenURI(tokenId);
+        return ERC721URIStorage.tokenURI(tokenId);
     }
 
     function mint(
@@ -85,11 +85,11 @@ contract FxERC721 is IFxERC721, ERC721, ERC721Enumerable, ERC721URIStorage, ERC7
         bytes memory _data
     ) public override {
         require(msg.sender == _fxManager, "Invalid sender");
-        string memory artistId = "dada";
-        uint256 price = 12;
-        string memory tokenUri = "bla";
-        address royaltyReceiver = user;
-        uint96 royaltyNumerator = 100;
+        // string memory artistId = "dada";
+        // uint256 price = 12;
+        // string memory tokenUri = "QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz";
+        // address royaltyReceiver = user;
+        // uint96 royaltyNumerator = 100;
         // TODO: Needs to be implemented correctly based on what we get from flow
         require(
           _EventInfo[tokenId].approved == true,
@@ -97,9 +97,8 @@ contract FxERC721 is IFxERC721, ERC721, ERC721Enumerable, ERC721URIStorage, ERC7
         );
         
         // TODO: Fix this based on the actual struct
-        // (string artistId, uint256 price, string tokenUri, address royaltyReceiver, uint96 royaltyNumerator) = abi.decode(_data, (string, uint256, string, address,uint96));
+        (string memory tokenUri, address royaltyReceiver, uint96 royaltyNumerator) = abi.decode(_data, (string, address,uint96));
         _safeMint(user, tokenId, _data);
-        _setTokenPONSMetadata(tokenId, artistId, price);
         _setTokenURI(tokenId,tokenUri);
         _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
         delete _EventInfo[tokenId];

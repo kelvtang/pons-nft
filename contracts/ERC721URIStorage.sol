@@ -11,16 +11,8 @@ import "./ERC721.sol";
 abstract contract ERC721URIStorage is ERC721  {
     using Strings for uint256;
 
-
-    // TODO: add our own metadata struct
-    struct PONSMetadata { 
-        string ArtistId;
-        uint256 price;
-    } 
-
     // Optional mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
-    mapping(uint256 => PONSMetadata) private _tokenToPONSMetada;
 
     /**
      * @dev See {IERC721Metadata-tokenURI}.
@@ -43,23 +35,8 @@ abstract contract ERC721URIStorage is ERC721  {
         return super.tokenURI(tokenId);
     }
 
-
-    function tokenPONSMetadata(uint256 tokenId) public view virtual returns (bytes memory) {
-        require(_exists(tokenId), "ERC721URIStorage: PONSMetadata query for nonexistent token");
-        PONSMetadata memory PONSMetadataObj = _tokenToPONSMetada[tokenId];
-        return abi.encode(PONSMetadataObj.ArtistId, PONSMetadataObj.price);
-    }
-
-
-    // TODO: add the struct parameters
-    function _setTokenPONSMetadata(uint256 tokenId, string memory artistId, uint256 price) internal virtual {
-        require(_exists(tokenId), "ERC721URIStorage: URI set of nonexistent token");
-        _tokenToPONSMetada[tokenId] = PONSMetadata(artistId, price);
-    }
-
-    // TODO: Change according to our base URI
     function _baseURI() internal view virtual override returns (string memory) {
-        return "ipfs://";
+        return "";
     }
 
     /**
