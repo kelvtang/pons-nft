@@ -33,7 +33,7 @@ transaction
 		let royalty = PonsUtils.Ratio (royaltyRatioAmount)
 
 		let nftIds =
-			PonsUsage .mintForSale (
+			PonsUsage .mintForSaleFlow (
 				minter: artistAccount,
 				metadata: metadata,
 				quantity: quantity,

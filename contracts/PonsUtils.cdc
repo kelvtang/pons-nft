@@ -1,5 +1,6 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import FlowToken from 0xFLOWTOKEN
+import FUSD from 0xFUSD
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 
 /*
@@ -34,6 +35,31 @@ pub contract PonsUtils {
 		pub fun toString () : String {
 			return self .flowAmount .toString () .concat (" FLOW") } }
 
+	/* Fusd Units struct */
+ 	pub struct FusdUnits {
+		/* Represents the amount of FUSD tokens */
+		pub let fusdAmount : UFix64 
+
+		init (fusdAmount : UFix64) {
+			self .fusdAmount = fusdAmount }
+
+		/* Check whether the amount is at least the amount of another FusdUnits */
+		pub fun isAtLeast (_ fusdUnits : FusdUnits) : Bool {
+			return self .fusdAmount >= fusdUnits .fusdAmount }
+
+		/* Make another fusdUnits equivalent to the amount being scaled by a ratio */
+		pub fun scale (ratio : Ratio) : FusdUnits {
+			return FusdUnits (fusdAmount: self .fusdAmount * ratio .amount) }
+
+		/* Make another FusdUnits equivalent to the amount being subtracted by another amount of FusdUnits */
+		pub fun cut (_ fusdUnits : FusdUnits) : FusdUnits {
+			return FusdUnits (fusdAmount: self .fusdAmount - fusdUnits .fusdAmount) }
+
+
+		/* Produce a string representation in a format like "1234.56 FLOW" */
+		pub fun toString () : String {
+			return self .fusdAmount .toString () .concat (" FUSD") } }
+
 	/* Ratio struct */
 	pub struct Ratio {
 		/* Represents the numerical ratio, so that for example 0.1 represents 10%, and 1.0 represents 100% */
@@ -48,6 +74,12 @@ pub contract PonsUtils {
 		let flowAmount1 = flowUnits1 .flowAmount
 		let flowAmount2 = flowUnits2 .flowAmount
 		return FlowUnits (flowAmount: flowAmount1 + flowAmount2) }
+
+ 	/* Produce a FlowUnits equivalent to the sum of the two separate amounts of FusdUnits */
+	pub fun sumFusdUnits (_ fusdUnits1 : FusdUnits, _ fusdUnits2 : FusdUnits) : FusdUnits {
+		let fusdAmount1 = fusdUnits1 .fusdAmount
+		let fusdAmount2 = fusdUnits2 .fusdAmount
+		return FusdUnits (fusdAmount: fusdAmount1 + fusdAmount2) } 
 
 // WORKAROUND -- ignore
 // For some inexplicable reason Flow is not recognising `&PonsNftContract_v1.Collection` as `&NonFungibleToken.Collection`

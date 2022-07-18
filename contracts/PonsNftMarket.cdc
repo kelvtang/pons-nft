@@ -1,6 +1,7 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import FlowToken from 0xFLOWTOKEN
+import FUSD from 0xFUSD
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsUtils from 0xPONS
@@ -20,34 +21,57 @@ pub contract PonsNftMarketContract {
 	/* The storage path for the PonsNftMarket */
 	pub let PonsNftMarketAddress : Address
 	/* Standardised storage path for PonsListingCertificateCollection */
-	pub let PonsListingCertificateCollectionStoragePath : StoragePath
+	//pub let PonsListingCertificateCollectionStoragePath : StoragePath
 
 
 	/* PonsMarketContractInit is emitted on initialisation of this contract */
 	pub event PonsMarketContractInit ()
 
 	/* PonsNFTListed is emitted on the listing of Pons NFTs on the marketplace */
-	pub event PonsNFTListed (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits)
+	pub event PonsNFTListedFlow (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits)
 
 	/* PonsNFTUnlisted is emitted on the unlisting of Pons NFTs from the marketplace */
-	pub event PonsNFTUnlisted (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits)
+	pub event PonsNFTUnlistedFlow (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits)
 
 	/* PonsNFTSold is emitted when a Pons NFT is sold */
-	pub event PonsNFTSold (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits)
+	pub event PonsNFTSoldFlow (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits)
 
 	/* PonsNFTSold is emitted when a Pons NFT is sold, and the new owner address is known */
-	pub event PonsNFTOwns (owner : Address, nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits)
+	pub event PonsNFTOwnsFlow (owner : Address, nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits)
 
 
 	/* Allow the PonsNft events to be emitted by all implementations of Pons NFTs from the same account */
-	access(account) fun emitPonsNFTListed (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
-		emit PonsNFTListed (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
-	access(account) fun emitPonsNFTUnlisted (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
-		emit PonsNFTUnlisted (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
-	access(account) fun emitPonsNFTSold (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
-		emit PonsNFTSold (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
-	access(account) fun emitPonsNFTOwns (owner : Address, nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
-		emit PonsNFTOwns (owner: owner, nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+	access(account) fun emitPonsNFTListedFlow (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
+		emit PonsNFTListedFlow (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+	access(account) fun emitPonsNFTUnlistedFlow (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
+		emit PonsNFTUnlistedFlow (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+	access(account) fun emitPonsNFTSoldFlow (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
+		emit PonsNFTSoldFlow (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+	access(account) fun emitPonsNFTOwnsFlow (owner : Address, nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FlowUnits) : Void {
+		emit PonsNFTOwnsFlow (owner: owner, nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+
+	/* PonsNFTListed is emitted on the listing of Pons NFTs on the marketplace */
+	pub event PonsNFTListedFusd (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FusdUnits)
+
+	/* PonsNFTUnlisted is emitted on the unlisting of Pons NFTs from the marketplace */
+	pub event PonsNFTUnlistedFusd (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FusdUnits)
+
+	/* PonsNFTSold is emitted when a Pons NFT is sold */
+	pub event PonsNFTSoldFusd (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FusdUnits)
+
+	/* PonsNFTSold is emitted when a Pons NFT is sold, and the new owner address is known */
+	pub event PonsNFTOwnsFusd (owner : Address, nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FusdUnits)
+
+
+	/* Allow the PonsNft events to be emitted by all implementations of Pons NFTs from the same account */
+	access(account) fun emitPonsNFTListedFusd (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FusdUnits) : Void {
+		emit PonsNFTListedFusd (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+	access(account) fun emitPonsNFTUnlistedFusd (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FusdUnits) : Void {
+		emit PonsNFTUnlistedFusd (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+	access(account) fun emitPonsNFTSoldFusd (nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FusdUnits) : Void {
+		emit PonsNFTSoldFusd (nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
+	access(account) fun emitPonsNFTOwnsFusd (owner : Address, nftId : String, serialNumber : UInt64, editionLabel : String, price : PonsUtils.FusdUnits) : Void {
+		emit PonsNFTOwnsFusd (owner: owner, nftId: nftId, serialNumber: serialNumber, editionLabel: editionLabel, price: price) }
 
 
 
@@ -60,8 +84,10 @@ pub contract PonsNftMarketContract {
 		/* Get the nftIds of all NFTs for sale */
 		pub fun getForSaleIds () : [String]
 
-		/* Get the price of an NFT */
-		pub fun getPrice (nftId : String) : PonsUtils.FlowUnits?
+		/* Get the Flow price of an NFT */
+		pub fun getPriceFlow (nftId : String) : PonsUtils.FlowUnits?
+		/* Get the FUSD price of an NFT */
+		pub fun getPriceFusd (nftId : String) : PonsUtils.FusdUnits?
 
 		/* Borrow an NFT from the marketplace, to browse its details */
 		pub fun borrowNft (nftId : String) : &PonsNftContractInterface.NFT?
@@ -70,7 +96,7 @@ pub contract PonsNftMarketContract {
 		/* The price of the first edition of the NFT minted is determined by the basePrice */
 		/* When only one edition is minted, the incrementalPrice is inconsequential */
 		/* When the Pons marketplace mints multiple editions of NFTs, the market price of each successive NFT is incremented by the incrementalPrice */
-		pub fun mintForSale
+		pub fun mintForSaleFlow
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
 		, metadata : {String: String}
 		, quantity : Int
@@ -96,8 +122,47 @@ pub contract PonsNftMarketContract {
 				PonsNftMarketContract .certificatesOwnedByMarket (& result as &[{PonsListingCertificate}]):
 					"Failed to mint NFTs for sale" } */ }
 
+		/* The same as previous function but handles fusd minting */
+		/* The logic behind this is that the minting function doesn't handle nil for its prices. 
+			This leaves us without the option of expanding parameters.
+			So the only real way to enable fusd is to create a separate minting function. */
+		pub fun mintForSaleFusd
+		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
+		, metadata : {String: String}
+		, quantity : Int
+		, basePrice : PonsUtils.FusdUnits
+		, incrementalPrice : PonsUtils.FusdUnits
+		, _ royaltyRatio : PonsUtils.Ratio
+		, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>
+		) : @[{PonsListingCertificate}] {
+			pre {
+				quantity >= 0:
+					"The quantity minted must not be a negative number"
+				basePrice .fusdAmount >= 0.0:
+					"The base price must be a positive amount of Fusd units"
+				incrementalPrice .fusdAmount >= 0.0:
+					"The base price must be a positive amount of Fusd units"
+				royaltyRatio .amount >= 0.0:
+					"The royalty ratio must be in the range 0% - 100%"
+				royaltyRatio .amount <= 1.0:
+					"The royalty ratio must be in the range 0% - 100%" }
+			/*
+			// For some reason not understood, the certificatesOwnedByMarket function fails to type-check in this post-condition
+			post {
+				PonsNftMarketContract .certificatesOwnedByMarket (& result as &[{PonsListingCertificate}]):
+					"Failed to mint NFTs for sale" } */ }
+
 		/* List a Pons NFT on the marketplace for sale */
-		pub fun listForSale (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} /*{
+		pub fun listForSaleFlow (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} /*{
+			// WORKAROUND -- ignore
+			// Flow implementation seems to be inconsistent regarding owners of nested resources
+			// https://github.com/onflow/cadence/issues/1320
+			post {
+				result .listerAddress == before (nft .owner !.address):
+					"Failed to list this Pons NFT" } }*/
+		
+		/* List a Pons NFT on the marketplace for sale */
+		pub fun listForSaleFusd (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FusdUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} /*{
 			// WORKAROUND -- ignore
 			// Flow implementation seems to be inconsistent regarding owners of nested resources
 			// https://github.com/onflow/cadence/issues/1320
@@ -105,8 +170,8 @@ pub contract PonsNftMarketContract {
 				result .listerAddress == before (nft .owner !.address):
 					"Failed to list this Pons NFT" } }*/
 
-		/* Purchase a Pons NFT from the marketplace */
-		pub fun purchase (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
+		/* Purchase a Pons NFT from the marketplace using Flow */
+		pub fun purchaseFlow (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
 			pre {
 				// Given that the purchaseVault is a FlowToken vault, preconditions on FungibleToken and FlowToken ensure that
 				// the balance of the vault is positive, and that only amounts between zero and the balance of the vault can be withdrawn from the vault, so that
@@ -118,6 +183,21 @@ pub contract PonsNftMarketContract {
 			post {
 				result .nftId == nftId:
 					"Failed to purchase the Pons NFT" } }
+
+		/* Purchase a Pons NFT from the marketplace using FUSD */
+		pub fun purchaseFusd (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
+			pre {
+				// Given that the purchaseVault is a FlowToken vault, preconditions on FungibleToken and FlowToken ensure that
+				// the balance of the vault is positive, and that only amounts between zero and the balance of the vault can be withdrawn from the vault, so that
+				// attempts to game the market using unreasonable royalty ratios (e.g. < 0% or > 100%) will result in failed assertions
+				purchaseVault .isInstance (Type<@FUSD.Vault> ()):
+					"Pons NFTs must be purchased using Flow tokens"
+				self .borrowNft (nftId: nftId) != nil:
+					"This Pons NFT is not on the market anymore" }
+			post {
+				result .nftId == nftId:
+					"Failed to purchase the Pons NFT" } }
+		
 		/* Unlist a Pons NFT from the marketplace */
 		pub fun unlist (_ ponsListingCertificate : @{PonsListingCertificate}) : @PonsNftContractInterface.NFT {
 			pre {
@@ -185,9 +265,13 @@ pub contract PonsNftMarketContract {
 	pub fun getForSaleIds () : [String] {
 		return PonsNftMarketContract .ponsMarket .getForSaleIds () }
 
-	/* API to get the price of an NFT on the market */
-	pub fun getPrice (nftId : String) : PonsUtils.FlowUnits? {
-		return PonsNftMarketContract .ponsMarket .getPrice (nftId: nftId) }
+	/* API to get the Flow price of an NFT on the market */
+	pub fun getPriceFlow (nftId : String) : PonsUtils.FlowUnits? {
+		return PonsNftMarketContract .ponsMarket .getPriceFlow (nftId: nftId) }
+
+	/* API to get the Fusd price of an NFT on the market */
+	pub fun getPriceFusd (nftId : String) : PonsUtils.FusdUnits? {
+		return PonsNftMarketContract .ponsMarket .getPriceFusd (nftId: nftId) }
 
 	/* API to borrow an NFT for browsing */
 	pub fun borrowNft (nftId : String) : &PonsNftContractInterface.NFT? {
@@ -223,8 +307,10 @@ pub contract PonsNftMarketContract {
 
 		// Save the market address
 		self .PonsNftMarketAddress = self .account .address
+		
+		/* Removed as listing certificate collections are now stored in unique locations
 		// Save the standardised Pons listing certificate collection storage path
-		self .PonsListingCertificateCollectionStoragePath = /storage/listingCertificateCollection
+		self .PonsListingCertificateCollectionStoragePath = /storage/listingCertificateCollection */
 
 		// Emit the PonsNftMarket initialisation event
 		emit PonsMarketContractInit () }
@@ -233,12 +319,14 @@ pub contract PonsNftMarketContract {
 	pub resource InvalidPonsNftMarket : PonsNftMarket {
 		pub fun getForSaleIds () : [String] {
 			panic ("not implemented") }
-		pub fun getPrice (nftId : String) : PonsUtils.FlowUnits? {
+		pub fun getPriceFlow (nftId : String) : PonsUtils.FlowUnits? {
+			panic ("not implemented") }
+		pub fun getPriceFusd (nftId : String) : PonsUtils.FusdUnits? {
 			panic ("not implemented") }
 		pub fun borrowNft (nftId : String) : &PonsNftContractInterface.NFT? {
 			panic ("not implemented") }
 
-		pub fun mintForSale 
+		pub fun mintForSaleFlow
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
 		, metadata : {String: String}
 		, quantity : Int
@@ -248,9 +336,23 @@ pub contract PonsNftMarketContract {
 		, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>
 		) : @[{PonsListingCertificate}] {
 			panic ("not implemented") }
-		pub fun listForSale (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} {
+		pub fun mintForSaleFusd
+		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
+		, metadata : {String: String}
+		, quantity : Int
+		, basePrice : PonsUtils.FusdUnits
+		, incrementalPrice : PonsUtils.FusdUnits
+		, _ royaltyRatio : PonsUtils.Ratio
+		, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>
+		) : @[{PonsListingCertificate}] {
 			panic ("not implemented") }
-		pub fun purchase (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
+		pub fun listForSaleFlow (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FlowUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} {
+			panic ("not implemented") }
+		pub fun listForSaleFusd (_ nft : @PonsNftContractInterface.NFT, _ salePrice : PonsUtils.FusdUnits, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>) : @{PonsListingCertificate} {
+			panic ("not implemented") }
+		pub fun purchaseFlow (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
+			panic ("not implemented") }
+		pub fun purchaseFusd (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
 			panic ("not implemented") }
 		pub fun purchaseBySerialId (nftSerialId : UInt64, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
 			panic ("not implemented") }

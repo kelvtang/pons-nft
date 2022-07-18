@@ -37,7 +37,10 @@ pub contract PonsNftContract {
 	access(account) var metadatas : {String: {String: String}}
 
 	/* Stores the Capability to receive Flow tokens for each artist */
-	access(account) var receivePaymentCaps : {String: Capability<&{FungibleToken.Receiver}>}
+	access(account) var receivePaymentCapsFlow : {String: Capability<&{FungibleToken.Receiver}>}
+
+	/* Stores the Capability to receive FUSD tokens for each artist */
+	access(account) var receivePaymentCapsFusd : {String: Capability<&{FungibleToken.Receiver}>}
 
 
 
@@ -217,8 +220,12 @@ pub contract PonsNftContract {
 		return PonsNftContract .addresses [ponsArtist .ponsArtistId] }
 
 	/* Get the Capability to receive Flow tokens of a PonsArtist */
-	pub fun getArtistReceivePaymentCap (_ ponsArtist : &PonsArtist) : Capability<&{FungibleToken.Receiver}>? {
-		return PonsNftContract .receivePaymentCaps [ponsArtist .ponsArtistId] }
+	pub fun getArtistReceivePaymentCapFlow (_ ponsArtist : &PonsArtist) : Capability<&{FungibleToken.Receiver}>? {
+		return PonsNftContract .receivePaymentCapsFlow [ponsArtist .ponsArtistId] }
+	
+	/* Get the Capability to receive FUSD tokens of a PonsArtist */
+	pub fun getArtistReceivePaymentCapFusd (_ ponsArtist : &PonsArtist) : Capability<&{FungibleToken.Receiver}>? {
+		return PonsNftContract .receivePaymentCapsFusd [ponsArtist .ponsArtistId] }
 
 
 
@@ -269,18 +276,28 @@ pub contract PonsNftContract {
 			PonsNftContract .metadatas = metadatas }
 
 		/* Get the dictionary mapping ponsArtistId to Capability of receiving Flow tokens */
-		pub fun getReceivePaymentCaps () : {String: Capability<&{FungibleToken.Receiver}>} {
-			return PonsNftContract .receivePaymentCaps }
+		pub fun getReceivePaymentCapsFlow () : {String: Capability<&{FungibleToken.Receiver}>} {
+			return PonsNftContract .receivePaymentCapsFlow }
+
+		/* Get the dictionary mapping ponsArtistId to Capability of receiving Flow tokens */
+		pub fun getReceivePaymentCapsFusd () : {String: Capability<&{FungibleToken.Receiver}>} {
+			return PonsNftContract .receivePaymentCapsFusd }
+		
 		/* Update the dictionary mapping ponsArtistId to Capability of receiving Flow tokens */
-		pub fun setReceivePaymentCaps (_ receivePaymentCaps : {String: Capability<&{FungibleToken.Receiver}>}) : Void {
-			PonsNftContract .receivePaymentCaps = receivePaymentCaps }
+		pub fun setReceivePaymentCapsFlow (_ receivePaymentCapsFlow : {String: Capability<&{FungibleToken.Receiver}>}) : Void {
+			PonsNftContract .receivePaymentCapsFlow = receivePaymentCapsFlow }
+
+		/* Update the dictionary mapping ponsArtistId to Capability of receiving FUSD tokens */
+		pub fun setReceivePaymentCapsFusd (_ receivePaymentCapsFusd : {String: Capability<&{FungibleToken.Receiver}>}) : Void {
+			PonsNftContract .receivePaymentCapsFusd = receivePaymentCapsFusd }
 
 		/* Recognise a new Pons artist, and store the PonsArtist resource instance */
 		pub fun recognisePonsArtist
 		( ponsArtistId : String
 		, metadata : {String: String}
 		, _ addressOptional : Address?
-		, _ receivePaymentCapOptional : Capability<&{FungibleToken.Receiver}>?
+		, _ receivePaymentCapOptionalFlow : Capability<&{FungibleToken.Receiver}>?
+		, _ receivePaymentCapOptionalFusd : Capability<&{FungibleToken.Receiver}>?
 		) : Void {
 			pre {
 				! PonsNftContract .ponsArtists .containsKey (ponsArtistId):
@@ -308,8 +325,12 @@ pub contract PonsNftContract {
 				PonsNftContract .addresses .insert (key: ponsArtistId, addressOptional !) }
 
 			// Save the artist's Capability to receive Flow tokens
-			if receivePaymentCapOptional != nil {
-				PonsNftContract .receivePaymentCaps .insert (key: ponsArtistId, receivePaymentCapOptional !) }
+			if receivePaymentCapOptionalFlow != nil {
+				PonsNftContract .receivePaymentCapsFlow .insert (key: ponsArtistId, receivePaymentCapOptionalFlow !) }
+
+			// Save the artist's Capability to receive FUSD tokens
+			if receivePaymentCapOptionalFusd != nil {
+				PonsNftContract .receivePaymentCapsFusd .insert (key: ponsArtistId, receivePaymentCapOptionalFusd !) }
 
 			emit PonsArtistRecognised (ponsArtistId: ponsArtistId, metadata: metadata, addressOptional: addressOptional) }
 
@@ -338,7 +359,8 @@ pub contract PonsNftContract {
 		self .ponsArtistIds = {}
 		self .addresses = {}
 		self .metadatas = {}
-		self .receivePaymentCaps = {}
+		self .receivePaymentCapsFlow = {}
+		self .receivePaymentCapsFusd = {}
 
 		// Create and save an Artist Authority resource to the storage path
         	self .account .save (<- create PonsArtistAuthority (), to: /storage/ponsArtistAuthority)

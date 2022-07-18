@@ -49,10 +49,14 @@ pub contract PonsNftMarketAdminContract_v1 {
 			PonsNftContract_v1 .insertMetadata (nftId: nftId, metadata: metadata) }
 
 		/* Updates the price of the Pons NFT on the marketplace */
-		pub fun updateSalePrice (nftId : String, price : PonsUtils.FlowUnits) : Void {
+		pub fun updateSalePriceFlow (nftId : String, price : PonsUtils.FlowUnits) : Void {
 			let ponsNftMarketRef = & PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
 			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
-			ponsNftMarketV1Ref .insertSalePrice (nftId: nftId, price: price) }
+			ponsNftMarketV1Ref .insertSalePriceFlow (nftId: nftId, price: price) }
+		pub fun updateSalePriceFusd (nftId : String, price : PonsUtils.FusdUnits) : Void {
+			let ponsNftMarketRef = & PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
+			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
+			ponsNftMarketV1Ref .insertSalePriceFusd (nftId: nftId, price: price) }
 
 		/* Borrows the NFT collection of the marketplace */
 		pub fun borrowCollection () : &PonsNftContract_v1.Collection {
@@ -64,8 +68,14 @@ pub contract PonsNftMarketAdminContract_v1 {
 		pub fun delistNftFromMarketplace(nftId : String) : Void{
 			let ponsNftMarketRef = & PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}
 			let ponsNftMarketV1Ref = ponsNftMarketRef as! &PonsNftMarketContract_v1.PonsNftMarket_v1
+<<<<<<< HEAD
 			var sale_price = ponsNftMarketV1Ref .removeSalePrice(nftId:nftId)
 			if sale_price == nil {
+=======
+			var sale_price_flow = ponsNftMarketV1Ref .removeSalePriceFlow(nftId:nftId)
+			var sale_price_fusd = ponsNftMarketV1Ref .removeSalePriceFusd(nftId:nftId)
+			if sale_price_flow == nil && sale_price_fusd == nil {
+>>>>>>> uzair-fusdv2
 				panic ("nft not included in sales list")
 			}
 		}

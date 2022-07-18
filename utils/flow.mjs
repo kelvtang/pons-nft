@@ -439,7 +439,11 @@ var run_known_test_returnTransaction = _base_path => _test_name => _authorizer_n
 								
 								// Draw out the price of transactions.
 								let getTransaction = (transaction_id) => {
+<<<<<<< HEAD
 									exec('flow transactions get '+transaction_id+' -o json',
+=======
+									exec('flow transactions get '+transaction_id+' -o json --network testnet',
+>>>>>>> uzair-fusdv2
 									function (error, stdout, stderr) {
 										if (stderr !== '' && stderr !== null){throw stderr;};
 										if (error !== null) {throw error;};

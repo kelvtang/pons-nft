@@ -1,6 +1,4 @@
-import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
-import PonsNftMarketContract from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 import PonsEscrowContract from 0xPONS
@@ -33,7 +31,7 @@ transaction
 		let thirdNftId = testInfo ["Third NFT nftId"] !
 
 
-		let storagePath = PonsUsage .submitEscrow (
+		let storagePath = PonsUsage .submitEscrowFlow (
 			submitter: artistAccount,
 			id: "termination-test-transaction-7-artist",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (

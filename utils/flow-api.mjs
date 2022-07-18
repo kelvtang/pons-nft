@@ -78,6 +78,7 @@ var raw_transaction_response_ =
 			if
 			( _exception .message .includes ('failed to get state commitment for block')
 			|| _exception .message .includes ('upstream connect error or disconnect/reset before headers. reset reason: connection failure')
+			//|| _exception .message .includes ('Error while dialing dial tcp')
 			) {
 				;await sleep_ (1)
 				return await

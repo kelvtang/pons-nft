@@ -1,4 +1,3 @@
-import FungibleToken from 0xFUNGIBLETOKEN
 import PonsUtils from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
@@ -40,13 +39,13 @@ transaction
 
 
 
-		let originalPrice = PonsNftMarketContract .getPrice (nftId: firstNftId) !
+		let originalPrice = PonsNftMarketContract .getPriceFlow (nftId: firstNftId) !
 		TestUtils .log ("Original price: " .concat (originalPrice .flowAmount .toString ()))
 
 		let changedPrice = PonsUtils.FlowUnits (changedPriceAmount)
-		nftAdminRef .updateSalePrice (nftId: firstNftId, price: changedPrice)
+		nftAdminRef .updateSalePriceFlow (nftId: firstNftId, price: changedPrice)
 
-		let updatedPrice = PonsNftMarketContract .getPrice (nftId: firstNftId) !
+		let updatedPrice = PonsNftMarketContract .getPriceFlow (nftId: firstNftId) !
 		TestUtils .log ("Updated price: " .concat (updatedPrice .flowAmount .toString ()))
 
 
