@@ -120,6 +120,20 @@ func main() {
 			}
 		}
 	}
+	if len(eventsData) == 0 {
+		emptyJson, _ := json.MarshalIndent("", "", " ")
+		payload := event{
+			Contract_address:    "",
+			Contract_name:       "",
+			Event_type:          "",
+			Transaction_id:      "",
+			Data:                string(emptyJson),
+			Block_height:        endHeight + 1,
+			Latest_block_height: endHeight + 1,
+			New_event:           false,
+		}
+		eventsData = append(eventsData, payload)
+	}
 	responseMap := make(map[string][]event)
 	responseMap["events"] = eventsData
 	eventsJson, _ := json.MarshalIndent(responseMap, "", " ")
