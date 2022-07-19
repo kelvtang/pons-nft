@@ -20,6 +20,7 @@ var send_known_transaction__ = send_known_transaction_ (__dirname + '/transactio
 	( await send_known_transaction__ ("setup-fusd-minter")
 		( [ '0xPONS' ] )
 		( [] ), null, 4 ) )
+		
 ;console .log (
 	JSON .stringify
 	( await send_known_transaction__ ("deposit-fusd-minter")

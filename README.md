@@ -83,6 +83,16 @@ This directory contains Cadence contracts which make up the Pons NFT system.
 
 This file can be directly run with `node deploy-contracts.mjs` to deploy the Pons NFT marketplace contracts to the Flow network specified by config.mjs.
 
+## mint-fusd-on-emulator.mjs
+
+This file can be directly run with `node mint-fusd-on-emulator.mjs` to mint FUSD token on the emulator and deposit them into the PONs account for testing.  
+The emulator address `0xf8d6e0586b0a20c7` is hardcoded in line 28 and 35 of mint-fusd-on-emulator.mjs and can be replaced with testnet address.
+
+## get-fusd-balance.mjs
+
+This file can be directly run with `node get-fusd-balance.mjs` to return the FUSD balance held in the account. It can be run in pair with mint-fusd-on-emulator.mjs to test if the minting process was successful.  
+The emulator address `0xf8d6e0586b0a20c7` is hardcoded in the script at line 32 and can be replaced with a testnet or mainnet address.
+
 ## tests/
 
 This directory contains Cadence transactions and verification scripts, which make up the unit tests and integration tests for the Pons NFT marketplace.
