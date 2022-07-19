@@ -33,10 +33,13 @@ func main() {
 	handleError(err)
 	startHeight := uint64(signedHeight)
 
-	var endHeight uint64
-	latestBlock, err := c.GetLatestBlock(ctx, true)
+	signedEndHeight, err := strconv.ParseInt(os.Args[2], 10, 64)
 	handleError(err)
-	endHeight = latestBlock.Height
+	endHeight := uint64(signedEndHeight)
+	// var endHeight uint64
+	// latestBlock, err := c.GetLatestBlock(ctx, true)
+	// handleError(err)
+	// endHeight = latestBlock.Height
 
 	// Different channels
 	collectionChannel := make(chan collectionPayload)
@@ -49,11 +52,11 @@ func main() {
 	for startHeight < endHeight {
 		var blockHeights []uint64
 
-		if startHeight+49 <= endHeight {
-			for j := startHeight; j < startHeight+50; j++ {
+		if startHeight+99 <= endHeight {
+			for j := startHeight; j < startHeight+100; j++ {
 				blockHeights = append(blockHeights, j)
 			}
-			startHeight += 50
+			startHeight += 100
 		} else {
 			for j := startHeight; j <= endHeight; j++ {
 				blockHeights = append(blockHeights, j)

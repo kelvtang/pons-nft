@@ -1,4 +1,4 @@
-create or replace procedure fetch_events(block_height bigint)
+create or replace procedure fetch_events(block_height bigint, end_height bigint)
 language plpgsql
 as $$
 declare 
@@ -15,8 +15,9 @@ begin
         latest_block_height bigint,
         new_event boolean
     );
-    execute format('copy temp_events from program ''/mnt/c/Users/abdel/Desktop/PONS.ai/pons-nft/gosdk/fetch-events.sh %s'' with (format ''csv'', header ''on'')', block_height);
-    -- execute format('copy temp_events from program ''/home/ubuntu/abdel/gosdk/fetch-events.sh %s'' with (format ''csv'', header ''on'')', block_height);
+    -- execute format('copy temp_events from program ''/mnt/c/Users/abdel/Desktop/PONS.ai/pons-nft/gosdk/fetch-events.sh %s'' with (format ''csv'', header ''on'')', block_height);
+    -- TODO: Chnage path
+    execute format('copy temp_events from program ''/home/ubuntu/abdel/gosdk/fetch-events.sh %s %s'' with (format ''csv'', header ''on'')', block_height, end_height);
 
     lock table events in exclusive mode;
     
@@ -44,5 +45,5 @@ begin
 end$$;
 
 
-call fetch_events(22349785);
+-- call fetch_events(22349785);
 -- call update_events();
