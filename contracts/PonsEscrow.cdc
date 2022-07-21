@@ -1,5 +1,6 @@
 import FungibleToken from 0xFUNGIBLETOKEN
 import FlowToken from 0xFLOWTOKEN
+import FUSD from 0xFUSD
 import PonsNftContractInterface from 0xPONS
 import PonsUtils from 0xPONS
 
@@ -37,6 +38,8 @@ pub contract PonsEscrowContract {
 	pub resource EscrowResource {
 		/* Stores locked-up Flow tokens */
 		access(account) var flowVault : @FungibleToken.Vault
+		/* Stores locked-up Fusd tokens */
+		access(account) var fusdVault : @FungibleToken.Vault
 		/* Stores locked-up Pons NFTs */
 		access(account) var ponsNfts : @[PonsNftContractInterface.NFT]
 
@@ -44,30 +47,44 @@ pub contract PonsEscrowContract {
 		/* Offer access to the enclosed Flow Token Vault */
 		pub fun borrowFlowVault () : &FungibleToken.Vault {
 			return & self .flowVault as &FungibleToken.Vault }
+		
+		/* Offer access to the enclosed Fusd Token Vault */
+		pub fun borrowFusdVault () : &FungibleToken.Vault {
+			return & self .fusdVault as &FungibleToken.Vault }
 
 		/* Offer access to the enclosed Pons NFT List */
 		pub fun borrowPonsNfts () : &[PonsNftContractInterface.NFT] {
 			return & self .ponsNfts as &[PonsNftContractInterface.NFT] }
 
-		init (flowVault : @FungibleToken.Vault, ponsNfts : @[PonsNftContractInterface.NFT]) {
+		init (flowVault : @FungibleToken.Vault, fusdVault : @FungibleToken.Vault, ponsNfts : @[PonsNftContractInterface.NFT]) {
 			pre {
 				flowVault .isInstance (Type<@FlowToken.Vault> ()):
+					"Only Flow tokens and Pons NFTs are accepted in EscrowResource"
+				fusdVault .isInstance (Type<@FUSD.Vault> ()):
 					"Only Flow tokens and Pons NFTs are accepted in EscrowResource" }
+			self .fusdVault <- fusdVault
 			self .flowVault <- flowVault
 			self .ponsNfts <- ponsNfts }
 
 		destroy () {
 			if self .flowVault .balance != 0.0 {
 				panic ("Non-empty EscrowResource cannot be destroyed") }
+			if self .fusdVault .balance != 0.0 {
+				panic ("Non-empty EscrowResource cannot be destroyed") }
 			if self .ponsNfts .length != 0 {
 				panic ("Non-empty EscrowResource cannot be destroyed") }
 			destroy self .flowVault
+			destroy self .fusdVault
 			destroy self .ponsNfts } }
 			
 	/* Escrow ResourceDescription struct. Represents requirements for the fulfillment of an Escrow */
 	pub struct EscrowResourceDescription {
 		/* Represents the amount of Flow tokens needed to consummate an Escrow */
 		pub let flowUnits : PonsUtils.FlowUnits
+
+		/* Represents the amount of Fusd tokens needed to consummate an Escrow */
+		pub let fusdUnits : PonsUtils.FusdUnits
+
 		/* Represents a list of nftIds, of which Pons NFTs are needed to consummate an Escrow */
 		access(self) let ponsNftIds : [String]
 
@@ -75,23 +92,27 @@ pub contract PonsEscrowContract {
 		pub fun getPonsNftIds () : [String] {
 			return self .ponsNftIds .concat ([]) }
 
-		init (flowUnits : PonsUtils.FlowUnits, ponsNftIds : [String]) {
+		init (flowUnits : PonsUtils.FlowUnits, fusdUnits : PonsUtils.FusdUnits, ponsNftIds : [String]) {
 			self .flowUnits = flowUnits
+			self .fusdUnits = fusdUnits
 			self .ponsNftIds = ponsNftIds } }
 	/* Escrow Fulfillment struct. Represents fulfillment capabilities for an Escrow */
 	pub struct EscrowFulfillment {
 		/* Represents the Capability for receiving demanded Flow tokens of an Escrow */
-		pub let receivePaymentCap : Capability<&{FungibleToken.Receiver}>
+		pub let receivePaymentCapFlow : Capability<&{FungibleToken.Receiver}>
+		/* Represents the Capability for receiving demanded Flow tokens of an Escrow */
+		pub let receivePaymentCapFusd : Capability<&{FungibleToken.Receiver}>
 		/* Represents the Capability for receiving demanded Pons NFTs of an Escrow */
 		pub let receiveNftCap : Capability<&{PonsNftContractInterface.PonsNftReceiver}>
 
-		init (receivePaymentCap : Capability<&{FungibleToken.Receiver}>, receiveNftCap : Capability<&{PonsNftContractInterface.PonsNftReceiver}>) {
-			self .receivePaymentCap = receivePaymentCap
+		init (receivePaymentCapFlow : Capability<&{FungibleToken.Receiver}>, receivePaymentCapFusd : Capability<&{FungibleToken.Receiver}>, receiveNftCap : Capability<&{PonsNftContractInterface.PonsNftReceiver}>) {
+			self .receivePaymentCapFlow = receivePaymentCapFlow
+			self .receivePaymentCapFusd = receivePaymentCapFusd
 			self .receiveNftCap = receiveNftCap } }
 
 
-	pub fun makeEscrowResource (flowVault : @FungibleToken.Vault, ponsNfts : @[PonsNftContractInterface.NFT]) : @EscrowResource {
-		return <- create EscrowResource (flowVault: <- flowVault, ponsNfts: <- ponsNfts) }
+	pub fun makeEscrowResource (flowVault : @FungibleToken.Vault, fusdVault : @FungibleToken.Vault, ponsNfts : @[PonsNftContractInterface.NFT]) : @EscrowResource {
+		return <- create EscrowResource (flowVault: <- flowVault, fusdVault: <- fusdVault, ponsNfts: <- ponsNfts) }
 
 
 /*
@@ -238,6 +259,7 @@ pub contract PonsEscrowContract {
 	/* Gets the EscrowResourceDescription corresponding to resources in an EscrowResource */
 	pub fun resourceDescription (_ escrowResourceRef : &EscrowResource) : EscrowResourceDescription {
 		let flowUnits = PonsUtils.FlowUnits (escrowResourceRef .flowVault .balance)
+		let fusdUnits = PonsUtils.FusdUnits (escrowResourceRef .fusdVault .balance)
 		let ponsNftIds : [String] = []
 
 		var index = 0
@@ -245,7 +267,7 @@ pub contract PonsEscrowContract {
 			ponsNftIds .append (escrowResourceRef .ponsNfts [index] .nftId)
 			index = index + 1 }
 
-		return EscrowResourceDescription (flowUnits: flowUnits, ponsNftIds: ponsNftIds) }
+		return EscrowResourceDescription (flowUnits: flowUnits, fusdUnits: fusdUnits, ponsNftIds: ponsNftIds) }
 
 	/* Checks whether the provided EscrowResource satisfy the EscrowResourceDescription */
 	pub fun satisfiesResourceDescription
@@ -253,7 +275,9 @@ pub contract PonsEscrowContract {
 	, _ escrowResourceDescription : EscrowResourceDescription
 	) : Bool {
 		if ! PonsUtils.FlowUnits (escrowResourceRef .flowVault .balance) .isAtLeast (escrowResourceDescription .flowUnits) {
-			return false }
+			if ! PonsUtils.FusdUnits (escrowResourceRef .fusdVault .balance) .isAtLeast (escrowResourceDescription .fusdUnits){
+				return false 
+			}}
 		let ponsNftIds : [String] = []
 
 		var index = 0
@@ -268,7 +292,9 @@ pub contract PonsEscrowContract {
 	/* Transfer all the resources held in the provided EscrowResource using the EscrowFulfillment */
 	pub fun fullfillResource (_ resources : @EscrowResource, _ fulfillment : EscrowFulfillment) : Void {
 		var fulfillmentFlowVault <- resources .flowVault .withdraw (amount: resources .flowVault .balance)
-		fulfillment .receivePaymentCap .borrow () !.deposit (from: <- fulfillmentFlowVault)
+		var fulfillmentFusdVault <- resources .fusdVault .withdraw (amount: resources .fusdVault .balance)
+		fulfillment .receivePaymentCapFlow .borrow () !.deposit (from: <- fulfillmentFlowVault)
+		fulfillment .receivePaymentCapFusd .borrow () !.deposit (from: <- fulfillmentFusdVault)
 
 		while resources .ponsNfts .length > 0 {
 			fulfillment .receiveNftCap .borrow () !.depositNft (<- resources .borrowPonsNfts () .remove (at: 0)) }

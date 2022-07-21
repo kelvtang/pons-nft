@@ -31,14 +31,16 @@ transaction
 
 
 
-		PonsUsage .submitEscrowFlow (
+		PonsUsage .submitEscrow (
 			submitter: artistAccount,
 			id: "consummation-test-transaction-6-artist",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ firstNftId ] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (5.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ secondNftId ] ) )
 
 		} }

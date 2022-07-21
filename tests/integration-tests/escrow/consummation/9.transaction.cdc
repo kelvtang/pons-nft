@@ -47,6 +47,7 @@ transaction
 
 				return <- PonsEscrowContract .makeEscrowResource (
 					flowVault: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) ! .withdraw (amount: 5.0),
+					fusdVault: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) ! .withdraw (amount: 5.0),
 					ponsNfts: <- [ <- PonsUsage .borrowOwnPonsCollection (collector: ponsAccount) .withdrawNft (nftId: secondNftId) ] ) } )
 
 		escrowManagerRef .dismissEscrow (id: "consummation-test-transaction-6-artist")

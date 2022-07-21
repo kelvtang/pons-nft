@@ -37,14 +37,16 @@ transaction
 		escrowManagerRef .dismissEscrow (id: "termination-test-transaction-3-random")
 
 
-		PonsUsage .submitEscrowFlow (
+		PonsUsage .submitEscrow (
 			submitter: ponsAccount,
 			id: "termination-test-transaction-6-pons",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ) )
 
 		let escrowRef = escrowManagerRef .escrow (id: "termination-test-transaction-6-pons") !

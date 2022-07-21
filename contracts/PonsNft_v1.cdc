@@ -359,6 +359,9 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} {
 			return PonsNftContract_v1 .ponsNftMetadatas [ponsNftRef .nftId] ! }
 
+		pub fun getArtistIdFromId (_ nftId: String) : String {
+			return PonsNftContract_v1 .ponsNftArtistIds [nftId] !}
+
 		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection {
 			return <- create Collection () }
 

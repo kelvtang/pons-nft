@@ -33,14 +33,16 @@ transaction
 
 
 
-		PonsUsage .submitEscrowFlow (
+		PonsUsage .submitEscrow (
 			submitter: artistAccount,
 			id: "consummation-test-transaction-10-artist",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ secondNftId ] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (5.0),
+				fusdUnits: PonsUtils.FusdUnits (5.0),
 				ponsNftIds: [ firstNftId ] ) )
 
 
@@ -59,6 +61,7 @@ transaction
 
 				return <- PonsEscrowContract .makeEscrowResource (
 					flowVault: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) ! .withdraw (amount: 10.0),
+					fusdVault: <- ponsAccount .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) ! .withdraw (amount: 10.0),
 					ponsNfts: <- [ <- PonsUsage .borrowOwnPonsCollection (collector: ponsAccount) .withdrawNft (nftId: firstNftId) ] ) } )
 
 		escrowManagerRef .dismissEscrow (id: "consummation-test-transaction-10-artist")

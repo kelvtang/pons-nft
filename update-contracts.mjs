@@ -15,8 +15,8 @@ var update_known_contract_ = update_known_contract_from_ (__dirname + '/contract
 ;await update_known_contract_ ('PonsNft_v1') 
 ;await update_known_contract_ ('PonsNftMarket_v1') 
 ;await update_known_contract_ ('PonsNftMarketAdmin_v1') 
-;await update_known_contract_ ('PonsEscrow') 
-;await update_known_contract_ ('PonsEscrowFusd')  
+;await update_known_contract_ ('PonsEscrow')
+;await update_known_contract_ ('PonsTunnel')  
 
 update_known_contract_ = update_known_contract_from_ (__dirname + '/testing-contracts/')
 

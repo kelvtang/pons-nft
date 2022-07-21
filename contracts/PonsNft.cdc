@@ -136,6 +136,8 @@ pub contract PonsNftContract {
 		pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String 
 		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} 
 
+		pub fun getArtistIdFromId (_ nftId: String) : String
+
 		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection
 
 		pub fun updatePonsNft (_ ponsNft : @PonsNftContractInterface.NFT) : @PonsNftContractInterface.NFT }
@@ -152,6 +154,9 @@ pub contract PonsNftContract {
 		PonsNftContract .historicalImplementations .append (<- implementation) }
 
 
+	
+
+
 
 	/* A trivial instance of PonsNftContractImplementation which panics on all calls, used on initialization of the PonsNft contract. */
 	pub resource InvalidPonsNftContractImplementation : PonsNftContractImplementation {
@@ -163,6 +168,10 @@ pub contract PonsNftContract {
 			panic ("not implemented") }
 		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} {
 			panic ("not implemented") }
+
+		pub fun getArtistIdFromId (_ nftId: String) : String{
+			panic ("not implemented") }
+		
 
 		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection {
 			panic ("not implemented") }

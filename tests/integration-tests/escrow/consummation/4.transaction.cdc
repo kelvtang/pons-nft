@@ -33,24 +33,28 @@ transaction
 
 
 
-		PonsUsage .submitEscrowFlow (
+		PonsUsage .submitEscrow (
 			submitter: randomAccount,
 			id: "consummation-test-transaction-4-random",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ firstNftId ] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ) )
 
-		PonsUsage .submitEscrowFlow (
+		PonsUsage .submitEscrow (
 			submitter: artistAccount,
 			id: "consummation-test-transaction-4-artist",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ firstNftId ] ) )
 
 

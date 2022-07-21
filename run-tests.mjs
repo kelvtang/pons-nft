@@ -225,6 +225,7 @@ let send_transaction_ = send_known_transaction_ (__dirname + '/transactions/')
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
 	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+
 ;await run_known_test_
 	( 'integration-tests/marketplace/purchase-with-insufficient-funds-fails-fusd' )
 	( [ '0xPONS', '0xARTIST_1', '0xPATRON_1' ] )
@@ -396,6 +397,22 @@ let send_transaction_ = send_known_transaction_ (__dirname + '/transactions/')
 
 ;await run_known_test_
 	( 'integration-tests/escrow/termination' )
+	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
+	, flow_sdk_api .arg ([ v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-10'
+			, title: 'NFT title 10'
+			, description: 'NFT description 10' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg ('5.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+
+;await run_known_test_
+	( 'integration-tests/escrow/bridge' )
 	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )
 	(
 	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)

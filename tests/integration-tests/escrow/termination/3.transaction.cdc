@@ -31,14 +31,16 @@ transaction
 
 
 
-		PonsUsage .submitEscrowFlow (
+		PonsUsage .submitEscrow (
 			submitter: randomAccount,
 			id: "termination-test-transaction-3-random",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (1000.0),
+				fusdUnits: PonsUtils.FusdUnits (1000.0),
 				ponsNftIds: [ firstNftId, secondNftId, thirdNftId ] ) )
 
 

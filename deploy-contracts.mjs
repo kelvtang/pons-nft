@@ -15,4 +15,5 @@ var deploy_known_contract_ = deploy_known_contract_from_ (__dirname + '/contract
 ;await deploy_known_contract_ ('PonsNftMarket_v1') ([])
 ;await deploy_known_contract_ ('PonsNftMarketAdmin_v1') ([])
 ;await deploy_known_contract_ ('PonsEscrow') ([])
-;await deploy_known_contract_ ('PonsEscrowFusd') ([])
+;await deploy_known_contract_ ('PonsEscrowTunnel') ([])
+;await deploy_known_contract_ ('PonsTunnel') ([])

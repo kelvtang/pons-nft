@@ -31,14 +31,16 @@ transaction
 		let thirdNftId = testInfo ["Third NFT nftId"] !
 
 
-		let storagePath = PonsUsage .submitEscrowFlow (
+		let storagePath = PonsUsage .submitEscrow (
 			submitter: artistAccount,
 			id: "termination-test-transaction-7-artist",
 			heldResourceDescription: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (2.0),
+				fusdUnits: PonsUtils.FusdUnits (2.0),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ firstNftId, secondNftId, thirdNftId ] ) )
 
 		PonsEscrowContract .terminateEscrow (

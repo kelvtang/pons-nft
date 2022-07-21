@@ -6,7 +6,6 @@ import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftMarketContract from 0xPONS
 import PonsEscrowContract from 0xPONS
-import PonsEscrowContractFusd from 0xPONS
 
 
 pub contract PonsUsage {
@@ -64,8 +63,7 @@ pub contract PonsUsage {
 			// the balance field through the Balance interface
 			account .link <&FUSD.Vault{FungibleToken.Balance}> (
 				/public/fusdBalance,
-				target: /storage/fusdVault ) }
-	}
+				target: /storage/fusdVault ) }}
 
 
 	/* Ensures an account has a PonsCollection, creating one if it does not exist */
@@ -75,8 +73,7 @@ pub contract PonsUsage {
 				( from: PonsNftContract .CollectionStoragePath )
 
 		if collectionRefOptional == nil {
-			collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) } 
-	}
+			collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) }}
 	
 	/* Ensures an account has a PonsCollection, creating one if it does not exist */
 	pub fun preparePonsNftReceiverCapability (collector : AuthAccount) : Capability<&{PonsNftContractInterface.PonsNftReceiver}> {
@@ -96,30 +93,26 @@ pub contract PonsUsage {
 				/private/ponsCollectionNftReceiver,
 				target: PonsNftContract .CollectionStoragePath ) }
 
-		return collector .getCapability <&{PonsNftContractInterface.PonsNftReceiver}> (/private/ponsCollectionNftReceiver) 
-	}
+		return collector .getCapability <&{PonsNftContractInterface.PonsNftReceiver}> (/private/ponsCollectionNftReceiver)}
 
 	/* Borrows a PonsCollection from an account, creating one if it does not exist */
 	pub fun borrowOwnPonsCollection (collector : AuthAccount) : &PonsNftContractInterface.Collection {
 		PonsUsage .acquirePonsCollection (collector: collector)
-		return collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) ! 
-	}
+		return collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) !}
 
 	/* Borrows a Pons NFT from an account */
 	pub fun borrowOwnPonsNft (collector : AuthAccount, nftId : String) : &PonsNftContractInterface.NFT {
 		var collectionRef =
 			collector .borrow <&PonsNftContractInterface.Collection>
 				( from: PonsNftContract .CollectionStoragePath ) !
-		return collectionRef .borrowNft (nftId: nftId) 
-	}
+		return collectionRef .borrowNft (nftId: nftId)}
 
 	/* Create a PonsArtistCertificate authorisation resource */
 	pub fun makePonsArtistCertificateDirectly (artist : AuthAccount) : @PonsNftContract.PonsArtistCertificate {
 		PonsUsage .acquirePonsCollection (collector: artist)
 
 		let ponsCollectionRef = PonsUsage .borrowOwnPonsCollection (collector : artist)
-		return <- PonsNftContract .makePonsArtistCertificate (ponsCollectionRef) 
-	}
+		return <- PonsNftContract .makePonsArtistCertificate (ponsCollectionRef)}
 
 	
 	/* Function to create a unique path from nft mintID*/
@@ -149,16 +142,14 @@ pub contract PonsUsage {
 		var collection_storage_path = PonsUsage .getPathFromID(newListingCertificate.nftId, counter: counter);
 		while account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) != nil{
 			counter = counter + 1;
-			collection_storage_path = PonsUsage .getPathFromID(newListingCertificate.nftId, counter: counter);
-		}
+			collection_storage_path = PonsUsage .getPathFromID(newListingCertificate.nftId, counter: counter);}
 		
 
 		// Store in to a listing certicate collection
 		listingCertificateHolder .appendListingCertificate(<- newListingCertificate );
 
 		// Save to unique storage location
-		account.save (<- listingCertificateHolder, to: collection_storage_path);
-	}
+		account.save (<- listingCertificateHolder, to: collection_storage_path)}
 
 	/* Deposit listing certificates into the account's default listing certificate collection */
 	pub fun depositListingCertificates (_ account : AuthAccount, _ newListingCertificates : @[{PonsNftMarketContract.PonsListingCertificate}]) : Void {
@@ -175,19 +166,15 @@ pub contract PonsUsage {
 			var collection_storage_path = PonsUsage .getPathFromID(certificate.nftId, counter: counter);
 			while account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) != nil{
 				counter = counter + 1;
-				collection_storage_path = PonsUsage .getPathFromID(certificate.nftId, counter: counter);
-			}
+				collection_storage_path = PonsUsage .getPathFromID(certificate.nftId, counter: counter)}
 			
 
 			// Store in to a listing certicate collection
 			listingCertificateHolder .appendListingCertificate(<- certificate );
 
 			// Save to unique storage location
-			account.save (<- listingCertificateHolder, to: collection_storage_path);
-			
-		}
-		destroy newListingCertificates;
-	}
+			account.save (<- listingCertificateHolder, to: collection_storage_path)}
+		destroy newListingCertificates;}
 
 	/* Withdraw listing certificates from the account's default listing certificate collection */
 	pub fun withdrawListingCertificate (_ account : AuthAccount, nftId : String) : @{PonsNftMarketContract.PonsListingCertificate} {
@@ -198,19 +185,16 @@ pub contract PonsUsage {
 		var collection_storage_path = PonsUsage .getPathFromID(nftId, counter: counter);
 		while account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) != nil{
 			counter = counter + 1;
-			collection_storage_path = PonsUsage .getPathFromID(nftId, counter: counter);
-		}; 
+			collection_storage_path = PonsUsage .getPathFromID(nftId, counter: counter)} 
 		if counter == 0{
-			panic ("Pons Listing Certificate Collection for this nftId not found");
-		}
+			panic ("Pons Listing Certificate Collection for this nftId not found")}
 		collection_storage_path = PonsUsage .getPathFromID(nftId, counter: (counter-1));
 
 		// Borrow the existing listing certificate collection of the account, which must already exist
 		var listingCertificateCollectionRef = account .borrow <&PonsNftMarketContract.PonsListingCertificateCollection> (from: collection_storage_path) !
 
 		// Only one certificate in each collection, at index zero
-		return <- listingCertificateCollectionRef .removeListingCertificate (at: 0)
-	}
+		return <- listingCertificateCollectionRef .removeListingCertificate (at: 0)}
 
 	/* Mint new NFTs for sale for Pons artists */
 	pub fun mintForSaleFlow 
@@ -250,8 +234,7 @@ pub contract PonsUsage {
 		PonsUsage .depositListingCertificates (minter, <- listingCertificates)
 
 		// Return list of minted nftIds
-		return nftIds 
-	}
+		return nftIds}
 
 	/* Mint new NFTs for sale for Pons artists */
 	pub fun mintForSaleFusd 
@@ -291,8 +274,7 @@ pub contract PonsUsage {
 		PonsUsage .depositListingCertificates (minter, <- listingCertificates)
 
 		// Return list of minted nftIds
-		return nftIds 
-	}
+		return nftIds}
 	
 	pub fun listForSaleFlow (lister : AuthAccount, nftId : String, _ salePrice : PonsUtils.FlowUnits) : Void {
 		pre {
@@ -305,8 +287,9 @@ pub contract PonsUsage {
 		// List the NFT on the active Pons market for a listing certificate
 		var listingCertificate <- PonsNftMarketContract .ponsMarket .listForSaleFlow (<- nft, salePrice, receivePaymentCap)
 		// Deposit the listing certificate in the lister's listing certificate collection
-		PonsUsage .depositListingCertificate (lister, <- listingCertificate) 
-	}
+		PonsUsage .depositListingCertificate (lister, <- listingCertificate)}
+
+
 	pub fun listForSaleFusd (lister : AuthAccount, nftId : String, _ salePrice : PonsUtils.FusdUnits) : Void {
 		pre {
 			PonsUsage .borrowOwnPonsCollection (collector: lister) .borrowNft (nftId: nftId) != nil:
@@ -318,8 +301,8 @@ pub contract PonsUsage {
 		// List the NFT on the active Pons market for a listing certificate
 		var listingCertificate <- PonsNftMarketContract .ponsMarket .listForSaleFusd (<- nft, salePrice, receivePaymentCap)
 		// Deposit the listing certificate in the lister's listing certificate collection
-		PonsUsage .depositListingCertificate (lister, <- listingCertificate) 
-	}
+		PonsUsage .depositListingCertificate (lister, <- listingCertificate)}
+
 
 	/* Purchases a NFT from the marketplace, using a specified Flow token vault */
 	pub fun purchaseUsingVaultFlow (patron : AuthAccount, nftId : String, _ purchaseVault : @FungibleToken.Vault) : Void {
@@ -339,8 +322,9 @@ pub contract PonsUsage {
 
 		// Deposit the purchased NFT in the patron's Pons collection
 		PonsUsage .borrowOwnPonsCollection (collector: patron)
-		.depositNft (<- nft) 
-	}
+		.depositNft (<- nft)}
+
+
 	pub fun purchaseUsingVaultFusd (patron : AuthAccount, nftId : String, _ purchaseVault : @FungibleToken.Vault) : Void {
 		pre {
 			PonsNftMarketContract .borrowNft (nftId: nftId) != nil:
@@ -358,8 +342,8 @@ pub contract PonsUsage {
 
 		// Deposit the purchased NFT in the patron's Pons collection
 		PonsUsage .borrowOwnPonsCollection (collector: patron)
-		.depositNft (<- nft) 
-	}
+		.depositNft (<- nft)}
+
 
 	
 	/* Purchases a NFT from the marketplace, using the account's default Flow token vault */
@@ -393,8 +377,10 @@ pub contract PonsUsage {
 				from: /storage/ponsMarketPurchaseVaultFlow ) !
 
 		// Purchase the specified NFT using the Flow token vault
-		PonsUsage .purchaseUsingVaultFlow (patron: patron, nftId: nftId, <- purchaseVault) 
-	}
+		PonsUsage .purchaseUsingVaultFlow (patron: patron, nftId: nftId, <- purchaseVault)}
+
+
+
 	/* Purchases a NFT from the marketplace, using the account's default FUSD token vault */
 	pub fun purchaseFusd (patron : AuthAccount, nftId : String, priceLimit : PonsUtils.FusdUnits?) : Void {
 		pre {
@@ -426,8 +412,9 @@ pub contract PonsUsage {
 				from: /storage/ponsMarketPurchaseVaultFusd ) !
 
 		// Purchase the specified NFT using the Flow token vault
-		PonsUsage .purchaseUsingVaultFusd (patron: patron, nftId: nftId, <- purchaseVault) 
-	}
+		PonsUsage .purchaseUsingVaultFusd (patron: patron, nftId: nftId, <- purchaseVault)}
+
+
 
 	/* Unlists a NFT from marketplace */
 	pub fun unlist (lister : AuthAccount, nftId : String) : Void {
@@ -438,11 +425,12 @@ pub contract PonsUsage {
 		var nft <- PonsNftMarketContract .ponsMarket .unlist (<- listingCertificate)
 		
 		// Then, deposit the NFT into the lister's Pons collection
-		PonsUsage .borrowOwnPonsCollection (collector: lister) .depositNft ( <- nft ) 
-	}
+		PonsUsage .borrowOwnPonsCollection (collector: lister) .depositNft ( <- nft )}
+
+		
 	
 	/* Get a free Capability Path to store a Capability to an Escrow */
-	pub fun escrowCapabilityPathFlow (_ account : AuthAccount, _ id : String) : CapabilityPath {
+	pub fun escrowCapabilityPath (_ account : AuthAccount, _ id : String) : CapabilityPath {
 		// This function is not yet defined in this version of Cadence
 		//return PrivatePath ("escrow__" .concat (id)) !
 		let potentialCapabilityPaths =
@@ -463,30 +451,8 @@ pub contract PonsUsage {
 				return capabilityPath } }
 		panic ("No free escrow capability paths found") }
 
-	/* Get a free Capability Path to store a Capability to an Escrow */
-	pub fun escrowCapabilityPathFusd (_ account : AuthAccount, _ id : String) : CapabilityPath {
-		// This function is not yet defined in this version of Cadence
-		//return PrivatePath ("escrow__" .concat (id)) !
-		let potentialCapabilityPaths =
-			[ /private/escrow_fusd__1, /private/escrow_fusd__2, /private/escrow_fusd__3, /private/escrow_fusd__4, /private/escrow_fusd__5, /private/escrow_fusd__6, /private/escrow_fusd__7, /private/escrow_fusd__8, /private/escrow_fusd__9, /private/escrow_fusd__10 ]
-		for capabilityPath in potentialCapabilityPaths {
-			if account .getCapability <&PonsEscrowContractFusd.Escrow> (capabilityPath) .check () {
-				let storagePath = account .getLinkTarget (capabilityPath) ! as! StoragePath
-				let escrowRefOptional = account .borrow <&PonsEscrowContractFusd.Escrow> (from: storagePath) 
-				if escrowRefOptional == nil {
-					account .unlink (capabilityPath)
-					return capabilityPath }
-				else {
-					if escrowRefOptional !.isReleased () {
-						account .unlink (capabilityPath)
-						destroy account .load <@PonsEscrowContractFusd.Escrow> (from: storagePath)
-						return capabilityPath } } }
-			else {
-				return capabilityPath } }
-		panic ("No free escrow capability paths found") }
-
 	/* Get a free Storage Path to store a Capability to an Escrow */
-	pub fun escrowStoragePathFlow (_ account : AuthAccount, _ id : String) : StoragePath {
+	pub fun escrowStoragePath (_ account : AuthAccount, _ id : String) : StoragePath {
 		//return StoragePath ("escrow__" .concat (id)) !
 		let potentialStoragePaths =
 			[ /storage/escrow__1, /storage/escrow__2, /storage/escrow__3, /storage/escrow__4, /storage/escrow__5, /storage/escrow__6, /storage/escrow__7, /storage/escrow__8, /storage/escrow__9, /storage/escrow__10 ]
@@ -500,30 +466,16 @@ pub contract PonsUsage {
 					return storagePath } } }
 		panic ("No free escrow storage paths found") }
 
-	/* Get a free Storage Path to store a Capability to an Escrow */
-	pub fun escrowStoragePathFusd (_ account : AuthAccount, _ id : String) : StoragePath {
-		//return StoragePath ("escrow__" .concat (id)) !
-		let potentialStoragePaths =
-			[ /storage/escrow_fusd__1, /storage/escrow_fusd__2, /storage/escrow_fusd__3, /storage/escrow_fusd__4, /storage/escrow_fusd__5, /storage/escrow_fusd__6, /storage/escrow_fusd__7, /storage/escrow_fusd__8, /storage/escrow_fusd__9, /storage/escrow_fusd__10 ]
-		for storagePath in potentialStoragePaths {
-			let escrowRefOptional = account .borrow <&PonsEscrowContractFusd.Escrow> (from: storagePath) 
-			if escrowRefOptional == nil {
-				return storagePath }
-			else {
-				if escrowRefOptional !.isReleased () {
-					destroy account .load <@PonsEscrowContractFusd.Escrow> (from: storagePath)
-					return storagePath } } }
-		panic ("No free escrow storage paths found") }
-
 	/* Submit an escrowing using the specified id, resources, requirement, and fulfillment */
-	pub fun submitEscrowUsingFlow
+	pub fun submitEscrowUsing
 	( submitter : AuthAccount, id : String
 	, resources : @PonsEscrowContract.EscrowResource
-	, requirement : PonsEscrowContract.EscrowResourceDescription, fulfillment : PonsEscrowContract.EscrowFulfillment
+	, requirement : PonsEscrowContract.EscrowResourceDescription, 
+	fulfillment : PonsEscrowContract.EscrowFulfillment
 	) : StoragePath {
 		// Obtain escrow capability and storage paths
-		let capabilityPath = PonsUsage .escrowCapabilityPathFlow (submitter, id)
-		let storagePath = PonsUsage .escrowStoragePathFlow (submitter, id)
+		let capabilityPath = PonsUsage .escrowCapabilityPath (submitter, id)
+		let storagePath = PonsUsage .escrowStoragePath (submitter, id)
 
 		// Create an escrow capability to the escrow storage path
 		let escrowCap = submitter .link <&PonsEscrowContract.Escrow> (capabilityPath, target: storagePath) !
@@ -538,70 +490,23 @@ pub contract PonsUsage {
 
 		return storagePath }
 
-	/* Submit an escrowing using the specified id, resources, requirement, and fulfillment */
-	pub fun submitEscrowUsingFusd
-	( submitter : AuthAccount, id : String
-	, resources : @PonsEscrowContractFusd.EscrowResource
-	, requirement : PonsEscrowContractFusd.EscrowResourceDescription, fulfillment : PonsEscrowContractFusd.EscrowFulfillment
-	) : StoragePath {
-		// Obtain escrow capability and storage paths
-		let capabilityPath = PonsUsage .escrowCapabilityPathFusd (submitter, id)
-		let storagePath = PonsUsage .escrowStoragePathFusd (submitter, id)
-
-		// Create an escrow capability to the escrow storage path
-		let escrowCap = submitter .link <&PonsEscrowContractFusd.Escrow> (capabilityPath, target: storagePath) !
-
-		// First, submit an escrow with the specified information and resources, obtaining an Escrow resource
-		// Then, save the Escrow resource to the arranged storage path
-		submitter .save (
-			<- PonsEscrowContractFusd .submitEscrow (
-				id: id, escrowCap: escrowCap, resources: <- resources,
-				requirement: requirement, fulfillment: fulfillment ),
-			to: storagePath )
-
-		return storagePath }
-
 	/* Submit an escrow using the specified id and requirement, gathering the escrow resources and fulfillment from the default paths */
-	pub fun submitEscrowFlow
+	pub fun submitEscrow
 	( submitter : AuthAccount, id : String
 	, heldResourceDescription : PonsEscrowContract.EscrowResourceDescription, requirement : PonsEscrowContract.EscrowResourceDescription
 	) : StoragePath {
 		// Ensure the submitter has a Flow Vault and a PonsCollection, constructing an EscrowFulfillment using the two
 		let fulfillment =
 			PonsEscrowContract.EscrowFulfillment (
-				receivePaymentCap: PonsUsage .prepareFlowCapability (account: submitter),
+				receivePaymentCapFlow: PonsUsage .prepareFlowCapability (account: submitter),
+				receivePaymentCapFusd: PonsUsage .prepareFusdCapability (account: submitter),
 				receiveNftCap: PonsUsage .preparePonsNftReceiverCapability (collector: submitter) )
 
 		// Withdraw the amount specified by heldResourceDescription
 		var heldFlowVault <- 
 			submitter .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 				.withdraw (amount: heldResourceDescription .flowUnits .flowAmount)
-
-		// Withdraw the nfts specified by heldResourceDescription
-		var heldPonsNfts : @[PonsNftContractInterface.NFT] <- []
-		for nftId in heldResourceDescription .getPonsNftIds () {
-			heldPonsNfts .append (<- PonsUsage .borrowOwnPonsCollection (collector: submitter) .withdrawNft (nftId: nftId)) }
-
-		// Create EscrowResource based on the withdrawn Flow Vault and Pons NFTs
-		var heldResources <-
-			PonsEscrowContract .makeEscrowResource (flowVault: <- heldFlowVault, ponsNfts: <- heldPonsNfts)
-
-		// Submit the obtained EscrowFulfillment and EscrowResource for escrow
-		return PonsUsage .submitEscrowUsingFlow (
-			submitter: submitter, id: id,
-			resources: <- heldResources, requirement: requirement,
-			fulfillment: fulfillment ) }
-	/* Submit an escrow using the specified id and requirement, gathering the escrow resources and fulfillment from the default paths */
-	pub fun submitEscrowFusd
-	( submitter : AuthAccount, id : String
-	, heldResourceDescription : PonsEscrowContractFusd.EscrowResourceDescription, requirement : PonsEscrowContractFusd.EscrowResourceDescription
-	) : StoragePath {
-		// Ensure the submitter has a Flow Vault and a PonsCollection, constructing an EscrowFulfillment using the two
-		let fulfillment =
-			PonsEscrowContractFusd.EscrowFulfillment (
-				receivePaymentCap: PonsUsage .prepareFusdCapability (account: submitter),
-				receiveNftCap: PonsUsage .preparePonsNftReceiverCapability (collector: submitter) )
-
+		
 		// Withdraw the amount specified by heldResourceDescription
 		var heldFusdVault <- 
 			submitter .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
@@ -614,11 +519,11 @@ pub contract PonsUsage {
 
 		// Create EscrowResource based on the withdrawn Flow Vault and Pons NFTs
 		var heldResources <-
-			PonsEscrowContractFusd .makeEscrowResource (fusdVault: <- heldFusdVault, ponsNfts: <- heldPonsNfts)
+			PonsEscrowContract .makeEscrowResource (flowVault: <- heldFlowVault, fusdVault: <- heldFusdVault, ponsNfts: <- heldPonsNfts)
 
 		// Submit the obtained EscrowFulfillment and EscrowResource for escrow
-		return PonsUsage .submitEscrowUsingFusd (
+		return PonsUsage .submitEscrowUsing (
 			submitter: submitter, id: id,
 			resources: <- heldResources, requirement: requirement,
-			fulfillment: fulfillment ) }
-	}
+			fulfillment: fulfillment ) }}
+	
