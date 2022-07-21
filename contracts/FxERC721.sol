@@ -67,7 +67,7 @@ contract FxERC721 is IFxERC721, ERC721, ERC721Enumerable, ERC721URIStorage, ERC7
         _setupMetaData(_name, _symbol);
     }
 
-    function exists (uint256 tokenId) public virtual returns (bool) {
+    function exists (uint256 tokenId) public view returns (bool) {
         return _exists(tokenId);
     }
 
@@ -85,8 +85,6 @@ contract FxERC721 is IFxERC721, ERC721, ERC721Enumerable, ERC721URIStorage, ERC7
         bytes memory _data
     ) public override {
         require(msg.sender == _fxManager, "Invalid sender");
-        // string memory artistId = "dada";
-        // uint256 price = 12;
         // string memory tokenUri = "QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz";
         // address royaltyReceiver = user;
         // uint96 royaltyNumerator = 100;
@@ -112,7 +110,11 @@ contract FxERC721 is IFxERC721, ERC721, ERC721Enumerable, ERC721URIStorage, ERC7
 
     function burn(uint256 tokenId) public override {
         require(msg.sender == _fxManager, "Invalid sender");
-        
+
+        require(
+          exists(tokenId) == true,
+          "Token does not exist on Polygon chain"  
+        );
         // TODO: Needs to be implemented correctly based on what we get from flow
         require(
           _EventInfo[tokenId].approved == true,
