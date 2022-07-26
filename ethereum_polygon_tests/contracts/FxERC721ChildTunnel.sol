@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+// different contract for tests
+
 pragma solidity ^0.8.0;
 
 import {FxBaseChildTunnel} from "./FxBaseChildTunnel.sol";
@@ -26,6 +28,9 @@ contract FxERC721ChildTunnel is
     bytes32 public rootTokenTemplateCodeHash;
 
     event FlowDeposit(bytes data);
+
+    // TODO: Remove
+    event childToRoot(bytes data);
 
     constructor(
         address _fxChild,
@@ -141,6 +146,17 @@ contract FxERC721ChildTunnel is
         bytes memory metaData = abi.encode(name, symbol);
 
         // send message to root regarding token burn
+        // TODO: Remove
+        emit childToRoot(
+            abi.encode(
+                rootToken,
+                childToken,
+                msg.sender,
+                tokenId,
+                data,
+                metaData
+            )
+        );
         _sendMessageToRoot(
             abi.encode(
                 rootToken,
@@ -229,6 +245,10 @@ contract FxERC721ChildTunnel is
         FxERC721 childTokenContract = FxERC721(childToken);
         // childTokenContract.setApproval(true, tokenId);
         childTokenContract.mint(to, tokenId, depositData);
+    }
+
+    function syncDeposit(address sender, bytes memory syncData) public {
+        _processMessageFromRoot(0, sender, syncData);
     }
 
     // check if address is contract

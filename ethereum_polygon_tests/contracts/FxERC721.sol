@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+// different contract for tests
+
 pragma solidity ^0.8.0;
 
 import {IFxERC721} from "./IFxERC721.sol";
@@ -56,7 +58,7 @@ contract FxERC721 is
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        return "ipfs://";
+        return "";
     }
 
     function _beforeTokenTransfer(
@@ -116,6 +118,9 @@ contract FxERC721 is
         bytes memory _data
     ) public override {
         require(msg.sender == _fxManager, "Invalid sender");
+        // string memory tokenUri = "QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz";
+        // address royaltyReceiver = user;
+        // uint96 royaltyNumerator = 100;
         // // TODO: Needs to be implemented correctly based on what we get from flow
         // require(
         //     _EventInfo[tokenId].approved == true,

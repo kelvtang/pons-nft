@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+//different contract for tests
+
 pragma solidity ^0.8.0;
 
 import {FxBaseRootTunnel} from "./FxBaseRootTunnel.sol";
@@ -33,7 +35,9 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
     ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
-
+    
+    // TODO: Remove
+    event rootToChild(bytes data);
 
     // before calling, need to prompt user to accept adding us as approved owner from js 
     function deposit(
@@ -55,6 +59,8 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
   
         // DEPOSIT, encode(rootToken, depositor, user, tokenId, extra data)
         bytes memory message = abi.encode(DEPOSIT, abi.encode(rootToken, msg.sender, user, tokenId, data));
+        // TODO: Remove
+        emit rootToChild(message);
         _sendMessageToChild(message);
     }
 
