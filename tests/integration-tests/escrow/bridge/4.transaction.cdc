@@ -3,7 +3,7 @@ import PonsUtils from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
 import PonsEscrowContract from 0xPONS
-import ponsTunnelContract from 0xPONS
+import PonsTunnelContract from 0xPONS
 
 import TestUtils from 0xPONS
 import PonsUsage from 0xPONS
@@ -30,7 +30,7 @@ transaction
 		let thirdNftId = testInfo ["Third NFT nftId"] !
 
 
-		ponsTunnelContract .sendNftThroughTunnel(nftId: firstNftId, ponsAccount: ponsAccount, ponsHolderAccount: artistAccount, tunnelUserAccount: randomAccount, polygonAddress: "0x3455643");
-		ponsTunnelContract .sendNftThroughTunnel(nftId: secondNftId, ponsAccount: ponsAccount, ponsHolderAccount: artistAccount, tunnelUserAccount: randomAccount, polygonAddress: "0x3455643");
+		PonsTunnelContract .sendNftThroughTunnel(nftId: firstNftId, ponsAccount: ponsAccount, ponsHolderAccount: artistAccount, tunnelUserAccount: randomAccount, polygonAddress: "0x3455643");
+		PonsTunnelContract .sendNftThroughTunnel(nftId: secondNftId, ponsAccount: ponsAccount, ponsHolderAccount: artistAccount, tunnelUserAccount: randomAccount, polygonAddress: "0x3455643");
 
 		} }

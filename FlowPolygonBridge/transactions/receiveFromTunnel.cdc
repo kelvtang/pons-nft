@@ -6,11 +6,11 @@
 
  transaction(
      flowRecepientAddress: Address,
-     nftId: String
+     nftSerialId: UInt64
  ) {
      prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount, tunnelUserAccount : AuthAccount){
          if flowRecepientAddress == tunnelUserAccount .Address{
-            ponsTunnelContract .recieveNftFromTunnel(nftId : nftId, ponsAccount : ponsAccount, ponsHolderAccount : ponsHolderAccount, tunnelUserAccount : AuthAccount);
+            PonsTunnelContract .recieveNftFromTunnel(nftSerialId: nftSerialId, ponsAccount : ponsAccount, ponsHolderAccount : ponsHolderAccount, tunnelUserAccount : AuthAccount);
         }else {
             panic ("Only recipient can sign tranaction")
         }

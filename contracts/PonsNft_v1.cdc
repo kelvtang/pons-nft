@@ -236,6 +236,17 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		pub fun getIDs () : [UInt64] {
 			return self .ownedNFTs .keys }
 
+		/* Get NFT serialNumber from its NftId */
+		pub fun getNftId (serialId: UInt64) : String?{
+			// Get list of keys. Each key is a nftId string.
+			for id in PonsNftContract_v1 .ponsNftSerialNumbers .keys{ // Iterate through dictionary
+				if PonsNftContract_v1 .ponsNftSerialNumbers[id] == serialId{ 
+					return id; // return the nftId if it points to the same serialId
+				}
+			}
+			return nil;
+		}
+
 		/* Borrow a reference to a NFT in the PonsCollection, given its serialNumber */
 		pub fun borrowNFT (id : UInt64) : &NonFungibleToken.NFT {
 			pre {

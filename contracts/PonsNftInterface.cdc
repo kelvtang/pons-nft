@@ -48,6 +48,9 @@ pub contract interface PonsNftContractInterface {
 		/* Get a list of nftIds stored in the PonsCollection */
 		pub fun getNftIds () : [String]
 
+		/* Get a list of nftIds from serialId */
+		pub fun getNftId (serialId: UInt64) : String?
+
 		/* Borrow a reference to a NFT in the PonsCollection */
 		pub fun borrowNft (nftId : String) : &NFT {
 			post {
