@@ -23,14 +23,13 @@ transaction
 
 	prepare (ponsAccount : AuthAccount, artistAccount : AuthAccount, randomAccount : AuthAccount){//, polygonAddress: String) {
 
-		TestUtils .log ("NFT sent through tunnel is sent by user")
+		TestUtils .log ("NFT sent through tunnel is received by user")
 
 		let firstNftId = testInfo ["First NFT nftId"] !
 		let secondNftId = testInfo ["Second NFT nftId"] !
 		let thirdNftId = testInfo ["Third NFT nftId"] !
 
 
-		ponsTunnelContract .sendNftThroughTunnel(nftId: firstNftId, ponsAccount: ponsAccount, ponsHolderAccount: artistAccount, tunnelUserAccount: randomAccount, polygonAddress: "0x3455643");
-		ponsTunnelContract .sendNftThroughTunnel(nftId: secondNftId, ponsAccount: ponsAccount, ponsHolderAccount: artistAccount, tunnelUserAccount: randomAccount, polygonAddress: "0x3455643");
+		ponsTunnelContract .recieveNftFromTunnel(nftId: firstNftId, ponsAccount: ponsAccount, ponsHolderAccount: artistAccount, tunnelUserAccount: randomAccount);
 
 		} }

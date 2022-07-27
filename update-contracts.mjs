@@ -5,8 +5,6 @@ import { flow_sdk_api } from './config.mjs'
 var __dirname = new URL ('.', import .meta .url) .pathname
 //var deploy_known_contract_ = deploy_known_contract_from_ (__dirname + '/contracts/')
 var update_known_contract_ = update_known_contract_from_ (__dirname + '/contracts/')
-
-
 ;await update_known_contract_ ('PonsUtils') 
 ;await update_known_contract_ ('PonsCertification') 
 ;await update_known_contract_ ('PonsNftInterface') 
@@ -16,9 +14,11 @@ var update_known_contract_ = update_known_contract_from_ (__dirname + '/contract
 ;await update_known_contract_ ('PonsNftMarket_v1') 
 ;await update_known_contract_ ('PonsNftMarketAdmin_v1') 
 ;await update_known_contract_ ('PonsEscrow')
+
+update_known_contract_ = update_known_contract_from_ (__dirname + '/FlowPolygonBridge/contracts/')
+;await update_known_contract_ ('PonsEscrowTunnel')  
 ;await update_known_contract_ ('PonsTunnel')  
 
 update_known_contract_ = update_known_contract_from_ (__dirname + '/testing-contracts/')
-
 ;await update_known_contract_ ('PonsUsage') 
 ;await update_known_contract_ ('TestUtils') 
