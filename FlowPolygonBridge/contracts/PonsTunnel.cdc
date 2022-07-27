@@ -34,7 +34,8 @@ pub contract PonsTunnelContract{
 	pub struct nftDetails{
 		pub let nftId: String
 		pub let nftSerialId: UInt64
-		pub let metadata: {String:String}
+		pub let metadata: {String:String} 
+		pub let tags : [{String:String}]
 		pub let artistAddressFlow: Address
 		pub var artistAddressPolygon: String?
 		pub let royalty: UFix64
@@ -42,10 +43,11 @@ pub contract PonsTunnelContract{
 		pub fun setArtistAddressPolygon(artistAddressPolygon: String){
 			self .artistAddressPolygon = artistAddressPolygon}
 
-		init (nftId:String, nftSerialId:UInt64, metadata: {String:String}, artistAddressFlow:Address, royalty:UFix64){
+		init (nftId:String, nftSerialId:UInt64, metadata: {String:String}, tags: [{String:String}], artistAddressFlow:Address, royalty:UFix64){
 			self .nftId = nftId
 			self .nftSerialId = nftSerialId
 			self .metadata = metadata
+			self .tags = tags
 			self .artistAddressFlow = artistAddressFlow
 			self .artistAddressPolygon = nil
 			self .royalty = royalty}}
@@ -83,8 +85,12 @@ pub contract PonsTunnelContract{
 			"description":metadata["description"]!
 		};
 
+		var i:UInt64 = 0;
+		var tags: [{String:String}] = [] 
+		while metadata["tag-".concat(i.toString())] != nil{ tags.append({"tag-".concat(i.toString()):metadata["tag-".concat(i.toString())]!}); i = i + 1;}
+
 		let royalty:UFix64 = PonsNftContract .getRoyalty(nftRef) .amount;
-		let nftEmitData: PonsTunnelContract.nftDetails = PonsTunnelContract .nftDetails(nftId:nftRef .nftId, nftSerialId:nftRef .id, metdata:metadataSelf, artistAddressFlow:artistAddressFlow, royalty:royalty)
+		let nftEmitData: PonsTunnelContract.nftDetails = PonsTunnelContract .nftDetails(nftId:nftRef .nftId, nftSerialId:nftRef .id, metdata:metadataSelf, tags:tags, artistAddressFlow:artistAddressFlow, royalty:royalty)
 		return nftEmitData;}
 
 	access(self) fun generateSentTunnelEmitData(nftRef: &PonsNftContractInterface.NFT, artistAddressPolygon: String?, polygonRecipientAddress: String):PonsTunnelContract.sentTunnelData{
@@ -108,8 +114,8 @@ pub contract PonsTunnelContract{
 	}
 		
 
-    /* Creates Flow Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send Flow tokens to the account */
-	access(self) fun prepareFlowCapability (account : AuthAccount) : Capability<&{FungibleToken.Receiver}> {
+   /* Creates Flow Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send Flow tokens to the account */
+	pub fun prepareFlowCapability (account : AuthAccount) : Capability<&{FungibleToken.Receiver}> {
 		if account .borrow <&FlowToken.Vault> (from: /storage/flowTokenVault) == nil {
 			account .save (<- FlowToken .createEmptyVault (), to: /storage/flowTokenVault) }
 
@@ -128,7 +134,7 @@ pub contract PonsTunnelContract{
 		return account .getCapability <&{FungibleToken.Receiver}> (/public/flowTokenReceiver)}
 
 	/* Creates FUSD Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send FUSD tokens to the account */
-	access(self) fun prepareFusdCapability (account : AuthAccount) : Capability<&{FungibleToken.Receiver}> {
+	pub fun prepareFusdCapability (account : AuthAccount) : Capability<&{FungibleToken.Receiver}> {
 		if account .borrow <&FUSD.Vault> (from: /storage/fusdVault) == nil {
 			account .save (<- FUSD .createEmptyVault (), to: /storage/fusdVault) }
 
@@ -144,9 +150,20 @@ pub contract PonsTunnelContract{
 				/public/fusdBalance,
 				target: /storage/fusdVault ) }
 
-		return account .getCapability <&{FungibleToken.Receiver}> (/public/fusdReceiver)}
+		return account .getCapability <&{FungibleToken.Receiver}> (/public/fusdReceiver)
+	}
 
-	access(self) fun preparePonsNftReceiverCapability (collector : AuthAccount) : Capability<&{PonsNftContractInterface.PonsNftReceiver}> {
+	/* Ensures an account has a PonsCollection, creating one if it does not exist */
+	pub fun acquirePonsCollection (collector : AuthAccount) : Void {
+		var collectionRefOptional =
+			collector .borrow <&PonsNftContractInterface.Collection>
+				( from: PonsNftContract .CollectionStoragePath )
+
+		if collectionRefOptional == nil {
+			collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) }}
+	
+	/* Ensures an account has a PonsCollection, creating one if it does not exist */
+	pub fun preparePonsNftReceiverCapability (collector : AuthAccount) : Capability<&{PonsNftContractInterface.PonsNftReceiver}> {
 		var collectionRefOptional =
 			collector .borrow <&PonsNftContractInterface.Collection>
 				( from: PonsNftContract .CollectionStoragePath )
@@ -165,24 +182,17 @@ pub contract PonsTunnelContract{
 
 		return collector .getCapability <&{PonsNftContractInterface.PonsNftReceiver}> (/private/ponsCollectionNftReceiver)}
 
-	/* Ensures an account has a PonsCollection, creating one if it does not exist */
-	access(self) fun acquirePonsCollection (collector : AuthAccount) : Void {
-		var collectionRefOptional =
-			collector .borrow <&PonsNftContractInterface.Collection>
-				( from: PonsNftContract .CollectionStoragePath )
-
-		if collectionRefOptional == nil {
-			collector .save (<- PonsNftContract .createEmptyPonsCollection (), to: PonsNftContract .CollectionStoragePath) }}
-    /* Borrows a PonsCollection from an account, creating one if it does not exist */
-	access(self) fun borrowOwnPonsCollection (collector : AuthAccount) : &PonsNftContractInterface.Collection {
+	/* Borrows a PonsCollection from an account, creating one if it does not exist */
+	pub fun borrowOwnPonsCollection (collector : AuthAccount) : &PonsNftContractInterface.Collection {
 		PonsTunnelContract .acquirePonsCollection (collector: collector)
-		return collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) !}
+		return collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) !
+	}
 
-    
-    /* Get a free Capability Path to store a Capability to an Escrow */
-	access(self) fun escrowCapabilityPathFlow (_ account : AuthAccount, _ id : String) : CapabilityPath {
+	
+	/* Get a free Capability Path to store a Capability to an Escrow */
+	pub fun escrowCapabilityPath (_ account : AuthAccount, _ id : String) : CapabilityPath {
 		// This function is not yet defined in this version of Cadence
-		//return PrivatePath ("escrow__" .concat (id)) !
+		//return PrivatePath ("escrow___" .concat (id)) !
 		let potentialCapabilityPaths =
 			[ /private/escrow___1, /private/escrow___2, /private/escrow___3, /private/escrow___4, /private/escrow___5, /private/escrow___6, /private/escrow___7, /private/escrow___8, /private/escrow___9, /private/escrow___10 ]
 		for capabilityPath in potentialCapabilityPaths {
@@ -202,8 +212,8 @@ pub contract PonsTunnelContract{
 		panic ("No free escrow capability paths found") }
 
 	/* Get a free Storage Path to store a Capability to an Escrow */
-	access(self) fun escrowStoragePathFlow (_ account : AuthAccount, _ id : String) : StoragePath {
-		//return StoragePath ("escrow__" .concat (id)) !
+	pub fun escrowStoragePath (_ account : AuthAccount, _ id : String) : StoragePath {
+		//return StoragePath ("escrow___" .concat (id)) !
 		let potentialStoragePaths =
 			[ /storage/escrow___1, /storage/escrow___2, /storage/escrow___3, /storage/escrow___4, /storage/escrow___5, /storage/escrow___6, /storage/escrow___7, /storage/escrow___8, /storage/escrow___9, /storage/escrow___10 ]
 		for storagePath in potentialStoragePaths {
@@ -217,14 +227,15 @@ pub contract PonsTunnelContract{
 		panic ("No free escrow storage paths found") }
 
 	/* Submit an escrowing using the specified id, resources, requirement, and fulfillment */
-	access(self) fun submitEscrowUsingFlow
+	pub fun submitEscrowUsing
 	( submitter : AuthAccount, id : String
 	, resources : @PonsEscrowTunnelContract.EscrowResource
-	, requirement : PonsEscrowTunnelContract.EscrowResourceDescription, fulfillment : PonsEscrowTunnelContract.EscrowFulfillment
+	, requirement : PonsEscrowTunnelContract.EscrowResourceDescription, 
+	fulfillment : PonsEscrowTunnelContract.EscrowFulfillment
 	) : StoragePath {
 		// Obtain escrow capability and storage paths
-		let capabilityPath = PonsTunnelContract .escrowCapabilityPathFlow (submitter, id)
-		let storagePath = PonsTunnelContract .escrowStoragePathFlow (submitter, id)
+		let capabilityPath = PonsTunnelContract .escrowCapabilityPath (submitter, id)
+		let storagePath = PonsTunnelContract .escrowStoragePath (submitter, id)
 
 		// Create an escrow capability to the escrow storage path
 		let escrowCap = submitter .link <&PonsEscrowTunnelContract.Escrow> (capabilityPath, target: storagePath) !
@@ -240,20 +251,26 @@ pub contract PonsTunnelContract{
 		return storagePath }
 
 	/* Submit an escrow using the specified id and requirement, gathering the escrow resources and fulfillment from the default paths */
-	access(self) fun submitEscrowFlow
+	pub fun submitEscrow
 	( submitter : AuthAccount, id : String
 	, heldResourceDescription : PonsEscrowTunnelContract.EscrowResourceDescription, requirement : PonsEscrowTunnelContract.EscrowResourceDescription
 	) : StoragePath {
 		// Ensure the submitter has a Flow Vault and a PonsCollection, constructing an EscrowFulfillment using the two
 		let fulfillment =
 			PonsEscrowTunnelContract.EscrowFulfillment (
-				receivePaymentCap: PonsTunnelContract .prepareFlowCapability (account: submitter),
+				receivePaymentCapFlow: PonsTunnelContract .prepareFlowCapability (account: submitter),
+				receivePaymentCapFusd: PonsTunnelContract .prepareFusdCapability (account: submitter),
 				receiveNftCap: PonsTunnelContract .preparePonsNftReceiverCapability (collector: submitter) )
 
 		// Withdraw the amount specified by heldResourceDescription
 		var heldFlowVault <- 
 			submitter .borrow <&FungibleToken.Vault> (from: /storage/flowTokenVault) !
 				.withdraw (amount: heldResourceDescription .flowUnits .flowAmount)
+		
+		// Withdraw the amount specified by heldResourceDescription
+		var heldFusdVault <- 
+			submitter .borrow <&FungibleToken.Vault> (from: /storage/fusdVault) !
+				.withdraw (amount: heldResourceDescription .fusdUnits .fusdAmount)
 
 		// Withdraw the nfts specified by heldResourceDescription
 		var heldPonsNfts : @[PonsNftContractInterface.NFT] <- []
@@ -262,19 +279,16 @@ pub contract PonsTunnelContract{
 
 		// Create EscrowResource based on the withdrawn Flow Vault and Pons NFTs
 		var heldResources <-
-			PonsEscrowTunnelContract .makeEscrowResource (flowVault: <- heldFlowVault, ponsNfts: <- heldPonsNfts)
+			PonsEscrowTunnelContract .makeEscrowResource (flowVault: <- heldFlowVault, fusdVault: <- heldFusdVault, ponsNfts: <- heldPonsNfts)
 
 		// Submit the obtained EscrowFulfillment and EscrowResource for escrow
-		return PonsTunnelContract .submitEscrowUsingFlow (
+		return PonsTunnelContract .submitEscrowUsing (
 			submitter: submitter, id: id,
 			resources: <- heldResources, requirement: requirement,
-			fulfillment: fulfillment ) }
+			fulfillment: fulfillment ) 
+	}
 	
-
-
-
-
-    pub fun sendNftThroughTunnel(nftId:String, ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount, tunnelUserAccount : AuthAccount, polygonAddress: String){
+	pub fun sendNftThroughTunnel(nftId:String, ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount, tunnelUserAccount : AuthAccount, polygonAddress: String){
 		pre {
 			/* ponsHolderAccount.toString() == "":
 				panic("Can only go through tunnel by burning using Pons Burner") */
@@ -282,24 +296,28 @@ pub contract PonsTunnelContract{
 
 		let nftRef:&PonsNftContractInterface.NFT = PonsTunnelContract .borrowOwnPonsCollection (collector: tunnelUserAccount) .borrowNft (nftId: nftId)
 		
-		PonsTunnelContract .submitEscrowFlow (
+		PonsTunnelContract .submitEscrow (
 			submitter: tunnelUserAccount,
 			id: nftId.concat("Tunnel-User-Escrow"),
 			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ nftId ] ),
 			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ) )
 
-		PonsTunnelContract .submitEscrowFlow (
+		PonsTunnelContract .submitEscrow (
 			submitter: ponsHolderAccount,
 			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
 			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ nftId ] ) )	
 
 		let escrowManagerRef = ponsAccount .borrow <&PonsEscrowTunnelContract.EscrowManager> (from: /storage/escrowTunnelManager) !
@@ -349,24 +367,28 @@ pub contract PonsTunnelContract{
 		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: tunnelUserAccount) .getNftId (serialId: nftSerialId)!
 		let nftRef:&PonsNftContractInterface.NFT = PonsTunnelContract .borrowOwnPonsCollection (collector: tunnelUserAccount) .borrowNft (nftId: nftId)
 		
-		PonsTunnelContract .submitEscrowFlow (
+		PonsTunnelContract .submitEscrow (
 			submitter: tunnelUserAccount,
 			id: nftId.concat("Tunnel-User-Escrow"),
 			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ nftId ] ),
 			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ) )
 
-		PonsTunnelContract .submitEscrowFlow (
+		PonsTunnelContract .submitEscrow (
 			submitter: ponsHolderAccount,
 			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
 			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ nftId ] ) )	
 
 		let escrowManagerRef = ponsAccount .borrow <&PonsEscrowTunnelContract.EscrowManager> (from: /storage/escrowTunnelManager) !
@@ -418,24 +440,28 @@ pub contract PonsTunnelContract{
 		let nftRef:&PonsNftContractInterface.NFT = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .borrowNft (nftId: nftId)
 		
 
-		PonsTunnelContract .submitEscrowFlow (
+		PonsTunnelContract .submitEscrow (
 			submitter: ponsHolderAccount,
 			id: nftId.concat("Tunnel-User-Escrow"),
 			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ nftId ] ),
 			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ) )
 
-		PonsTunnelContract .submitEscrowFlow (
+		PonsTunnelContract .submitEscrow (
 			submitter: tunnelUserAccount,
 			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
 			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ nftId ] ) )	
 
 		let escrowManagerRef = ponsAccount .borrow <&PonsEscrowTunnelContract.EscrowManager> (from: /storage/escrowTunnelManager) !
@@ -486,24 +512,28 @@ pub contract PonsTunnelContract{
 		let nftRef:&PonsNftContractInterface.NFT = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .borrowNft (nftId: nftId)
 		
 
-		PonsTunnelContract .submitEscrowFlow (
+		PonsTunnelContract .submitEscrow (
 			submitter: ponsHolderAccount,
 			id: nftId.concat("Tunnel-User-Escrow"),
 			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ nftId ] ),
 			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ) )
 
-		PonsTunnelContract .submitEscrowFlow (
+		PonsTunnelContract .submitEscrow (
 			submitter: tunnelUserAccount,
 			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
 			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [] ),
 			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
 				flowUnits: PonsUtils.FlowUnits (0.0),
+				fusdUnits: PonsUtils.FusdUnits (0.0),
 				ponsNftIds: [ nftId ] ) )	
 
 		let escrowManagerRef = ponsAccount .borrow <&PonsEscrowTunnelContract.EscrowManager> (from: /storage/escrowTunnelManager) !
@@ -545,12 +575,3 @@ pub contract PonsTunnelContract{
 	}
 
 }
-
-
-/* 
-recieveNft check, approval/proof
-	new escrow, to prevent cancellation of escrow
-coordinate with abdel, same nft so that it can go on to ethereum
-recieveNft check, mint nft if not existing in ponsBurner account
-
- */

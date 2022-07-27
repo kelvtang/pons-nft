@@ -525,5 +525,7 @@ pub contract PonsUsage {
 		return PonsUsage .submitEscrowUsing (
 			submitter: submitter, id: id,
 			resources: <- heldResources, requirement: requirement,
-			fulfillment: fulfillment ) }}
+			fulfillment: fulfillment ) 
+	}
+}
 	
