@@ -22,13 +22,6 @@ pub contract PonsTunnelContract{
     pub event nftSubmittedThroughTunnel (data: sentTunnelData)
     pub event nftRecievedThroughTunnel (data: recieveTunnelData)
  
- 	/* 
- 	relay can get address itself
- 	currently ulr points to image --> ipfs/url hosted on relay 
-	struct for emit
-		--> updating artist address poly/flow
-	*/
-
 
 	/* These structs define the emitted data in proper structure */
 	pub struct nftDetails{
@@ -38,6 +31,10 @@ pub contract PonsTunnelContract{
 		pub let artistAddressFlow: Address
 		pub var artistAddressPolygon: String?
 		pub let royalty: UFix64
+
+		pub fun setArtistAddressPolygon (artistAddressPolygon: String){
+			self .artistAddressPolygon = artistAddressPolygon;
+		}
 
 		init (nftId:String, nftSerialId:UInt64, metadata: {String:String}, artistAddressFlow:Address, royalty:UFix64){
 			self .nftId = nftId
@@ -65,11 +62,6 @@ pub contract PonsTunnelContract{
 	}
 
 	access(self) fun generateNftEmitData(nftRef: &PonsNftContractInterface.NFT):PonsTunnelContract.nftDetails{
-		
-		/* 
-		nftSerialId: UInt256?			// cannot find it
-		artistAddressPolygon: String?	// May not exist
-		*/
 
 		let artistAddressFlow:Address = PonsNftContract .getArtistAddress (PonsNftContract .borrowArtistById (ponsArtistId: PonsNftContract .implementation .getArtistIdFromId(nftRef .nftId)))!;
 		
@@ -80,7 +72,9 @@ pub contract PonsTunnelContract{
 	access(self) fun generateSentTunnelEmitData(nftRef: &PonsNftContractInterface.NFT, artistAddressPolygon: String?, polygonRecipientAddress: String):PonsTunnelContract.sentTunnelData{
 		let nftEmitData:PonsTunnelContract.nftDetails = PonsTunnelContract .generateNftEmitData(nftRef: nftRef)
 
-		if artistAddressPolygon != nil { nftEmitData .setArtistAddressPolygon (artistAddressPolygon:artistAddressPolygon!)};
+		if artistAddressPolygon != nil { 
+			nftEmitData .setArtistAddressPolygon (artistAddressPolygon:artistAddressPolygon!)
+		}
 
 
 		let sentData: PonsTunnelContract.sentTunnelData = PonsTunnelContract .sentTunnelData(polygonRecipientAddress: polygonRecipientAddress, nft: nftEmitData)
@@ -89,11 +83,11 @@ pub contract PonsTunnelContract{
 	access(self) fun generateRecieveTunnelEmitData(nftRef: &PonsNftContractInterface.NFT, artistAddressPolygon: String?, flowRecipientAddress: Address):PonsTunnelContract.recieveTunnelData{
 		let nftEmitData:PonsTunnelContract.nftDetails = PonsTunnelContract .generateNftEmitData(nftRef: nftRef)
 
-		if artistAddressPolygon != nil { nftEmitData .setArtistAddressPolygon (artistAddressPolygon:artistAddressPolygon!)};
-
+		if artistAddressPolygon != nil { 
+			nftEmitData .setArtistAddressPolygon (artistAddressPolygon:artistAddressPolygon!)
+		}
 
 		let recievedData: PonsTunnelContract.recieveTunnelData = PonsTunnelContract .recieveTunnelData(flowRecipientAddress: flowRecipientAddress, nft: nftEmitData)
-
 		return recievedData
 	}
 		
