@@ -35,19 +35,14 @@ pub contract PonsTunnelContract{
 		pub let nftId: String
 		pub let nftSerialId: UInt64
 		pub let metadata: {String:String} 
-		pub let tags : [{String:String}]
 		pub let artistAddressFlow: Address
 		pub var artistAddressPolygon: String?
 		pub let royalty: UFix64
 
-		pub fun setArtistAddressPolygon(artistAddressPolygon: String){
-			self .artistAddressPolygon = artistAddressPolygon}
-
-		init (nftId:String, nftSerialId:UInt64, metadata: {String:String}, tags: [{String:String}], artistAddressFlow:Address, royalty:UFix64){
+		init (nftId:String, nftSerialId:UInt64, metadata: {String:String}, artistAddressFlow:Address, royalty:UFix64){
 			self .nftId = nftId
 			self .nftSerialId = nftSerialId
 			self .metadata = metadata
-			self .tags = tags
 			self .artistAddressFlow = artistAddressFlow
 			self .artistAddressPolygon = nil
 			self .royalty = royalty}}
@@ -77,20 +72,9 @@ pub contract PonsTunnelContract{
 		*/
 
 		let artistAddressFlow:Address = PonsNftContract .getArtistAddress (PonsNftContract .borrowArtistById (ponsArtistId: PonsNftContract .implementation .getArtistIdFromId(nftRef .nftId)))!;
-		let metadata = PonsNftContract .getMetadata(nftRef);
-
-		let metadataSelf:{String:String} = {
-			"url":metadata["url"]!,
-			"title":metadata["title"]!,
-			"description":metadata["description"]!
-		};
-
-		var i:UInt64 = 0;
-		var tags: [{String:String}] = [] 
-		while metadata["tag-".concat(i.toString())] != nil{ tags.append({"tag-".concat(i.toString()):metadata["tag-".concat(i.toString())]!}); i = i + 1;}
-
+		
 		let royalty:UFix64 = PonsNftContract .getRoyalty(nftRef) .amount;
-		let nftEmitData: PonsTunnelContract.nftDetails = PonsTunnelContract .nftDetails(nftId:nftRef .nftId, nftSerialId:nftRef .id, metdata:metadataSelf, tags:tags, artistAddressFlow:artistAddressFlow, royalty:royalty)
+		let nftEmitData: PonsTunnelContract.nftDetails = PonsTunnelContract .nftDetails(nftId:nftRef .nftId, nftSerialId:nftRef .id, metdata: PonsNftContract .getMetadata(nftRef), artistAddressFlow:artistAddressFlow, royalty:royalty)
 		return nftEmitData;}
 
 	access(self) fun generateSentTunnelEmitData(nftRef: &PonsNftContractInterface.NFT, artistAddressPolygon: String?, polygonRecipientAddress: String):PonsTunnelContract.sentTunnelData{
