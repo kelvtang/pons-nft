@@ -119,11 +119,14 @@ const CHILD_TUNNEL_CONTRACT_ADDRESS = "0xD332Fd59F7EeEdb6a6C8ec5Ef19caB144586Bd3
 const ROOT_TOKEN_ADDRESS = "0x0a3A54E87A05feAAf04B52fD876E7dA33bF728F4"
 const CHILD_TOKEN_ADDRESS = "0x6952CA3c6f13C43C1DE0eB8dAb3589c613f1A22B"
 
+
+// TODO: Change based on our actual server address
 const BASE_TOKEN_URI = "https://6f2d-61-244-192-118.ap.ngrok.io/metadata/";
 
-// ;flow_sdk_api .config ()
-// 	.put("sdk.transport", grpcSend)
-// 	.put("accessNode.api", access_node_origin)
+;flow_sdk_api .config ()
+	.put("sdk.transport", grpcSend)
+	.put("accessNode.api", access_node_origin)
+	// .put("accessNode.api", " https://access-mainnet-beta.onflow.org")
 
 
 
