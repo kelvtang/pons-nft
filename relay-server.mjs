@@ -2,6 +2,7 @@ import express from 'express';
 import { ethers } from 'ethers';
 import * as fs from 'fs';
 import { send_transaction_, authorizer_ } from './utils/flow-api.mjs';
+import {send_known_transaction_} from './utils/flow.mjs'
 import { CHILD_TUNNEL_CONTRACT_ADDRESS, CHILD_TOKEN_ADDRESS, PRIVATE_KEYS } from './config.mjs';
 import { BASE_TOKEN_URI } from './config.mjs';
 import { flow_sdk_api } from './config.mjs';
@@ -122,7 +123,7 @@ polygonChildTunnelContractInstance.on('FlowDeposit', (data) => {
         (authorizer_(address)(key_id)(private_key))
         (authorizer_(address)(key_id)(private_key))
         ([authorizer_(address)(key_id)(private_key)])
-        ('transaction () {prepare (artistAccount : AuthAccount, ponsAccount : AuthAccount) {} }')
+        (await readFile ('./FlowPolygonBridge/transactions/sendThroughTunnelUsingSerialId.cdc', 'utf8'))
         ([flowReceiver, tokenId])
 })
 
