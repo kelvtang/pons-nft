@@ -57,7 +57,7 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
             title = value
         } else if (key === 'description') {
             description = value
-        } else if (key.startsWith('tag')) {
+        } else if (key.startsWith('tag-')) {
             tags.push(JSON.stringify({
                 trait_type: "Tag",
                 value: value
