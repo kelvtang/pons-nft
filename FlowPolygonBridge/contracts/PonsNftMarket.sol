@@ -2,17 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/stringUtils.sol";
-
-// import "../../contracts/FxERC721.sol";
-
-// import "../libraries/iterable_mapping.sol"; // --> create iterable
+import "../../contracts/FxERC721.sol";
 
 contract PonsNftMarket {
-    /* 
-    get nft
-    emit data
-     */
-
     event nftPurchased(address from, address to, string nftId, uint256 amount);
     event nftListed(address by, string nftId, uint256 amount);
     event nftUnlisted(string nftId);
@@ -102,5 +94,9 @@ contract PonsNftMarket {
 
     function getForSaleIds() public view returns (string[] memory) {
         return nftForSale;
+    }
+
+    function getPrice(string calldata nftId) public view returns (uint256) {
+        return nftSalesPrice[nftId];
     }
 }
