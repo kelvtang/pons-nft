@@ -164,9 +164,8 @@ abstract contract FxBaseRootTunnel {
      *  9 - receiptLogIndex - Log Index to read from the receipt
      */
     function receiveMessage(bytes memory inputData) public virtual {
-        // TODO: remove uncomment
-        // bytes memory message = _validateAndExtractMessage(inputData);
-        _processMessageFromChild(inputData);
+        bytes memory message = _validateAndExtractMessage(inputData);
+        _processMessageFromChild(message);
     }
 
     /**

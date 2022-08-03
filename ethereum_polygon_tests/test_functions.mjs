@@ -91,6 +91,6 @@ const changeArrToBytes = async (dataArr) => {
 }
 
 
-export { deployContracts, createSigner, transferToEthereum, createRPCProviders, setFxChildTunnel, setFxRootTunnel, deployChildToken, createContractInstance, changeArrToBytes };
+export { deployContract, deployContracts, createSigner, transferToEthereum, createRPCProviders, setFxChildTunnel, setFxRootTunnel, deployChildToken, createContractInstance, changeArrToBytes };
 export { templateContractInformation, rootTunnelContractInformation, childTunnelContractInformation };
 

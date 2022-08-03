@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
-// different contract for tests
-
 pragma solidity ^0.8.0;
 
 import {IFxERC721} from "./IFxERC721.sol";
 import "./ERC721Royalty.sol";
 import "./ERC721URIStorage.sol";
 import "./ERC721Enumerable.sol";
+import "./Ownable.sol";
 
 /**
  * @title FxERC20 represents fx erc20
@@ -16,10 +15,12 @@ contract FxERC721 is
     ERC721,
     ERC721Enumerable,
     ERC721URIStorage,
-    ERC721Royalty
+    ERC721Royalty,
+    Ownable
 {
     address internal _fxManager;
     address internal _connectedToken;
+
 
     // // TODO: Needs to be implemented correctly based on what we get from flow
     // struct EventInformation {
@@ -58,7 +59,7 @@ contract FxERC721 is
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        return "";
+        return "ipfs://";
     }
 
     function _beforeTokenTransfer(
@@ -117,10 +118,8 @@ contract FxERC721 is
         uint256 tokenId,
         bytes memory _data
     ) public override {
-        require(msg.sender == _fxManager, "Invalid sender");
-        // string memory tokenUri = "QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz";
-        // address royaltyReceiver = user;
-        // uint96 royaltyNumerator = 100;
+        // require(msg.sender == _fxManager, "Invalid sender");
+
         // // TODO: Needs to be implemented correctly based on what we get from flow
         // require(
         //     _EventInfo[tokenId].approved == true,
@@ -131,11 +130,18 @@ contract FxERC721 is
         (
             string memory tokenUri,
             address royaltyReceiver,
+            string memory flowArtistId, // Extra parameter added to abi. Holds artist address in flow.
             uint96 royaltyNumerator
-        ) = abi.decode(_data, (string, address, uint96));
+        ) = abi.decode(_data, (string, address, string, uint96));
         _safeMint(user, tokenId);
         _setTokenURI(tokenId, tokenUri);
-        _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
+        if (royaltyReceiver == address(0)){
+            // If address is blank (in case artist does not have polygon account) we save it through here.
+            _setTokenRoyalty_flow(tokenId, flowArtistId, royaltyNumerator);
+            _setTokenRoyalty(tokenId, owner(), royaltyNumerator);
+        }else{
+            _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
+        }
         // delete _EventInfo[tokenId];
     }
 
@@ -165,4 +171,13 @@ contract FxERC721 is
         _burn(tokenId);
         // delete _EventInfo[tokenId];
     }
+
+    function _transfer(address from, address to, uint256 tokenId) internal override {
+        ERC721._transfer(from, to, tokenId);
+    }
+
+    function transfer(address from, address to, uint256 tokenId) public {
+        _transfer(from, to, tokenId);
+    }
+
 }

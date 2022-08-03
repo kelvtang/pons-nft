@@ -23,6 +23,10 @@
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+const fs = require('fs');
+const mnemonic = fs.readFileSync("./.secret").toString().trim();
+
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
@@ -78,9 +82,19 @@ module.exports = {
   networks: {
     development: {
       host: "127.0.0.1",
-      port: 8545,
-      network_id: '*', // match any netwrok id
+      port: 7545,
+      network_id: "*" // Match any network id
     },
+    develop: {
+      port: 8545
+    },
+    matic: {
+      provider: () => new HDWalletProvider(mnemonic, `https://rpc-mumbai.maticvigil.com`),
+      network_id: 80001,
+      confirmations: 2,
+      timeoutBlocks: 20000000000,
+      skipDryRun: true,
+    }
   },
 
   // Set default mocha options here, use special reporters, etc.

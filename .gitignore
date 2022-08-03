@@ -6,3 +6,7 @@ deployment-contracts
 nkeys.json
 
 solc_binaries/
+ethereum_polygon_tests/.secret
+truffle-config.js
+.secret
+build/
