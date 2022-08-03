@@ -3,9 +3,21 @@ pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
 
-// import ".ERC721.sol";
+contract PonsNftMarket {
 
-contract PonsNftMarket is FxERC721 {
+    address private marketOwner;
+
+    constructor(address _marketOwner){
+        marketOwner = _marketOwner;
+    }
+    function getOwner() public view returns (address){
+        return marketOwner;
+    }
+
+    FxERC721 tokenContract = new FxERC721(marketOwner);
+    
+
+
     event nftPurchased(
         address from,
         address to,
@@ -76,8 +88,8 @@ contract PonsNftMarket is FxERC721 {
                 );
 
                 // Initiate transfer of nft from listed seller to new owner.
-                safeTransferFrom(
-                    _msgSender(),
+                FxERC721(tokenContract).safeTransferFrom(
+                    msg.sender,
                     listingCertificateCollection[tokenId].listerAddress,
                     tokenId
                 );

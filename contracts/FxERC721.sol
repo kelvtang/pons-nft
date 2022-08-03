@@ -19,6 +19,15 @@ contract FxERC721 is
     address internal _fxManager;
     address internal _connectedToken;
 
+
+    address private contractOwner; // Owner reserves ability to manage token.
+    constructor (address _contractOwner){
+        contractOwner = _contractOwner;
+    }
+    function getOwner() public view returns (address){
+        return contractOwner;
+    }
+
     // // TODO: Needs to be implemented correctly based on what we get from flow
     // struct EventInformation {
     //     bool approved;
@@ -159,5 +168,13 @@ contract FxERC721 is
 
         _burn(tokenId);
         // delete _EventInfo[tokenId];
+    }
+
+    function _transfer(address from, address to, uint256 tokenId) internal override {
+        ERC721._transfer(from, to, tokenId);
+    }
+
+    function transfer(address from, address to, uint256 tokenId) public {
+        _transfer(from, to, tokenId);
     }
 }
