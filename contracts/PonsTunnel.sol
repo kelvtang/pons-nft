@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// import "../libraries/stringUtils.sol";
-// import "../../contracts/ERC721.sol";
-import "../../contracts/FxERC721.sol";
 
-contract PonsNftTunnel is FxERC721 {
+// import "./ERC721.sol";
+import "./FxERC721.sol";
+
+contract PonsNftTunnel is FxERC721 { // create new instance
     event nftSentThroughTunnel(uint256 tokenId,address from,string flowAddress);
     event nftReceievedFromTunnel(uint256 tokenId, address to);
     event newNftMinted(uint256 tokenId, address to);

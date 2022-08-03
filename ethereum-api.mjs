@@ -12,7 +12,9 @@ import { fileURLToPath } from 'url';
 
 const parentProvider = new providers.JsonRpcProvider("https://goerli.infura.io/v3/516e2b3a94b64665a2b9c8cec1bc4690")
 const childProvider = new providers.JsonRpcProvider("https://matic-mumbai.chainstacklabs.com/")
+
 const privateKey = ""
+
 const { ExitUtil, RootChain, use, Web3SideChainClient, POSClient, setProofApi } = pkg
 const { Web3ClientPlugin } = pkg1
 const { FxPortalClient } = pkg2
@@ -726,3 +728,7 @@ const approveContract = (rootTunnelAddress) => (rootTokenAddress) => (provider) 
 
 
 // await approveContract("0x4eFb59A9D172A0357dE1e76042FaF7167Ac20297")("0x298d2d417340cd7ab7d9c71b01c33fd4c335fab1")(parentProvider)(1)
+
+
+
+// // console.log(await deployContract(childProvider)("./FlowPolygonBridge/contracts/PonsNftMarket.sol")());
