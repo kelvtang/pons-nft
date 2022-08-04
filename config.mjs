@@ -129,6 +129,9 @@ const BURN_PROOF_EVENT_SIG = "0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2
 const NETWORK_TYPE = "testnet"
 const NETWORK_NAME = "mumbai"
 
+// TODO: Change to the actual event name
+const EVENT_NAME = ""
+
 // TODO: Change based on our actual server address
 const BASE_TOKEN_URI = "";
 
@@ -149,5 +152,5 @@ export { address_of_names, private_keys_of_names }
 export { ad_hoc_accounts, pons_artist_id_of_names }
 export { ACCOUNT_ADDRESSES, PRIVATE_KEYS, GANACHE_PROVIDER_CHILD, GANACHE_PROVIDER_ROOT }
 export { CHILD_TUNNEL_PROXY_ADDRESS, ROOT_TUNNEL_PROXY_ADDRESS, CHILD_TOKEN_PROXY_ADDRESS, ROOT_TOKEN_PROXY_ADDRESS, CHILD_ADMIN_PROXY, ROOT_ADMIN_PROXY }
-export { BASE_TOKEN_URI }
+export { BASE_TOKEN_URI, EVENT_NAME }
 export { NETWORK_TYPE, NETWORK_NAME, BURN_PROOF_EVENT_SIG }

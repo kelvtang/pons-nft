@@ -3,11 +3,12 @@ import { ethers } from 'ethers';
 import * as fs from 'fs';
 import { send_transaction_, authorizer_ } from './utils/flow-api.mjs';
 import { CHILD_TUNNEL_CONTRACT_ADDRESS, CHILD_TOKEN_ADDRESS, PRIVATE_KEYS } from './config.mjs';
-import { BASE_TOKEN_URI } from './config.mjs';
+import { BASE_TOKEN_URI, EVENT_NAME } from './config.mjs';
 import { flow_sdk_api } from './config.mjs';
 import fcl_api from '@onflow/fcl';
 import { fileTypeFromBuffer } from 'file-type';
 import fetch from 'node-fetch';
+import { encodeToBytes, createSigner, createContractInstance } from "./ethereum-api.mjs";
 
 const app = express();
 app.use(express.json());
@@ -19,11 +20,9 @@ const childTunnelContractInformation = JSON.parse(fs.readFileSync('./ethereum_po
 
 
 // TODO: Change Provider
-const polygonProvider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:7545"); 
-const signer = new ethers.Wallet(PRIVATE_KEYS[1], polygonProvider)
-const polygonChildTunnelContractInstance = new ethers.Contract(CHILD_TUNNEL_CONTRACT_ADDRESS, childTunnelContractInformation.abi,
-    signer)
-const abiCoder = ethers.utils.defaultAbiCoder
+const polygonProvider = await createRPCProviders("");
+const signer = await createSigner(PRIVATE_KEYS[1])(polygonProvider)
+const polygonChildTunnelContractInstance = await createContractInstance(CHILD_TUNNEL_CONTRACT_ADDRESS)(childTunnelContractInformation.abi)(signer)
 
 app.get("/metadata/:nftSerialId", (req, res) => {
     const nftSerialId = req.params.nftSerialId
@@ -36,9 +35,6 @@ app.get("/metadata/:nftSerialId", (req, res) => {
     res.send(data)
 })
 
-
-// TODO: Change to the actual event name
-const EVENT_NAME = "A.1654653399040a61.FlowToken.TokensDeposited"
 
 app.listen(3000, () => console.log(`app running on 3000`))
 
@@ -102,9 +98,9 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
         artistAddressPolygon = ethers.constants.AddressZero
     }
 
-    const depositData = abiCoder.encode(["string", "address", "uint96"], [`${BASE_TOKEN_URI}${nftSerialId}`, artistAddressPolygon, royalty])
-    const data = abiCoder.encode(["address", "address", "uint64", "bytes"], [CHILD_TOKEN_ADDRESS, polygonRecipientAddress, nftSerialId, depositData])
-    const childSigner = new ethers.Wallet(PRIVATE_KEYS[1], polygonProvider);
+    const depositData = await encodeToBytes(["string", "address", "uint96"])([`${BASE_TOKEN_URI}${nftSerialId}`, artistAddressPolygon, royalty])
+    const data = await encodeToBytes(["address", "uint64", "bytes"])([polygonRecipientAddress, nftSerialId, depositData])
+    const childSigner = await createSigner(PRIVATE_KEYS[1])(polygonProvider);
     polygonChildTunnelContractInstance.connect(childSigner)
     polygonChildTunnelContractInstance.processMessageFromFLow(data)
 })
