@@ -341,7 +341,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\r\n// OpenZeppelin Contracts (last updated v4.7.0) (token/ERC721/extensions/ERC721URIStorage.sol)\r\n\r\npragma solidity ^0.8.0;\r\n\r\nimport \"./ERC721.sol\";\r\n\r\n/**\r\n * @dev ERC721 token with storage based token URI management.\r\n */\r\nabstract contract ERC721URIStorage is ERC721  {\r\n    using Strings for uint256;\r\n\r\n    // Optional mapping for token URIs\r\n    mapping(uint256 => string) private _tokenURIs;\r\n\r\n    /**\r\n     * @dev See {IERC721Metadata-tokenURI}.\r\n     */\r\n    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {\r\n        require(_exists(tokenId), \"ERC721URIStorage: URI query for nonexistent token\");\r\n\r\n        string memory _tokenURI = _tokenURIs[tokenId];\r\n        string memory base = _baseURI();\r\n\r\n        // If there is no base URI, return the token URI.\r\n        if (bytes(base).length == 0) {\r\n            return _tokenURI;\r\n        }\r\n        // If both are set, concatenate the baseURI and tokenURI (via abi.encodePacked).\r\n        if (bytes(_tokenURI).length > 0) {\r\n            return string(abi.encodePacked(base, _tokenURI));\r\n        }\r\n\r\n        return super.tokenURI(tokenId);\r\n    }\r\n\r\n    function _baseURI() internal view virtual override returns (string memory) {\r\n        return \"\";\r\n    }\r\n\r\n    /**\r\n     * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.\r\n     *\r\n     * Requirements:\r\n     *\r\n     * - `tokenId` must exist.\r\n     */\r\n    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {\r\n        require(_exists(tokenId), \"ERC721URIStorage: URI set of nonexistent token\");\r\n        _tokenURIs[tokenId] = _tokenURI;\r\n    }\r\n\r\n    /**\r\n     * @dev See {ERC721-_burn}. This override additionally checks to see if a\r\n     * token-specific URI was set for the token, and if so, it deletes the token URI from\r\n     * the storage mapping.\r\n     */\r\n    function _burn(uint256 tokenId) internal virtual override {\r\n\r\n        if (bytes(_tokenURIs[tokenId]).length != 0) {\r\n            delete _tokenURIs[tokenId];\r\n        }\r\n    }\r\n}",
-  "sourcePath": "C:\\Users\\Uzair\\Desktop\\workspace\\globalCopy_pulls_v2\\pons-nft\\ethereum_polygon_tests\\contracts\\ERC721URIStorage.sol",
+  "sourcePath": "/mnt/c/Users/Uzair/Desktop/workspace/globalCopy_pulls_v2/pons-nft/ethereum_polygon_tests/contracts/ERC721URIStorage.sol",
   "ast": {
     "absolutePath": "project:/contracts/ERC721URIStorage.sol",
     "exportedSymbols": {
@@ -1973,7 +1973,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.8",
-  "updatedAt": "2022-08-02T09:37:32.123Z",
+  "updatedAt": "2022-08-04T03:26:19.136Z",
   "devdoc": {
     "details": "ERC721 token with storage based token URI management.",
     "kind": "dev",

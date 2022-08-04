@@ -40,7 +40,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\n// Create2 adds common methods for minimal proxy with create2\r\nabstract contract Create2 {\r\n    // creates clone using minimal proxy\r\n    function createClone(bytes32 _salt, address _target) internal returns (address _result) {\r\n        bytes20 _targetBytes = bytes20(_target);\r\n\r\n        assembly {\r\n            let clone := mload(0x40)\r\n            mstore(clone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)\r\n            mstore(add(clone, 0x14), _targetBytes)\r\n            mstore(add(clone, 0x28), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)\r\n            _result := create2(0, clone, 0x37, _salt)\r\n        }\r\n\r\n        require(_result != address(0), \"Create2: Failed on minimal deploy\");\r\n    }\r\n\r\n    // get minimal proxy creation code\r\n    function minimalProxyCreationCode(address logic) internal pure returns (bytes memory) {\r\n        bytes10 creation = 0x3d602d80600a3d3981f3;\r\n        bytes10 prefix = 0x363d3d373d3d3d363d73;\r\n        bytes20 targetBytes = bytes20(logic);\r\n        bytes15 suffix = 0x5af43d82803e903d91602b57fd5bf3;\r\n        return abi.encodePacked(creation, prefix, targetBytes, suffix);\r\n    }\r\n\r\n    // get computed create2 address\r\n    function computedCreate2Address(\r\n        bytes32 salt,\r\n        bytes32 bytecodeHash,\r\n        address deployer\r\n    ) public pure returns (address) {\r\n        bytes32 _data = keccak256(abi.encodePacked(bytes1(0xff), deployer, salt, bytecodeHash));\r\n        return address(uint160(uint256(_data)));\r\n    }\r\n}\r\n",
-  "sourcePath": "C:\\Users\\Uzair\\Desktop\\workspace\\globalCopy_pulls_v2\\pons-nft\\ethereum_polygon_tests\\contracts\\Create2.sol",
+  "sourcePath": "/mnt/c/Users/Uzair/Desktop/workspace/globalCopy_pulls_v2/pons-nft/ethereum_polygon_tests/contracts/Create2.sol",
   "ast": {
     "absolutePath": "project:/contracts/Create2.sol",
     "exportedSymbols": {
@@ -1668,7 +1668,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.8",
-  "updatedAt": "2022-08-02T09:37:31.662Z",
+  "updatedAt": "2022-08-04T03:26:17.947Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

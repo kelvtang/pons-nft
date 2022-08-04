@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-// different contract for tests
-
 pragma solidity ^0.8.0;
 
 import {IFxERC721} from "./IFxERC721.sol";
@@ -20,6 +18,15 @@ contract FxERC721 is
 {
     address internal _fxManager;
     address internal _connectedToken;
+
+
+    address private contractOwner; // Owner reserves ability to manage token.
+    constructor (address _contractOwner){
+        contractOwner = _contractOwner;
+    }
+    function getOwner() public view returns (address){
+        return contractOwner;
+    }
 
     // // TODO: Needs to be implemented correctly based on what we get from flow
     // struct EventInformation {
@@ -58,7 +65,7 @@ contract FxERC721 is
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        return "";
+        return "ipfs://";
     }
 
     function _beforeTokenTransfer(
@@ -118,9 +125,6 @@ contract FxERC721 is
         bytes memory _data
     ) public override {
         require(msg.sender == _fxManager, "Invalid sender");
-        // string memory tokenUri = "QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz";
-        // address royaltyReceiver = user;
-        // uint96 royaltyNumerator = 100;
         // // TODO: Needs to be implemented correctly based on what we get from flow
         // require(
         //     _EventInfo[tokenId].approved == true,
@@ -164,5 +168,13 @@ contract FxERC721 is
 
         _burn(tokenId);
         // delete _EventInfo[tokenId];
+    }
+
+    function _transfer(address from, address to, uint256 tokenId) internal override {
+        ERC721._transfer(from, to, tokenId);
+    }
+
+    function transfer(address from, address to, uint256 tokenId) public {
+        _transfer(from, to, tokenId);
     }
 }

@@ -386,7 +386,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\nimport {IERC721} from \"./IERC721.sol\";\r\n\r\ninterface IFxERC721 is IERC721 {\r\n    function fxManager() external returns (address);\r\n\r\n    function connectedToken() external returns (address);\r\n\r\n    function initialize(\r\n        address _fxManager,\r\n        address _connectedToken,\r\n        string memory _name,\r\n        string memory _symbol\r\n    ) external;\r\n\r\n    function mint(\r\n        address user,\r\n        uint256 tokenId,\r\n        bytes memory _data\r\n    ) external;\r\n\r\n    function burn(uint256 tokenId) external;\r\n}",
-  "sourcePath": "C:\\Users\\Uzair\\Desktop\\workspace\\globalCopy_pulls_v2\\pons-nft\\ethereum_polygon_tests\\contracts\\IFxERC721.sol",
+  "sourcePath": "/mnt/c/Users/Uzair/Desktop/workspace/globalCopy_pulls_v2/pons-nft/ethereum_polygon_tests/contracts/IFxERC721.sol",
   "ast": {
     "absolutePath": "project:/contracts/IFxERC721.sol",
     "exportedSymbols": {
@@ -896,7 +896,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.8",
-  "updatedAt": "2022-08-02T09:37:32.480Z",
+  "updatedAt": "2022-08-04T03:26:21.436Z",
   "devdoc": {
     "kind": "dev",
     "methods": {

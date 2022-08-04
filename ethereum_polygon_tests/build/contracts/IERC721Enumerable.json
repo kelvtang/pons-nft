@@ -352,7 +352,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\r\n// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC721/extensions/IERC721Enumerable.sol)\r\n\r\npragma solidity ^0.8.0;\r\n\r\nimport {IERC721 } from \"./IERC721.sol\";\r\n\r\n/**\r\n * @title ERC-721 Non-Fungible Token Standard, optional enumeration extension\r\n * @dev See https://eips.ethereum.org/EIPS/eip-721\r\n */\r\ninterface IERC721Enumerable is IERC721 {\r\n    /**\r\n     * @dev Returns the total amount of tokens stored by the contract.\r\n     */\r\n    function totalSupply() external view returns (uint256);\r\n\r\n    /**\r\n     * @dev Returns a token ID owned by `owner` at a given `index` of its token list.\r\n     * Use along with {balanceOf} to enumerate all of ``owner``'s tokens.\r\n     */\r\n    function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256);\r\n\r\n    /**\r\n     * @dev Returns a token ID at a given `index` of all the tokens stored by the contract.\r\n     * Use along with {totalSupply} to enumerate all tokens.\r\n     */\r\n    function tokenByIndex(uint256 index) external view returns (uint256);\r\n}",
-  "sourcePath": "C:\\Users\\Uzair\\Desktop\\workspace\\globalCopy_pulls_v2\\pons-nft\\ethereum_polygon_tests\\contracts\\IERC721Enumerable.sol",
+  "sourcePath": "/mnt/c/Users/Uzair/Desktop/workspace/globalCopy_pulls_v2/pons-nft/ethereum_polygon_tests/contracts/IERC721Enumerable.sol",
   "ast": {
     "absolutePath": "project:/contracts/IERC721Enumerable.sol",
     "exportedSymbols": {
@@ -720,7 +720,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.8",
-  "updatedAt": "2022-08-02T09:37:32.442Z",
+  "updatedAt": "2022-08-04T03:26:21.219Z",
   "devdoc": {
     "details": "See https://eips.ethereum.org/EIPS/eip-721",
     "kind": "dev",

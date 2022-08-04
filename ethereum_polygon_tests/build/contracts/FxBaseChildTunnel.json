@@ -86,7 +86,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\n// IFxMessageProcessor represents interface to process message\r\ninterface IFxMessageProcessor {\r\n    function processMessageFromRoot(\r\n        uint256 stateId,\r\n        address rootMessageSender,\r\n        bytes calldata data\r\n    ) external;\r\n}\r\n\r\n/**\r\n * @notice Mock child tunnel contract to receive and send message from L2\r\n */\r\nabstract contract FxBaseChildTunnel is IFxMessageProcessor {\r\n    // MessageTunnel on L1 will get data from this event\r\n    event MessageSent(bytes message);\r\n\r\n    // fx child\r\n    address public fxChild;\r\n\r\n    // fx root tunnel\r\n    address public fxRootTunnel;\r\n\r\n    constructor(address _fxChild) {\r\n        fxChild = _fxChild;\r\n    }\r\n\r\n    // Sender must be fxRootTunnel in case of ERC20 tunnel\r\n    modifier validateSender(address sender) {\r\n        require(sender == fxRootTunnel, \"FxBaseChildTunnel: INVALID_SENDER_FROM_ROOT\");\r\n        _;\r\n    }\r\n\r\n    // set fxRootTunnel if not set already\r\n    function setFxRootTunnel(address _fxRootTunnel) external virtual {\r\n        require(fxRootTunnel == address(0x0), \"FxBaseChildTunnel: ROOT_TUNNEL_ALREADY_SET\");\r\n        fxRootTunnel = _fxRootTunnel;\r\n    }\r\n\r\n    function processMessageFromRoot(\r\n        uint256 stateId,\r\n        address rootMessageSender,\r\n        bytes calldata data\r\n    ) external override {\r\n        require(msg.sender == fxChild, \"FxBaseChildTunnel: INVALID_SENDER\");\r\n        _processMessageFromRoot(stateId, rootMessageSender, data);\r\n    }\r\n\r\n    /**\r\n     * @notice Emit message that can be received on Root Tunnel\r\n     * @dev Call the internal function when need to emit message\r\n     * @param message bytes message that will be sent to Root Tunnel\r\n     * some message examples -\r\n     *   abi.encode(tokenId);\r\n     *   abi.encode(tokenId, tokenMetadata);\r\n     *   abi.encode(messageType, messageData);\r\n     */\r\n    function _sendMessageToRoot(bytes memory message) internal {\r\n        emit MessageSent(message);\r\n    }\r\n\r\n    /**\r\n     * @notice Process message received from Root Tunnel\r\n     * @dev function needs to be implemented to handle message as per requirement\r\n     * This is called by onStateReceive function.\r\n     * Since it is called via a system call, any event will not be emitted during its execution.\r\n     * @param stateId unique state id\r\n     * @param sender root message sender\r\n     * @param message bytes message that was sent from Root Tunnel\r\n     */\r\n    function _processMessageFromRoot(\r\n        uint256 stateId,\r\n        address sender,\r\n        bytes memory message\r\n    ) internal virtual;\r\n}",
-  "sourcePath": "C:\\Users\\Uzair\\Desktop\\workspace\\globalCopy_pulls_v2\\pons-nft\\ethereum_polygon_tests\\contracts\\FxBaseChildTunnel.sol",
+  "sourcePath": "/mnt/c/Users/Uzair/Desktop/workspace/globalCopy_pulls_v2/pons-nft/ethereum_polygon_tests/contracts/FxBaseChildTunnel.sol",
   "ast": {
     "absolutePath": "project:/contracts/FxBaseChildTunnel.sol",
     "exportedSymbols": {
@@ -1486,7 +1486,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.8",
-  "updatedAt": "2022-08-02T09:37:32.174Z",
+  "updatedAt": "2022-08-04T03:26:19.311Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
