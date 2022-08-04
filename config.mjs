@@ -114,19 +114,28 @@ const PRIVATE_KEYS = [
 	"0xc10059c762a98075390e82cdb851b24f6d65b329ebe5777a74bfb8d245d72089"
 ]
 
-const ROOT_TUNNEL_CONTRACT_ADDRESS = "0x87Caf19f878FB3a57962f89b46ca3712F2D34EDF" // Owner is Account[0]
-const CHILD_TUNNEL_CONTRACT_ADDRESS = "0xD332Fd59F7EeEdb6a6C8ec5Ef19caB144586Bd3B" // Owner is Account[1]
-const ROOT_TOKEN_ADDRESS = "0x0a3A54E87A05feAAf04B52fD876E7dA33bF728F4"
-const CHILD_TOKEN_ADDRESS = "0x6952CA3c6f13C43C1DE0eB8dAb3589c613f1A22B"
 
+const CHILD_TOKEN_PROXY_ADDRESS = ""
+const ROOT_TOKEN_PROXY_ADDRESS = ""
+const CHILD_TUNNEL_PROXY_ADDRESS = ""
+const ROOT_TUNNEL_PROXY_ADDRESS = ""
+const CHILD_ADMIN_PROXY = ""
+const ROOT_ADMIN_PROXY = ""
+
+const GANACHE_PROVIDER_CHILD = "http://127.0.0.1:7545"
+const GANACHE_PROVIDER_ROOT = "http://127.0.0.1:8545"
+
+const BURN_PROOF_EVENT_SIG = "0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036"
+const NETWORK_TYPE = "testnet"
+const NETWORK_NAME = "mumbai"
 
 // TODO: Change based on our actual server address
 const BASE_TOKEN_URI = "https://6f2d-61-244-192-118.ap.ngrok.io/metadata/";
 
-;flow_sdk_api .config ()
+; flow_sdk_api.config()
 	.put("sdk.transport", grpcSend)
 	.put("accessNode.api", access_node_origin)
-	// .put("accessNode.api", " https://access-mainnet-beta.onflow.org")
+// .put("accessNode.api", " https://access-mainnet-beta.onflow.org")
 
 
 
@@ -138,6 +147,7 @@ export { access_node_origin }
 
 export { address_of_names, private_keys_of_names }
 export { ad_hoc_accounts, pons_artist_id_of_names }
-export { ACCOUNT_ADDRESSES, PRIVATE_KEYS }
-export { ROOT_TUNNEL_CONTRACT_ADDRESS, CHILD_TUNNEL_CONTRACT_ADDRESS, ROOT_TOKEN_ADDRESS, CHILD_TOKEN_ADDRESS }
+export { ACCOUNT_ADDRESSES, PRIVATE_KEYS, GANACHE_PROVIDER_CHILD, GANACHE_PROVIDER_ROOT }
+export { CHILD_TUNNEL_PROXY_ADDRESS, ROOT_TUNNEL_PROXY_ADDRESS, CHILD_TOKEN_PROXY_ADDRESS, ROOT_TOKEN_PROXY_ADDRESS, CHILD_ADMIN_PROXY, ROOT_ADMIN_PROXY }
 export { BASE_TOKEN_URI }
+export { NETWORK_TYPE, NETWORK_NAME, BURN_PROOF_EVENT_SIG }
