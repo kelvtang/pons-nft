@@ -2,7 +2,7 @@
 
 ## Installing Dependencies
 ```bash 
-npm install --global truffle
+npm install --global truffle ganache-cli
 ```
 ```bash 
 npm install --save @truffle/hdwallet-provider fs ethers

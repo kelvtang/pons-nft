@@ -2,22 +2,32 @@
 pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
+import "./Ownable.sol";
+import "./IERC721Receiver.sol";
 
-contract PonsNftMarket {
+contract PonsNftMarket is Ownable, IERC721Receiver{
 
-    //TODO: create system for royaties.--> hold and withdraw
+    //TODO: create system for royaties.--> hold and withdraw    
 
-    address private ponsAccountAddress;
+    address private childProxyAddress;
 
-    constructor(address _ponsAccountAddress) payable {
-        ponsAccountAddress = _ponsAccountAddress;
+    function setChildProxyAddress(address _childProxyAddress) public {
+        require(childProxyAddress == address(0x0), "Address already Initialized");
+        require(_childProxyAddress == address(0x0), "Cannot initialize address");
+        childProxyAddress = _childProxyAddress;
     }
-    function getOwner() public view returns (address){
-        return ponsAccountAddress;
+    function getChildProxyAdress() public view returns (address){
+        return childProxyAddress;
     }
-
-    FxERC721 tokenContract = new FxERC721(ponsAccountAddress);
     
+    function onERC721Received(
+        address, /* operator */
+        address, /* from */
+        uint256, /* tokenId */
+        bytes calldata /* data */
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
 
 
     event nftPurchased(
@@ -90,9 +100,9 @@ contract PonsNftMarket {
                 );
 
                 // Initiate transfer of nft from listed seller to new owner.
-                FxERC721(tokenContract).safeTransferFrom(
-                    msg.sender,
+                FxERC721(childProxyAddress).safeTransferFrom(
                     listingCertificateCollection[tokenId].listerAddress,
+                    msg.sender,
                     tokenId
                 );
 
