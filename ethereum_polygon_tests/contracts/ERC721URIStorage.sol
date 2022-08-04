@@ -4,12 +4,18 @@
 pragma solidity ^0.8.0;
 
 import "./ERC721.sol";
+import "./Initializable.sol";
 
 /**
  * @dev ERC721 token with storage based token URI management.
  */
-abstract contract ERC721URIStorage is ERC721  {
-    using Strings for uint256;
+abstract contract ERC721URIStorageUpgradeable is Initializable, ERC721Upgradeable {
+    function __ERC721URIStorage_init() internal onlyInitializing {
+    }
+
+    function __ERC721URIStorage_init_unchained() internal onlyInitializing {
+    }
+    using StringsUpgradeable for uint256;
 
     // Optional mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
@@ -18,7 +24,7 @@ abstract contract ERC721URIStorage is ERC721  {
      * @dev See {IERC721Metadata-tokenURI}.
      */
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), "ERC721URIStorage: URI query for nonexistent token");
+        _requireMinted(tokenId);
 
         string memory _tokenURI = _tokenURIs[tokenId];
         string memory base = _baseURI();
@@ -33,10 +39,6 @@ abstract contract ERC721URIStorage is ERC721  {
         }
 
         return super.tokenURI(tokenId);
-    }
-
-    function _baseURI() internal view virtual override returns (string memory) {
-        return "";
     }
 
     /**
@@ -62,4 +64,11 @@ abstract contract ERC721URIStorage is ERC721  {
             delete _tokenURIs[tokenId];
         }
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

@@ -1,28 +1,51 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {FxBaseRootTunnel} from "./FxBaseRootTunnel.sol";
-import {Create2} from "./Create2.sol";
-import {FxERC721} from "./FxERC721.sol";
-import {IERC721Receiver} from "./IERC721Receiver.sol";
+import "./FxBaseRootTunnel.sol";
+import "./FxERC721.sol";
+import "./IERC721Receiver.sol";
+import "./OwnableUpgradeable.sol";
+import "./TransparentUpgradeableProxy.sol";
+
 /**
  * @title FxERC721RootTunnel
  */
-contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
-    // maybe DEPOSIT and MAP_TOKEN can be reduced to bytes4
+contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgradeable, OwnableUpgradeable {
+    // maybe DEPOSIT can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
-    //bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
 
-    mapping(address => address) public rootToChildTokens;
-    address public rootTokenTemplate;
-    bytes32 public childTokenTemplateCodeHash;
+    address public rootProxy;
+    // child proxy address
+    address public childProxy;
+    
+    constructor() {
+        _disableInitializers();
+    }
 
-    constructor(
+    function initialize(
         address _checkpointManager,
-        address _fxRoot,
-        address _rootTokenTemplate
-    ) FxBaseRootTunnel(_checkpointManager, _fxRoot) {
-        rootTokenTemplate = _rootTokenTemplate;
+        address _fxRoot
+    ) initializer public {
+        __Context_init();
+        __Ownable_init();
+        __FxBaseRootTunnel_init(_checkpointManager, _fxRoot);
+    }
+
+    function setProxyAddresses(
+        address _childProxy,
+        address _rootProxy
+    ) public onlyOwner {
+        
+        require(
+            _isContract(_rootProxy),
+            "Root proxy address is not contract"
+        );
+
+        require(childProxy == address(0x0), "FxERC721RootTunnel: Child Proxy address already set");
+        require(rootProxy == address(0x0), "FxERC721RootTunnel: Root Proxy address already set");
+
+        rootProxy = _rootProxy;
+        childProxy = _childProxy;
     }
 
     function onERC721Received(
@@ -34,53 +57,54 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
         return this.onERC721Received.selector;
     }
 
-
     // before calling, need to prompt user to accept adding us as approved owner from js 
     function deposit(
-        address rootToken,
         address user,
         uint256 tokenId,
-        bytes memory data
+        string memory tokenUri, 
+        address royaltyReceiver,
+        uint96 royaltyNumerator
     ) public {
-        // map token if not mapped
-        require(rootToChildTokens[rootToken] != address(0x0), "FxMintableERC721RootTunnel: NO_MAPPING_FOUND");
 
+        // validate root and child token mapping
+        require(
+            childProxy != address(0x0) &&
+                rootProxy != address(0x0),
+            "FxERC721RootTunnel: NO_MAPPED_TOKEN"
+        );
+
+        bytes memory data = abi.encode(tokenUri, royaltyReceiver, royaltyNumerator);
         // transfer from depositor to this contract
-        FxERC721(rootToken).safeTransferFrom(
+        FxERC721(rootProxy).safeTransferFrom(
             msg.sender, // depositor
             address(this), // manager contract
             tokenId,
             data
         );
-  
+        
         // DEPOSIT, encode(rootToken, depositor, user, tokenId, extra data)
-        bytes memory message = abi.encode(DEPOSIT, abi.encode(rootToken, msg.sender, user, tokenId, data));
+        bytes memory message = abi.encode(DEPOSIT, abi.encode(rootProxy, childProxy, user, tokenId, data));
         _sendMessageToChild(message);
     }
 
     // exit processor
     function _processMessageFromChild(bytes memory data) internal override {
-        (address rootToken, address childToken, address to, uint256 tokenId, bytes memory syncData, bytes memory metaData) = abi.decode(
+        (address _rootProxy, address _childProxy, address to, uint256 tokenId, bytes memory syncData) = abi.decode(
             data,
-            (address, address, address, uint256, bytes, bytes)
+            (address, address, address, uint256, bytes)
         );
 
-        // if root token is not available, create it
-        if (!_isContract(rootToken) && rootToChildTokens[rootToken] == address(0x0)) {
-            (string memory name, string memory symbol) = abi.decode(metaData, (string, string));
+        // validate root and child token mapping
+        require(
+            _childProxy == childProxy &&
+                _rootProxy == rootProxy,
+            "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
+        );
 
-            address _createdToken = _deployRootToken(childToken, name, symbol);
-            require(_createdToken == rootToken, "FxMintableERC721RootTunnel: ROOT_TOKEN_CREATION_MISMATCH");
-        }
-
-        // validate mapping for root to child
-        require(rootToChildTokens[rootToken] == childToken, "FxERC721RootTunnel: INVALID_MAPPING_ON_EXIT");
-
-        FxERC721 tokenObj = FxERC721(rootToken);
+        FxERC721 tokenObj = FxERC721(rootProxy);
 
         //approve token transfer
         if (!tokenObj.exists(tokenId)) {
-            // FxERC721(rootToken).setApproval(true, tokenId);
             tokenObj.mint(to, tokenId, syncData);
         } else {
             // transfer from tokens
@@ -91,23 +115,6 @@ contract FxERC721RootTunnel is FxBaseRootTunnel, Create2, IERC721Receiver {
                 syncData
             );
         }
-    }
-
-    function _deployRootToken(
-        address childToken,
-        string memory name,
-        string memory symbol
-    ) internal returns (address) {
-        // deploy new root token
-        bytes32 salt = keccak256(abi.encodePacked(childToken));
-        address rootToken = createClone(salt, rootTokenTemplate);
-        FxERC721(rootToken).initialize(address(this), rootToken, name, symbol);
-        // FxERC721(rootToken).transferOwnership(msg.sender);
-
-        // add into mapped tokens
-        rootToChildTokens[rootToken] = childToken;
-
-        return rootToken;
     }
 
     // check if address is contract

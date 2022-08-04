@@ -1,46 +1,56 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {FxBaseChildTunnel} from "./FxBaseChildTunnel.sol";
-import {Create2} from "./Create2.sol";
-import {FxERC721} from "./FxERC721.sol";
-import {IERC721Receiver} from "./IERC721Receiver.sol";
-import {Ownable} from "./Ownable.sol";
+import "./FxBaseChildTunnel.sol";
+import "./FxERC721.sol";
+import "./IERC721Receiver.sol";
+import "./OwnableUpgradeable.sol";
+import "./Initializable.sol";
+import "./TransparentUpgradeableProxy.sol";
 
 contract FxERC721ChildTunnel is
-    Ownable,
-    FxBaseChildTunnel,
-    Create2,
-    IERC721Receiver
+    Initializable,
+    OwnableUpgradeable,
+    FxBaseChildTunnelUpgradeable,
+    IERC721ReceiverUpgradeable
 {
+    // maybe DEPOSIT can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
-    //bytes32 public constant MAP_TOKEN = keccak256("MAP_TOKEN");
+    
+    // child proxy address
+    address public childProxy;
+    // root proxy address
+    address public rootProxy;
 
-    // event for token maping
-    event TokenMapped(address indexed rootToken, address indexed childToken);
-    // root to child token
-    mapping(address => address) public rootToChildToken;
-    // child token template
-    address public childTokenTemplate;
-    // root token tempalte code hash
-    bytes32 public rootTokenTemplateCodeHash;
 
     event FlowDeposit(bytes data);
 
-    constructor(
-        address _fxChild,
-        address _childTokenTemplate,
-        address _rootTokenTemplate
-    ) FxBaseChildTunnel(_fxChild) {
-        childTokenTemplate = _childTokenTemplate;
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
+        address _fxChild
+    ) initializer public {
+        __Context_init();
+        __Ownable_init();
+        __FxBaseChildTunnel_init(_fxChild);
+    }
+
+    function setProxyAddresses(
+        address _childProxy,
+        address _rootProxy
+    ) public onlyOwner {
         require(
-            _isContract(_childTokenTemplate),
-            "Token template is not contract"
+            _isContract(_childProxy),
+            "Child proxy address is not contract"
         );
-        // compute root token template code hash
-        rootTokenTemplateCodeHash = keccak256(
-            minimalProxyCreationCode(_rootTokenTemplate)
-        );
+        
+        require(childProxy == address(0x0), "FxERC721ChildTunnel: Child Proxy address already set");
+        require(rootProxy == address(0x0), "FxERC721ChildTunnel: Root Proxy address already set");
+
+        childProxy = _childProxy;
+        rootProxy = _rootProxy;
     }
 
     function onERC721Received(
@@ -52,61 +62,20 @@ contract FxERC721ChildTunnel is
         return this.onERC721Received.selector;
     }
 
-    // // TODO: Needs to be implemented correctly based on what we get from flow
-    // function sendApproval(
-    //     address childToken,
-    //     bool approval,
-    //     uint256 tokenId
-    // ) public onlyOwner {
-    //     FxERC721(childToken).setApproval(approval, tokenId);
-    // }
-
-    // deploy child token with unique id
-    function deployChildToken(
-        uint256 uniqueId,
-        string memory name,
-        string memory symbol
-    ) public onlyOwner {
-        // deploy new child token using unique id
-        bytes32 childSalt = keccak256(abi.encodePacked(uniqueId));
-        address childToken = createClone(childSalt, childTokenTemplate);
-
-        // compute root token address before deployment using create2
-        bytes32 rootSalt = keccak256(abi.encodePacked(childToken));
-        address rootToken = computedCreate2Address(
-            rootSalt,
-            rootTokenTemplateCodeHash,
-            fxRootTunnel
-        );
-
-        // check if mapping is already there
-        require(
-            rootToChildToken[rootToken] == address(0x0),
-            "FxMintableERC721ChildTunnel: ALREADY_MAPPED"
-        );
-        rootToChildToken[rootToken] = childToken;
-        emit TokenMapped(rootToken, childToken);
-
-        // initialize child token with all parameters
-        FxERC721(childToken).initialize(address(this), rootToken, name, symbol);
-        // FxERC721(childToken).transferOwnership(msg.sender);
-    }
-
     //To mint tokens on child chain
+    // TODO: To enable this function, a way has to be figured out on how to ensure a token with the same Id is not minted on flow
     // function mintToken(
-    //     address childToken,
     //     uint256 tokenId,
     //     bytes memory data
     // ) public {
-    //     FxERC721 childTokenContract = FxERC721(childToken);
+    //     FxERC721 childTokenContract = FxERC721(childProxy);
     //     // child token contract will have root token
-    //     address rootToken = childTokenContract.connectedToken();
+    //     address _rootProxy = childTokenContract.connectedToken();
 
     //     // validate root and child token mapping
     //     require(
-    //         childToken != address(0x0) &&
-    //             rootToken != address(0x0) &&
-    //             childToken == rootToChildToken[rootToken],
+    //         childProxy != address(0x0) &&
+    //             _rootProxy != address(0x0),
     //         "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
     //     );
 
@@ -115,62 +84,49 @@ contract FxERC721ChildTunnel is
     // }
 
     function withdraw(
-        address childToken,
         uint256 tokenId,
-        bytes memory data
+        string memory tokenUri, 
+        address royaltyReceiver,
+        uint96 royaltyNumerator
     ) public {
-        FxERC721 childTokenContract = FxERC721(childToken);
-        // child token contract will have root token
-        address rootToken = childTokenContract.connectedToken();
-
-        // validate root and child token mapping
+        FxERC721 childTokenContract = FxERC721(childProxy);
         require(
-            childToken != address(0x0) &&
-                rootToken != address(0x0) &&
-                childToken == rootToChildToken[rootToken],
-            "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
+            msg.sender == childTokenContract.ownerOf(tokenId),
+            "Caller not owner of token"
         );
-
         // withdraw tokens
         childTokenContract.burn(tokenId);
 
-        // name, symbol
-        FxERC721 rootTokenContract = FxERC721(childToken);
-        string memory name = rootTokenContract.name();
-        string memory symbol = rootTokenContract.symbol();
-        bytes memory metaData = abi.encode(name, symbol);
-
+        bytes memory syncData = abi.encode(tokenUri, royaltyReceiver, royaltyNumerator);
         // send message to root regarding token burn
         _sendMessageToRoot(
             abi.encode(
-                rootToken,
-                childToken,
+                rootProxy,
+                childProxy,
                 msg.sender,
                 tokenId,
-                data,
-                metaData
+                syncData
             )
         );
     }
 
     function processMessageFromFLow(bytes memory data) public onlyOwner {
         (
-            address childToken,
             address to,
-            uint256 tokenId,
+            uint64 flowTokenId,
             bytes memory depositData // royalty receiver should be sent from the relay and not the user
-        ) = abi.decode(data, (address, address, uint256, bytes));
+        ) = abi.decode(data, (address, uint64, bytes));
 
+        uint256 tokenId = uint256(flowTokenId);
         // deposit tokens
-        FxERC721 childTokenContract = FxERC721(childToken);
+        FxERC721 childTokenContract = FxERC721(childProxy);
 
-        address rootToken = childTokenContract.connectedToken();
+        address _rootProxy = childTokenContract.connectedToken();
 
         // validate root and child token mapping
         require(
-            childToken != address(0x0) &&
-                rootToken != address(0x0) &&
-                childToken == rootToChildToken[rootToken],
+            childProxy != address(0x0) &&
+                _rootProxy != address(0x0),
             "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
         );
 
@@ -179,12 +135,14 @@ contract FxERC721ChildTunnel is
     }
 
     function withdrawToFlow(
-        address childToken,
         address to,
         uint256 tokenId
-    ) public onlyOwner {
-        FxERC721 childTokenContract = FxERC721(childToken);
-
+    ) public {
+        FxERC721 childTokenContract = FxERC721(childProxy);
+        require(
+            msg.sender == childTokenContract.ownerOf(tokenId),
+            "Caller not owner of token"
+        );
         // childTokenContract.setApproval(true, tokenId);
         childTokenContract.burn(tokenId);
 
@@ -217,16 +175,22 @@ contract FxERC721ChildTunnel is
 
     function _syncDeposit(bytes memory syncData) internal {
         (
-            address rootToken,
-            address depositor,
+            address _rootProxy,
+            address _childProxy,
             address to,
             uint256 tokenId,
             bytes memory depositData
         ) = abi.decode(syncData, (address, address, address, uint256, bytes));
-        address childToken = rootToChildToken[rootToken];
+        
+        // validate root and child token mapping
+        require(
+            childProxy == _childProxy &&
+                rootProxy == _rootProxy,
+            "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
+        );
 
         // deposit tokens
-        FxERC721 childTokenContract = FxERC721(childToken);
+        FxERC721 childTokenContract = FxERC721(childProxy);
         // childTokenContract.setApproval(true, tokenId);
         childTokenContract.mint(to, tokenId, depositData);
     }
