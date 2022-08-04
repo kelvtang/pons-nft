@@ -130,7 +130,7 @@ const NETWORK_TYPE = "testnet"
 const NETWORK_NAME = "mumbai"
 
 // TODO: Change based on our actual server address
-const BASE_TOKEN_URI = "https://6f2d-61-244-192-118.ap.ngrok.io/metadata/";
+const BASE_TOKEN_URI = "";
 
 ; flow_sdk_api.config()
 	.put("sdk.transport", grpcSend)
