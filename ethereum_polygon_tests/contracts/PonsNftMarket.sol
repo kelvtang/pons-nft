@@ -7,13 +7,52 @@ import "./IERC721Receiver.sol";
 
 contract PonsNftMarket is Ownable, IERC721Receiver{
 
-    //TODO: create system for royaties.--> hold and withdraw    
+    constructor(){
+        // setChildProxyAddress(msg.sender);
+    }
+    
+    mapping(string => uint256) private RoyaltyHolder_flow; // Holds the amount of royalty due to atrist.
+    // mapping(address => uint256) private RoyaltyHolder; // Holds the amount of royalty due to atrist.
 
     address private childProxyAddress;
 
-    function setChildProxyAddress(address _childProxyAddress) public {
+    // Gives artist their due royalty (in matic) to their polygon address.
+    function withdrawRoyalty_flow(string calldata flowAddress, address polygonAddress) public onlyOwner {
+        require(RoyaltyHolder_flow[flowAddress]>0, "No royalty due for this artist");
+        require(polygonAddress != address(0x0), "Cannot send token to an empty address");
+        
+        // create payable address.
+        address payable polygonAddressPaybale = payable(polygonAddress);
+
+        // send value to address.
+        //  // Denominator of 10,000 since floating point values is still an experimental feature in solidity
+        polygonAddressPaybale.transfer((RoyaltyHolder_flow[flowAddress]/10_000)); 
+    }
+    function setRoyalty_flow(uint256 tokenId, uint256 salePrice) internal {
+        (string memory _atristId, uint256 _royaltyAmount) = FxERC721(childProxyAddress).royaltyInfo_flow(tokenId, salePrice);
+        RoyaltyHolder_flow[_atristId] += _royaltyAmount;
+    }
+
+
+    event nftPurchased(address from,address to,uint256 tokenId,uint256 amount);
+    event nftListed(address by, uint256 tokenId, uint256 amount);
+    event nftUnlisted(uint256 tokenId);
+    error nftOfferTooLow();
+    error nftNotFound();
+
+    struct listingCertificate {
+        address payable listerAddress;
+        uint256 tokenId;
+        uint256 listingCount;
+    }
+
+    mapping(uint256 => listingCertificate) private listingCertificateCollection;
+    mapping(uint256 => uint256) private nftSalesPrice; // denominator 10,000 // tokenId ==> listingPrice
+    uint256[] private nftForSale; // list of for sale. --> keys for nftSalesPrice
+
+    function setChildProxyAddress(address _childProxyAddress) public onlyOwner {
         require(childProxyAddress == address(0x0), "Address already Initialized");
-        require(_childProxyAddress == address(0x0), "Cannot initialize address");
+        require(_childProxyAddress != address(0x0), "Cannot initialize address");
         childProxyAddress = _childProxyAddress;
     }
     function getChildProxyAdress() public view returns (address){
@@ -28,31 +67,6 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
     ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
-
-
-    event nftPurchased(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 amount
-    );
-    event nftListed(address by, uint256 tokenId, uint256 amount);
-    event nftUnlisted(uint256 tokenId);
-    error nftOfferTooLow();
-    error nftNotFound();
-
-    struct listingCertificate {
-        address payable listerAddress;
-        uint256 tokenId;
-        uint256 listingCount;
-    }
-
-    // IterableMapping.itmap private listingCertificateCollection; // tokenId ==> listingCertificate
-
-    mapping(uint256 => listingCertificate) private listingCertificateCollection;
-
-    mapping(uint256 => uint256) private nftSalesPrice; // denominator 10,000 // tokenId ==> listingPrice
-    uint256[] private nftForSale; // list of for sale. --> keys for nftSalesPrice
 
     function listForSale(uint256 tokenId, uint256 salesPricex100)
         public
@@ -78,25 +92,36 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
     }
 
     function unlist(uint256 tokenId) public {
-        uint256 end = nftForSale.length;
-        for (uint256 i = 0; i < nftForSale.length; i++) {
-            if (nftForSale[i] == tokenId) {
-                nftForSale[i] = 0;
-                nftSalesPrice[tokenId] = 0;
-                delete end;
-                delete listingCertificateCollection[tokenId];
+        if (nftSalesPrice[tokenId] > 0){
+            uint256 end = nftForSale.length;
+            for (uint256 i = 0; i < nftForSale.length; i++) {
+                if (nftForSale[i] == tokenId) {
+                    nftForSale[i] = 0;
+                    nftSalesPrice[tokenId] = 0;
+                    delete end;
+                    delete listingCertificateCollection[tokenId];
 
-                emit nftUnlisted(tokenId);
+                    emit nftUnlisted(tokenId);
+                }
             }
+        }else{
+            revert nftNotFound();
         }
-        revert nftNotFound();
     }
 
     function purchase(uint256 tokenId) external payable returns (bool) {
         if (listingCertificateCollection[tokenId].listingCount >= 1) {
             if (msg.value < nftSalesPrice[tokenId]) {
+
+                (string memory _atristId, uint256 _royaltyAmount) = FxERC721(childProxyAddress).royaltyInfo_flow(tokenId, nftSalesPrice[tokenId]);
+                delete _atristId;
+                // If flow royalty exist, then royalty will be held.
+                if (FxERC721(childProxyAddress).flowRoyaltyExist(tokenId)){
+                    setRoyalty_flow(tokenId, uint256(msg.value)); // Store royalty into contract
+                }
+
                 listingCertificateCollection[tokenId].listerAddress.transfer(
-                    msg.value
+                    (msg.value - _royaltyAmount) /* Deduct royalty value before transfering */
                 );
 
                 // Initiate transfer of nft from listed seller to new owner.

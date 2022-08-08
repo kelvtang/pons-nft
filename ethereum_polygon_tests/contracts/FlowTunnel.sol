@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-
-// import "./ERC721.sol";
 import "./FxERC721.sol";
+import "./Ownable.sol";
+// import "./PonsNftMarket.sol";
 
-contract PonsTunnel { // create new instance
+contract FlowTunnel is Ownable { 
 
-    address private ponsAccountAddress;
-    constructor (address _ponsAccountAddress) payable{
-        ponsAccountAddress = _ponsAccountAddress;
-    }
-
-    function getOwner() public view returns (address){return ponsAccountAddress;}
-
-    FxERC721 tokenContract = new FxERC721(ponsAccountAddress); //refernce to contract.
+    FxERC721 tokenContract = new FxERC721(); //refernce to contract controlled by Pons.
+    
+    //Makes Tunnel run out of gas.
+    // PonsNftMarket marketContract = new PonsNftMarket(); // reference to market contract held by Pons.
 
     event nftSentThroughTunnel(uint256 tokenId,address from,string flowAddress);
     event nftReceievedFromTunnel(uint256 tokenId, address to);
