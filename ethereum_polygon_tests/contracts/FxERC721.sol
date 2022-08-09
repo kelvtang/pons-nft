@@ -129,14 +129,15 @@ contract FxERC721 is
         (
             string memory tokenUri,
             address royaltyReceiver,
-            string memory flowArtistAddress, // Extra parameter added to abi. Holds artist address in flow.
+            string memory flowArtistId, // Extra parameter added to abi. Holds artist address in flow.
             uint96 royaltyNumerator
         ) = abi.decode(_data, (string, address, string, uint96));
         _safeMint(user, tokenId);
         _setTokenURI(tokenId, tokenUri);
         if (royaltyReceiver == address(0)){
             // If address is blank (in case artist does not have polygon account) we save it through here.
-            _setTokenRoyalty_flow(tokenId, flowArtistAddress, royaltyNumerator);
+            _setTokenRoyalty_flow(tokenId, flowArtistId, royaltyNumerator);
+            _setTokenRoyalty(tokenId, owner(), royaltyNumerator);
         }else{
             _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
         }

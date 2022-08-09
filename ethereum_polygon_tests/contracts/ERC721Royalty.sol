@@ -37,7 +37,7 @@ abstract contract ERC721Royalty is ERC2981, ERC721  {
 
 
     struct RoyaltyInfo_flow{
-        string flowArtistAddress;
+        string flowArtistId;
         uint96 royaltyFraction;
     }
 
@@ -52,22 +52,22 @@ abstract contract ERC721Royalty is ERC2981, ERC721  {
         RoyaltyInfo_flow memory royalty = _tokenRoyaltyInfo_flow[_tokenId];
 
         if (royalty.royaltyFraction == 0) {
-            return (royalty.flowArtistAddress, uint256(0));
+            return (royalty.flowArtistId, uint256(0));
         }
 
-        uint256 royaltyAmount = (_salePrice * royalty.royaltyFraction) / 10_000; // Denominator is 10,000
+        uint256 royaltyAmount = (_salePrice * royalty.royaltyFraction) / super._feeDenominator(); // Denominator is 10,000
 
-        return (royalty.flowArtistAddress, royaltyAmount);
+        return (royalty.flowArtistId, royaltyAmount);
     }
 
     function _setTokenRoyalty_flow(
         uint256 tokenId,
-        string memory receiver,
+        string memory artistId,
         uint96 feeNumerator
     ) internal {
-        require(feeNumerator <= 10_000, "ERC2981: royalty fee will exceed salePrice");
+        require(feeNumerator <= super._feeDenominator(), "ERC2981: royalty fee will exceed salePrice");
 
-        _tokenRoyaltyInfo_flow[tokenId] = RoyaltyInfo_flow(receiver, feeNumerator);
+        _tokenRoyaltyInfo_flow[tokenId] = RoyaltyInfo_flow(artistId, feeNumerator);
     }
 
 }

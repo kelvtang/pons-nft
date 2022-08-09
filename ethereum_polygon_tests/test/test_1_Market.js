@@ -3,7 +3,7 @@ const ethers = require("ethers");
 
 // Create address type using ethers. 
     // This address must be in ganache environment.
-const ponsAccountAddress = ethers.utils.getAddress("0x5c3266FDb6BbC76e428ADA42C06d6615170C5BB2");
+const ponsAccountAddress = ethers.utils.getAddress("0x42753d3827A9A3a5422183d1dd156DDc71082a7d");
 
 
 contract("PonsNftMarket", (accounts) => {
@@ -82,7 +82,6 @@ contract("PonsNftMarket", (accounts) => {
             });
         });
     });
-
     /* 
         Write a test for purchase(uint256 tokenId)
     */
@@ -91,6 +90,5 @@ contract("PonsNftMarket", (accounts) => {
 
 
     // describe("", async ()=>{});
-
-
 });
+

@@ -3,15 +3,48 @@ const ethers = require("ethers");
 
 // Create address type using ethers. 
     // This address must be in ganache environment.
-const ponsAccountAddress = ethers.utils.getAddress("0x5c3266FDb6BbC76e428ADA42C06d6615170C5BB2");
+const currentAddress = ethers.utils.getAddress("0xa588c0322Fb61152966EB67d1fb2BadB0F30AC51");
 
 
 contract("FlowTunnel", (accounts)=>{
-    let tunnel;
+    var tunnel;
+
     before("Setup Tunnel", async ()=>{
-        tunnel = Tunnel.new({from: accounts[0]});
-    })
-    describe("", async ()=>{});
+        tunnel = await Tunnel.new({from: accounts[0]});
+    });
+
+    describe("Test Owner", async ()=>{
+        let owner;
+        before("Load address of contract owner", async ()=>{
+            owner = await tunnel.owner({from: accounts[0]});
+        });
+        it("Test if current address is correct", async ()=>{
+            expect(currentAddress).to.equal(owner);
+        });
+    });
+
+    describe("Testing Tunnel Functionality", async ()=>{
+        const tokenId = 26787689; // Dummy value
+        let _tokenId;
+        let data;
+        const ownerId = currentAddress; // Let pons be owner of this dummy nft.
+        const abiCoder = ethers.utils.defaultAbiCoder;
+
+        before("Setup Dummy Data", async ()=>{
+            data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://cool_boi.png", ownerId, "0x78785678", 78])
+        });
+
+        describe("Testing token", async ()=>{
+            let token_exits;
+            before("Load token - 1", async ()=>{     
+                token_exits = await tunnel.tokenExists(tokenId, {from:accounts[0]});
+            });
+            it("Token does not exist", async ()=>{
+                await expect(token_exits).to.equal(false);
+            });
+        });
+        // describe("Testing sending into Tunnel", async ()=>{});
+    });
 
 
     // describe("", async ()=>{});
