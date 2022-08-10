@@ -2,80 +2,99 @@ const Market = artifacts.require("PonsNftMarket");
 const Token = artifacts.require("FxERC721");
 const ethers = require("ethers");
 
-// Create address type using ethers. 
-    // This address must be in ganache environment.
-const ponsAccountAddress = ethers.utils.getAddress("0x42753d3827A9A3a5422183d1dd156DDc71082a7d");
-
 
 contract("PonsNftMarket", (accounts) => {
+    const abiCoder = ethers.utils.defaultAbiCoder;
+    const ponsAccountAddress = ethers.utils.getAddress(accounts[0]);
+
+    const userAddress_1 = ethers.utils.getAddress(accounts[1]);
+    const userAddress_2 = ethers.utils.getAddress(accounts[2]);
+
+    const tokenId = 89789878; // Dummy ID
     let market;
 
-    before(async () => {
-        let token = await Token.new({from:accounts[0]});
-        market = await Market.new(token.address, {from: accounts[0]});
+
+    before(async function(){
+        let token = await Token.new({from: ponsAccountAddress});
+        market = await Market.new(token.address, {from: ponsAccountAddress});
     });
 
-    describe("Test Owner Address", async ()=>{
-        let owner;
-        before(async ()=>{
-            owner = await market.owner({from: accounts[0]});
-        });
-        it("Switching Owners", ()=>{
-            expect(owner).to.not.equal(ponsAccountAddress);
-            describe("Switch Owners and test again",async ()=>{
-                before(async ()=>{
-                    await market.transferOwnership(ponsAccountAddress, {from: accounts[0]});
-                    owner = await market.owner({from: accounts[0]});
-                });
-                it("Test if owners have changed", ()=>{
-                    expect(owner).to.equal(ponsAccountAddress);
-                })
+    describe("Test Contract Owner", function(){
+        describe("Switching Owners", function(){
+            it("Test that current owner is still original", async function(){
+                expect(
+                    await market.owner({from: ponsAccountAddress})
+                ).to.not.equal(userAddress_1);
             });
-        })
+
+            describe("Switch Owners and test again", function(){
+                before(async function(){
+                    await market.transferOwnership(userAddress_1, {from: ponsAccountAddress});
+                });
+                it("Test if owners have changed", async function(){
+                    expect(
+                        await market.owner({from: ponsAccountAddress})
+                    ).to.equal(userAddress_1);
+                });
+            });
+        });
+
+        after("Reset Owner Back to original account", async function(){
+            await market.transferOwnership(ponsAccountAddress, {from: userAddress_1});
+        });
     });
 
-    describe("Testing List for sale", async ()=>{
-        let tokenID = 89789878; // Dummy ID
+    describe("NFT Listing", function(){
         let tokenPrice = 56;    // Dummy price
         let nftPrice;
         let nftIds = [];
-        before(async ()=>{
-            await market.listForSale(tokenID, tokenPrice, {from: accounts[0]});
+        before(async function(){
+            data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccountAddress, "alfram45", 89]);
+            await market.mintNewNft(tokenId, tokenPrice, data, {from: ponsAccountAddress}); // newly minted NFT's are always listed.
         });
-        describe("Test if listed", async ()=>{
-            before(async ()=>{
-                nftPrice = await market.getPrice(tokenID, {from:accounts[0]});
-                (await market.getForSaleIds({from:accounts[0]})).map(item => {
+        describe("Test Listing", async function(){
+            before(async function(){
+                nftPrice = await market.getPrice(tokenId, {from: ponsAccountAddress});
+                (await market.getForSaleIds({from: ponsAccountAddress})).map(item => {
                     nftIds.push(item.toNumber()); // May throw error uint256 might be too large for js.
                 });
             });
-            it("Listing compared to value set", async ()=>{
-                await expect(nftPrice.toNumber()).to.equal(tokenPrice);
+            it("Listing compared to value set", async function(){
+                expect(nftPrice.toNumber()).to.equal(tokenPrice);
             })
-            it("Test if nft ID is listed on sale", async ()=>{
-                await expect(nftIds).to.be.an('array').that.includes(tokenID);
+            it("Test if nft ID is listed on sale", async function(){
+                await expect(nftIds).to.be.an('array').that.includes(tokenId);
             });
         });
-        describe("Test unlisting", async ()=>{
-            before(async ()=>{
+        describe("Test unlisting", async function(){
+            before(async function(){
                 nftIds = [];
-                await market.unlist(tokenID, {from:accounts[0]});
-                (await market.getForSaleIds({from:accounts[0]})).map(item => {
+                await market.unlist(tokenId, {from: ponsAccountAddress});
+                (await market.getForSaleIds({from: ponsAccountAddress})).map(item => {
                     nftIds.push(item.toNumber()); // May throw error uint256 might be too large for js.
                 });
             });
-            it("Check that id is not among nft's listed for sale", async ()=>{
-                await expect(nftIds.includes(tokenID)).to.equal(false);
+            it("Check that id is not among nft's listed for sale", async function(){
+                expect(nftIds.includes(tokenId)).to.equal(false);
             });
+            after(function(){
+                describe("Relisting after unlist", function(){
+                    before(async function(){await market.listForSale(tokenId, nftPrice, {from:ponsAccountAddress});})
+                    it("Test if nft relisted", async function(){
+                        expect(await market.islisted(tokenId, {from: ponsAccountAddress})).to.be.true;
+                    })
+                });
+            })
         });
     });
-    /* 
-        Write a test for purchase(uint256 tokenId)
-    */
+    // describe("Purchase of nft", function(){
+    //     before(async function(){await market.purchase(tokenId, {from: userAddress_1});});
+    //     it("Test if nft is owned by customer", async function(){
+    //         expect(await market.tokenOwner(tokenId, {from:userAddress_2})).to.equal(userAddress_1);})
+    //     it("Test if nft has been delisted after purchase", async function(){
+    //         expect(await market.islisted(tokenId, {from:ponsAccountAddress})).to.be.false;})
+    // })
 
 
-
-
-    // describe("", async ()=>{});
 });
 

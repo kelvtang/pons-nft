@@ -82,7 +82,7 @@ contract FlowTunnel is Ownable, IERC721Receiver {
         * To handle inter-blockchain purchases, we list transfered nft on polygon marketplace.
          */
         if (to == marketContractAddress){
-            PonsNftMarket(marketContractAddress).listForSale(tokenId, 5000); // Dummy price
+            PonsNftMarket(marketContractAddress).listForSale(tokenId, 5000); //TODO: Dummy price
         }
 
         emit nftReceievedFromTunnel(tokenId, msg.sender);
