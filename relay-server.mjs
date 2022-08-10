@@ -3,11 +3,12 @@ import { ethers } from 'ethers';
 import * as fs from 'fs';
 import { send_transaction_, authorizer_ } from './utils/flow-api.mjs';
 import { CHILD_TUNNEL_CONTRACT_ADDRESS, CHILD_TOKEN_ADDRESS, PRIVATE_KEYS } from './config.mjs';
-import { BASE_TOKEN_URI } from './config.mjs';
+import { BASE_TOKEN_URI, EVENT_NAME } from './config.mjs';
 import { flow_sdk_api } from './config.mjs';
 import fcl_api from '@onflow/fcl';
 import { fileTypeFromBuffer } from 'file-type';
 import fetch from 'node-fetch';
+import { encodeToBytes, createSigner, createContractInstance } from "./ethereum-api.mjs";
 
 const app = express();
 app.use(express.json());
@@ -19,11 +20,9 @@ const childTunnelContractInformation = JSON.parse(fs.readFileSync('./ethereum_po
 
 
 // TODO: Change Provider
-const polygonProvider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:7545"); 
-const signer = new ethers.Wallet(PRIVATE_KEYS[1], polygonProvider)
-const polygonChildTunnelContractInstance = new ethers.Contract(CHILD_TUNNEL_CONTRACT_ADDRESS, childTunnelContractInformation.abi,
-    signer)
-const abiCoder = ethers.utils.defaultAbiCoder
+const polygonProvider = await createRPCProviders("");
+const signer = await createSigner(PRIVATE_KEYS[1])(polygonProvider)
+const polygonChildTunnelContractInstance = await createContractInstance(CHILD_TUNNEL_CONTRACT_ADDRESS)(childTunnelContractInformation.abi)(signer)
 
 app.get("/metadata/:nftSerialId", (req, res) => {
     const nftSerialId = req.params.nftSerialId
@@ -37,8 +36,39 @@ app.get("/metadata/:nftSerialId", (req, res) => {
 })
 
 
-// TODO: Change to the actual event name
-const EVENT_NAME = "A.1654653399040a61.FlowToken.TokensDeposited"
+// Reverts a transacttion if the user rejects a purchase on polygon
+app.get("/revert/:serialId", (req, res) => {
+    const tokenId = req.params.serialId
+    await marketplaceInstance.unlist(tokenId)
+    
+    // TODO: Edit hardcoded values
+    const FxERC721ManagerContract = new ethers.Contract(FXManagerAddress, ManagerABI, signer)
+    FxERC721ManagerContract.sendThroughTunnel(tokenId, USERFLOWADDRESS) // TODO: Edit hardcoded values
+        .then(_ => {
+            // TODO: Edit hardcoded values
+            await send_transaction_ 
+                (authorizer_(address)(key_id)(private_key)) // TODO: Edit hardcoded values
+                (authorizer_(address)(key_id)(private_key)) // TODO: Edit hardcoded values
+                ([authorizer_(address)(key_id)(private_key), authorizer_(address)(key_id)(private_key), USER_SIGNING]) // TODO: Edit hardcoded values
+                (` import PonsTunnelContract from 0xPONS
+          transaction(
+                flowRecepientAddress: Address,
+                nftSerialId: UInt64
+            ) {
+                prepare (ponsAccount : AuthAccount){
+                    if flowRecepientAddress == tunnelUserAccount .Address{
+                      PonsTunnelContract .recieveNftFromTunnel(nftSerialId: nftSerialId, ponsAccount : ponsAccount, ponsHolderAccount : ponsAccount, tunnelUserAccount : ponsAccount);
+                  }else {
+                      panic ("Only recipient can sign tranaction")
+                  }
+                }
+            }`)
+                ([flow_sdk_api.arg(USERFLOWADDRESS, flow_types.Address), // TODO: Edit hardcoded values
+                flow_sdk_api.arg(tokenId, flow_types.UInt64)])
+            res.send({ message: 'Transaction reverted' });
+        })
+})
+
 
 app.listen(3000, () => console.log(`app running on 3000`))
 
@@ -57,7 +87,7 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
             title = value
         } else if (key === 'description') {
             description = value
-        } else if (key.startsWith('tag')) {
+        } else if (key.startsWith('tag-')) {
             tags.push(JSON.stringify({
                 trait_type: "Tag",
                 value: value
@@ -68,17 +98,16 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
 
     royalty = Math.ceil(royalty * 10000)
 
-    let imageAnimationAttribute
-
+    let NftMetadata
     if (url.startsWith('ipfs')) {
         url = "https://" + url
         const response = await fetch(url)
         const urlContent = await response.arrayBuffer()
         const ext = (await fileTypeFromBuffer(urlContent))?.ext;
         if (ext === 'mp4') {
-            imageAnimationAttribute = 'animation_url'
+            NftMetadata['animation_url'] = url
         } else {
-            imageAnimationAttribute = 'image'
+            NftMetadata['image'] = url
         }
     }
 
@@ -87,13 +116,13 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
 
     // TODO: Need to process token URI first
     if (!fs.existsSync(path)) {
-        let NFTMetada = {
-            imageAnimationAttribute: url,
+        NftMetadata = {
+            ...NftMetadata,
             name: title,
             description: description,
             attributes: tags,
         }
-        fs.writeFileSync(`${path}.json`, JSON.stringify(NFTMetada, null, 2))
+        fs.writeFileSync(`${path}.json`, JSON.stringify(NftMetadata, null, 2))
     }
 
 
@@ -102,9 +131,9 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
         artistAddressPolygon = ethers.constants.AddressZero
     }
 
-    const depositData = abiCoder.encode(["string", "address", "uint96"], [`${BASE_TOKEN_URI}${nftSerialId}`, artistAddressPolygon, royalty])
-    const data = abiCoder.encode(["address", "address", "uint64", "bytes"], [CHILD_TOKEN_ADDRESS, polygonRecipientAddress, nftSerialId, depositData])
-    const childSigner = new ethers.Wallet(PRIVATE_KEYS[1], polygonProvider);
+    const depositData = await encodeToBytes(["string", "address", "uint96"])([`${BASE_TOKEN_URI}${nftSerialId}`, artistAddressPolygon, royalty])
+    const data = await encodeToBytes(["address", "uint64", "bytes"])([polygonRecipientAddress, nftSerialId, depositData])
+    const childSigner = await createSigner(PRIVATE_KEYS[1])(polygonProvider);
     polygonChildTunnelContractInstance.connect(childSigner)
     polygonChildTunnelContractInstance.processMessageFromFLow(data)
 })

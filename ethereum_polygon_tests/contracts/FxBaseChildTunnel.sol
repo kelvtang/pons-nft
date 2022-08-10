@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "./Initializable.sol";
+
+
 // IFxMessageProcessor represents interface to process message
-interface IFxMessageProcessor {
+interface IFxMessageProcessorUpgradeable {
     function processMessageFromRoot(
         uint256 stateId,
         address rootMessageSender,
@@ -13,7 +16,9 @@ interface IFxMessageProcessor {
 /**
  * @notice Mock child tunnel contract to receive and send message from L2
  */
-abstract contract FxBaseChildTunnel is IFxMessageProcessor {
+abstract contract FxBaseChildTunnelUpgradeable is Initializable, IFxMessageProcessorUpgradeable {
+
+
     // MessageTunnel on L1 will get data from this event
     event MessageSent(bytes message);
 
@@ -23,7 +28,11 @@ abstract contract FxBaseChildTunnel is IFxMessageProcessor {
     // fx root tunnel
     address public fxRootTunnel;
 
-    constructor(address _fxChild) {
+    function __FxBaseChildTunnel_init(address _fxChild) internal onlyInitializing {
+        __FxBaseChildTunnel_init_unchained(_fxChild);
+    }
+
+    function __FxBaseChildTunnel_init_unchained(address _fxChild) internal onlyInitializing {
         fxChild = _fxChild;
     }
 
@@ -75,4 +84,11 @@ abstract contract FxBaseChildTunnel is IFxMessageProcessor {
         address sender,
         bytes memory message
     ) internal virtual;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[40] private __gap;
 }

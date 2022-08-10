@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IERC721} from "./IERC721.sol";
+import "./IERC721.sol";
 
-interface IFxERC721 is IERC721 {
+interface IFxERC721Upgradeable is IERC721Upgradeable {
     function fxManager() external returns (address);
 
     function connectedToken() external returns (address);

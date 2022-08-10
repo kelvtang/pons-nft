@@ -1,69 +1,74 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IFxERC721} from "./IFxERC721.sol";
+import "./IFxERC721.sol";
 import "./ERC721Royalty.sol";
 import "./ERC721URIStorage.sol";
 import "./ERC721Enumerable.sol";
+import "./Initializable.sol";
+import "./Pausable.sol";
+import "./OwnableUpgradeable.sol";
+
 
 /**
  * @title FxERC20 represents fx erc20
  */
 contract FxERC721 is
-    IFxERC721,
-    ERC721,
-    ERC721Enumerable,
-    ERC721URIStorage,
-    ERC721Royalty
+    Initializable,
+    IFxERC721Upgradeable,
+    ERC721Upgradeable,
+    ERC721EnumerableUpgradeable,
+    ERC721URIStorageUpgradeable,
+    ERC721RoyaltyUpgradeable,
+    PausableUpgradeable,
+    OwnableUpgradeable
 {
     address internal _fxManager;
     address internal _connectedToken;
 
-    // // TODO: Needs to be implemented correctly based on what we get from flow
-    // struct EventInformation {
-    //     bool approved;
-    // }
-
-    // mapping(uint256 => EventInformation) private _EventInfo;
-
-    // // TODO: Needs to be implemented correctly based on what we get from flow
-    // function setApproval(bool approval, uint256 tokenId) public {
-    //     require(msg.sender == _fxManager, "Invalid sender");
-    //     _EventInfo[tokenId].approved = approval;
-    // }
+    constructor() {
+        _disableInitializers();
+    }
 
     function initialize(
         address fxManager_,
         address connectedToken_,
         string memory name_,
         string memory symbol_
-    ) public override {
-        require(
-            _fxManager == address(0x0) && _connectedToken == address(0x0),
-            "Token is already initialized"
-        );
+    ) initializer public override {
         _fxManager = fxManager_;
         _connectedToken = connectedToken_;
-
-        // setup meta data
-        setupMetaData(name_, symbol_);
+        __Context_init();
+        __Ownable_init();
+        __ERC721_init(name_, symbol_);
+        __ERC721Enumerable_init();
+        __ERC721URIStorage_init();
+        __Pausable_init();
+        __ERC721Royalty_init();
+        __ERC165_init();
+        __ERC2981_init();
     }
 
-    function _baseURI()
-        internal
-        view
-        virtual
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
-    {
-        return "ipfs://";
+    function updateConnectedToken(
+        address proxyAddress
+    ) public onlyOwner {
+        require(_connectedToken == address(0x0), "FxERC721: Connected token already set");
+        _connectedToken = proxyAddress;
+    }
+
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
     }
 
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override(ERC721, ERC721Enumerable) {
+    ) internal whenNotPaused virtual override(ERC721Upgradeable, ERC721EnumerableUpgradeable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
@@ -77,12 +82,6 @@ contract FxERC721 is
         return _connectedToken;
     }
 
-    // setup name, symbol
-    function setupMetaData(string memory _name, string memory _symbol) public {
-        require(msg.sender == _fxManager, "Invalid sender");
-        _setupMetaData(_name, _symbol);
-    }
-
     function exists(uint256 tokenId) public view returns (bool) {
         return _exists(tokenId);
     }
@@ -91,23 +90,23 @@ contract FxERC721 is
         public
         view
         virtual
-        override(IERC165, ERC721, ERC721Enumerable, ERC721Royalty)
+        override(IERC165Upgradeable, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721RoyaltyUpgradeable)
         returns (bool)
     {
         return
-            ERC721Royalty.supportsInterface(interfaceId) ||
-            ERC721Enumerable.supportsInterface(interfaceId) ||
-            ERC721.supportsInterface(interfaceId);
+            ERC721RoyaltyUpgradeable.supportsInterface(interfaceId) ||
+            ERC721EnumerableUpgradeable.supportsInterface(interfaceId) ||
+            ERC721Upgradeable.supportsInterface(interfaceId);
     }
 
     function tokenURI(uint256 tokenId)
         public
         view
         virtual
-        override(ERC721, ERC721URIStorage)
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
         returns (string memory)
     {
-        return ERC721URIStorage.tokenURI(tokenId);
+        return ERC721URIStorageUpgradeable.tokenURI(tokenId);
     }
 
     function mint(
@@ -116,13 +115,7 @@ contract FxERC721 is
         bytes memory _data
     ) public override {
         require(msg.sender == _fxManager, "Invalid sender");
-        // // TODO: Needs to be implemented correctly based on what we get from flow
-        // require(
-        //     _EventInfo[tokenId].approved == true,
-        //     "Token not approved for minting on polygon Blockchain"
-        // );
 
-        // TODO: Fix this based on the actual struct
         (
             string memory tokenUri,
             address royaltyReceiver,
@@ -131,17 +124,16 @@ contract FxERC721 is
         _safeMint(user, tokenId);
         _setTokenURI(tokenId, tokenUri);
         _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
-        // delete _EventInfo[tokenId];
     }
 
     function _burn(uint256 tokenId)
         internal
         virtual
-        override(ERC721, ERC721URIStorage, ERC721Royalty)
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721RoyaltyUpgradeable)
     {
-        ERC721._burn(tokenId);
-        ERC721Royalty._burn(tokenId);
-        ERC721URIStorage._burn(tokenId);
+        ERC721Upgradeable._burn(tokenId);
+        ERC721RoyaltyUpgradeable._burn(tokenId);
+        ERC721URIStorageUpgradeable._burn(tokenId);
     }
 
     function burn(uint256 tokenId) public override {
@@ -151,13 +143,7 @@ contract FxERC721 is
             exists(tokenId) == true,
             "Token does not exist on Polygon chain"
         );
-        // // TODO: Needs to be implemented correctly based on what we get from flow
-        // require(
-        //     _EventInfo[tokenId].approved == true,
-        //     "Token not approved for burning on polygon Blockchain"
-        // );
 
         _burn(tokenId);
-        // delete _EventInfo[tokenId];
     }
 }
