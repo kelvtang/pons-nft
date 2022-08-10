@@ -36,6 +36,40 @@ app.get("/metadata/:nftSerialId", (req, res) => {
 })
 
 
+// Reverts a transacttion if the user rejects a purchase on polygon
+app.get("/revert/:serialId", (req, res) => {
+    const tokenId = req.params.serialId
+    await marketplaceInstance.unlist(tokenId)
+    
+    // TODO: Edit hardcoded values
+    const FxERC721ManagerContract = new ethers.Contract(FXManagerAddress, ManagerABI, signer)
+    FxERC721ManagerContract.sendThroughTunnel(tokenId, USERFLOWADDRESS) // TODO: Edit hardcoded values
+        .then(_ => {
+            // TODO: Edit hardcoded values
+            await send_transaction_ 
+                (authorizer_(address)(key_id)(private_key)) // TODO: Edit hardcoded values
+                (authorizer_(address)(key_id)(private_key)) // TODO: Edit hardcoded values
+                ([authorizer_(address)(key_id)(private_key), authorizer_(address)(key_id)(private_key), USER_SIGNING]) // TODO: Edit hardcoded values
+                (` import PonsTunnelContract from 0xPONS
+          transaction(
+                flowRecepientAddress: Address,
+                nftSerialId: UInt64
+            ) {
+                prepare (ponsAccount : AuthAccount){
+                    if flowRecepientAddress == tunnelUserAccount .Address{
+                      PonsTunnelContract .recieveNftFromTunnel(nftSerialId: nftSerialId, ponsAccount : ponsAccount, ponsHolderAccount : ponsAccount, tunnelUserAccount : ponsAccount);
+                  }else {
+                      panic ("Only recipient can sign tranaction")
+                  }
+                }
+            }`)
+                ([flow_sdk_api.arg(USERFLOWADDRESS, flow_types.Address), // TODO: Edit hardcoded values
+                flow_sdk_api.arg(tokenId, flow_types.UInt64)])
+            res.send({ message: 'Transaction reverted' });
+        })
+})
+
+
 app.listen(3000, () => console.log(`app running on 3000`))
 
 fcl_api.events(EVENT_NAME).subscribe(async (event) => {
@@ -64,17 +98,16 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
 
     royalty = Math.ceil(royalty * 10000)
 
-    let imageAnimationAttribute
-
+    let NftMetadata
     if (url.startsWith('ipfs')) {
         url = "https://" + url
         const response = await fetch(url)
         const urlContent = await response.arrayBuffer()
         const ext = (await fileTypeFromBuffer(urlContent))?.ext;
         if (ext === 'mp4') {
-            imageAnimationAttribute = 'animation_url'
+            NftMetadata['animation_url'] = url
         } else {
-            imageAnimationAttribute = 'image'
+            NftMetadata['image'] = url
         }
     }
 
@@ -83,13 +116,13 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
 
     // TODO: Need to process token URI first
     if (!fs.existsSync(path)) {
-        let NFTMetada = {
-            imageAnimationAttribute: url,
+        NftMetadata = {
+            ...NftMetadata,
             name: title,
             description: description,
             attributes: tags,
         }
-        fs.writeFileSync(`${path}.json`, JSON.stringify(NFTMetada, null, 2))
+        fs.writeFileSync(`${path}.json`, JSON.stringify(NftMetadata, null, 2))
     }
 
 
