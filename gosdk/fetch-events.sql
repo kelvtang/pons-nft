@@ -4,7 +4,7 @@ as $$
 declare 
     event_record record;
 begin
-
+    raise notice 'Started reading from block: %', block_height;
     drop table if exists temp_events;
     create table temp_events(
         contract_address text,
@@ -30,7 +30,7 @@ begin
             event_record.data, event_record.block_height;
         end if;
     end loop;
-    raise notice 'Latest Historical Block: %', event_record.latest_block_height;
+    raise notice 'Latest read Historical Block: %', event_record.latest_block_height;
     execute 'INSERT INTO latest_block_height values($1)' using event_record.latest_block_height;
     
 end$$;
@@ -46,5 +46,5 @@ begin
 end$$;
 
 
--- call fetch_events(22349785, 22349786);
+-- call fetch_events(23830785, 23830812);
 -- call update_events();

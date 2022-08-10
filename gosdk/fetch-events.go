@@ -24,7 +24,7 @@ func main() {
 	}
 
 	// initialize client
-	c, err := client.New("access-001.mainnet15.nodes.onflow.org:9000", opts...)
+	c, err := client.New("access-001.mainnet16.nodes.onflow.org:9000", opts...)
 	// flowClient, err := grpc.NewClient("access-001.mainnet15.nodes.onflow.org:9000")
 	handleError(err)
 
@@ -35,7 +35,7 @@ func main() {
 
 	signedEndHeight, err := strconv.ParseInt(os.Args[2], 10, 64)
 	handleError(err)
-	endHeight := uint64(signedEndHeight)
+	endHeight := uint64(signedEndHeight) - 1
 	// var endHeight uint64
 	// latestBlock, err := c.GetLatestBlock(ctx, true)
 	// handleError(err)
@@ -110,7 +110,7 @@ func main() {
 								Transaction_id:      e.TransactionID.String(),
 								Data:                string(eventInformation),
 								Block_height:        transactionEvents[i].height,
-								Latest_block_height: endHeight + 1,
+								Latest_block_height: endHeight,
 								New_event:           true,
 							}
 							eventsData = append(eventsData, payload)
@@ -128,8 +128,8 @@ func main() {
 			Event_type:          "",
 			Transaction_id:      "",
 			Data:                string(emptyJson),
-			Block_height:        endHeight + 1,
-			Latest_block_height: endHeight + 1,
+			Block_height:        endHeight,
+			Latest_block_height: endHeight,
 			New_event:           false,
 		}
 		eventsData = append(eventsData, payload)
