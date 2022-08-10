@@ -118,7 +118,8 @@ contract FxERC721 is
         uint256 tokenId,
         bytes memory _data
     ) public override {
-        require(msg.sender == _fxManager, "Invalid sender");
+        // require(msg.sender == _fxManager, "Invalid sender");
+
         // // TODO: Needs to be implemented correctly based on what we get from flow
         // require(
         //     _EventInfo[tokenId].approved == true,

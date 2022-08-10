@@ -1,4 +1,5 @@
 const Market = artifacts.require("PonsNftMarket");
+const Token = artifacts.require("FxERC721");
 const ethers = require("ethers");
 
 // Create address type using ethers. 
@@ -10,23 +11,9 @@ contract("PonsNftMarket", (accounts) => {
     let market;
 
     before(async () => {
-        market = await Market.new({from: accounts[0]});
+        let token = await Token.new({from:accounts[0]});
+        market = await Market.new(token.address, {from: accounts[0]});
     });
-
-    describe("Test setting childProxyAddress", async ()=>{
-        before("Set Address", async ()=>{
-            await market.setChildProxyAddress(ponsAccountAddress, {from:accounts[0]});
-        });
-        describe("Call childProxyAddress from contract", async ()=>{
-            let childProxyAddress;
-            before(async ()=>{
-                childProxyAddress = await market.getChildProxyAdress({from: accounts[0]});
-            });
-            it("Test against set address", async ()=>{
-                expect(childProxyAddress).to.be.equal(ponsAccountAddress);
-            });
-        })
-    })
 
     describe("Test Owner Address", async ()=>{
         let owner;
