@@ -89,11 +89,11 @@ contract("FlowTunnel", (accounts)=>{
                         // setup tunnel
                         await tunnel.setupTunnel(tokenId, {from: userAddress});
                         await token.safeTransferFrom(userAddress, tunnel.address, tokenId, {from: userAddress});
-                        await tunnel.sendThroughTunnel(tokenId, "0xffff", {from:userAddress});
+                        await tunnel.sendThroughTunnel(tokenId, "0xffff", {from: userAddress});
 
                     });
                     it("Test for NFT after sending", async function(){
-                        expect(await tunnel.tokenOwner(tokenId, {from:userAddress})).to.equal(tunnel.address);
+                        expect(await tunnel.tokenOwner(tokenId, {from: userAddress})).to.equal(tunnel.address);
                     });
                 })
             });
@@ -107,13 +107,13 @@ contract("FlowTunnel", (accounts)=>{
         before(async function(){
 
             this.timeout(50_000);
-            
+
             let data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccountAddress, "alfram45", 89]);
             await market.mintNewNft(tokenId, 25, data, {from: ponsAccountAddress});
-            let token_exist_flag = await market.tokenExists(tokenId, {from:ponsAccountAddress});
+            let token_exist_flag = await market.tokenExists(tokenId, {from: ponsAccountAddress});
             assert(await token_exist_flag, "Token should exist");
             
-            await market.sendThroughTunnel(tokenId, {from:ponsAccountAddress});
+            await market.sendThroughTunnel(tokenId, {from: ponsAccountAddress});
 
         });
         it("Test that token has entered tunnel", async function(){
