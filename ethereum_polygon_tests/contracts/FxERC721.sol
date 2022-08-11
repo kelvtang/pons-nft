@@ -23,11 +23,17 @@ contract FxERC721 is
     PausableUpgradeable,
     OwnableUpgradeable
 {
-    address internal _fxManager;
+    // address internal _fxManager; @red
+
+    mapping(address => bool) internal _fxManager;
     address internal _connectedToken;
 
     constructor() {
         _disableInitializers();
+    }
+
+    function addFxManager(address fxManager_) public onlyOwner{
+        _fxManager[fxManager_] = true;
     }
 
     function initialize(
@@ -36,7 +42,7 @@ contract FxERC721 is
         string memory name_,
         string memory symbol_
     ) initializer public override {
-        _fxManager = fxManager_;
+        addFxManager(fxManager_);
         _connectedToken = connectedToken_;
         __Context_init();
         __Ownable_init();
@@ -72,10 +78,10 @@ contract FxERC721 is
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    // fxManager returns fx manager
-    function fxManager() public view override returns (address) {
-        return _fxManager;
-    }
+    // // fxManager returns fx manager
+    // function fxManager() public view override returns (address) {
+    //     return _fxManager;
+    // }
 
     // connectedToken returns root token
     function connectedToken() public view override returns (address) {
@@ -114,7 +120,7 @@ contract FxERC721 is
         uint256 tokenId,
         bytes memory _data
     ) public override {
-        // require(msg.sender == _fxManager, "Invalid sender");
+        require(_fxManager[msg.sender], "Invalid sender");
 
         (
             string memory tokenUri,
@@ -138,7 +144,7 @@ contract FxERC721 is
     }
 
     function burn(uint256 tokenId) public override {
-        require(msg.sender == _fxManager, "Invalid sender");
+        require(_fxManager[msg.sender], "Invalid sender");
 
         require(
             exists(tokenId) == true,
