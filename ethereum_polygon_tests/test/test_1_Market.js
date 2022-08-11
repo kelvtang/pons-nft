@@ -79,7 +79,8 @@ contract("PonsNftMarket", (accounts) => {
             });
             after(function(){
                 describe("Relisting after unlist", function(){
-                    before(async function(){await market.listForSale(tokenId, nftPrice, {from:ponsAccountAddress});})
+                    // List the nft for 0 eth.
+                    before(async function(){await market.listForSale(tokenId, 0, {from:ponsAccountAddress});})
                     it("Test if nft relisted", async function(){
                         expect(await market.islisted(tokenId, {from: ponsAccountAddress})).to.be.true;
                     })
