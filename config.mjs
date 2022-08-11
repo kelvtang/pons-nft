@@ -114,19 +114,31 @@ const PRIVATE_KEYS = [
 	"0x54dc1f227612fbd2f66ab224bddc55713977d6e207b48d95d13c5022da2d4acc"
 ]
 
-const ROOT_TUNNEL_CONTRACT_ADDRESS = "0x07eC6512C66617fc0Dea66eF8A0622E648481149" // Owner is Account[0]
-const CHILD_TUNNEL_CONTRACT_ADDRESS = "0x167C27d597607491d6416e05c2cCB528087ed834" // Owner is Account[1]
-const ROOT_TOKEN_ADDRESS = "0xa66a949790Aa765AFbfB589192aE5D2235BCEF5F"
-const CHILD_TOKEN_ADDRESS = "0x118a30A2287d0c8C0B71842A291dDC52e02A4288"
 
+const CHILD_TOKEN_PROXY_ADDRESS = ""
+const ROOT_TOKEN_PROXY_ADDRESS = ""
+const CHILD_TUNNEL_PROXY_ADDRESS = ""
+const ROOT_TUNNEL_PROXY_ADDRESS = ""
+const CHILD_ADMIN_PROXY = ""
+const ROOT_ADMIN_PROXY = ""
+
+const GANACHE_PROVIDER_CHILD = "http://127.0.0.1:7545"
+const GANACHE_PROVIDER_ROOT = "http://127.0.0.1:8545"
+
+const BURN_PROOF_EVENT_SIG = "0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036"
+const NETWORK_TYPE = "testnet"
+const NETWORK_NAME = "mumbai"
+
+// TODO: Change to the actual event name
+const EVENT_NAME = ""
 
 // TODO: Change based on our actual server address
-const BASE_TOKEN_URI = "https://6f2d-61-244-192-118.ap.ngrok.io/metadata/";
+const BASE_TOKEN_URI = "";
 
-;flow_sdk_api .config ()
+; flow_sdk_api.config()
 	.put("sdk.transport", grpcSend)
 	.put("accessNode.api", access_node_origin)
-	// .put("accessNode.api", " https://access-mainnet-beta.onflow.org")
+// .put("accessNode.api", " https://access-mainnet-beta.onflow.org")
 
 
 
@@ -138,6 +150,7 @@ export { access_node_origin }
 
 export { address_of_names, private_keys_of_names }
 export { ad_hoc_accounts, pons_artist_id_of_names }
-export { ACCOUNT_ADDRESSES, PRIVATE_KEYS }
-export { ROOT_TUNNEL_CONTRACT_ADDRESS, CHILD_TUNNEL_CONTRACT_ADDRESS, ROOT_TOKEN_ADDRESS, CHILD_TOKEN_ADDRESS }
-export { BASE_TOKEN_URI }
+export { ACCOUNT_ADDRESSES, PRIVATE_KEYS, GANACHE_PROVIDER_CHILD, GANACHE_PROVIDER_ROOT }
+export { CHILD_TUNNEL_PROXY_ADDRESS, ROOT_TUNNEL_PROXY_ADDRESS, CHILD_TOKEN_PROXY_ADDRESS, ROOT_TOKEN_PROXY_ADDRESS, CHILD_ADMIN_PROXY, ROOT_ADMIN_PROXY }
+export { BASE_TOKEN_URI, EVENT_NAME }
+export { NETWORK_TYPE, NETWORK_NAME, BURN_PROOF_EVENT_SIG }

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {RLPReader} from "./RLPReader.sol";
-import {MerklePatriciaProof} from "./MerklePatriciaProof.sol";
-import {Merkle} from "./Merkle.sol";
+import "./RLPReader.sol";
+import "./MerklePatriciaProof.sol";
+import "./Merkle.sol";
 import "./ExitPayloadReader.sol";
+import "./Initializable.sol";
 
-interface IFxStateSender {
+
+interface IFxStateSenderUpgradeable {
     function sendMessageToChild(address _receiver, bytes calldata _data) external;
 }
 
@@ -26,7 +28,8 @@ contract ICheckpointManager {
     mapping(uint256 => HeaderBlock) public headerBlocks;
 }
 
-abstract contract FxBaseRootTunnel {
+abstract contract FxBaseRootTunnelUpgradeable is Initializable {
+
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
     using ExitPayloadReader for bytes;
@@ -39,18 +42,23 @@ abstract contract FxBaseRootTunnel {
     bytes32 public constant SEND_MESSAGE_EVENT_SIG = 0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036;
 
     // state sender contract
-    IFxStateSender public fxRoot;
+    IFxStateSenderUpgradeable public fxRoot;
     // root chain manager
     ICheckpointManager public checkpointManager;
     // child tunnel contract which receives and sends messages
     address public fxChildTunnel;
+    event rootToChild(bytes data);
 
     // storage to avoid duplicate exits
     mapping(bytes32 => bool) public processedExits;
 
-    constructor(address _checkpointManager, address _fxRoot) {
+    function __FxBaseRootTunnel_init(address _checkpointManager, address _fxRoot) internal onlyInitializing {
+        __FxBaseRootTunnel_init_unchained(_checkpointManager, _fxRoot);
+    }
+
+    function __FxBaseRootTunnel_init_unchained(address _checkpointManager, address _fxRoot) internal onlyInitializing {
         checkpointManager = ICheckpointManager(_checkpointManager);
-        fxRoot = IFxStateSender(_fxRoot);
+        fxRoot = IFxStateSenderUpgradeable(_fxRoot);
     }
 
     // set fxChildTunnel if not set already
@@ -68,7 +76,8 @@ abstract contract FxBaseRootTunnel {
      *   abi.encode(messageType, messageData);
      */
     function _sendMessageToChild(bytes memory message) internal {
-        fxRoot.sendMessageToChild(fxChildTunnel, message);
+        // fxRoot.sendMessageToChild(fxChildTunnel, message);
+        emit rootToChild(message);
     }
 
     function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {
@@ -164,8 +173,9 @@ abstract contract FxBaseRootTunnel {
      *  9 - receiptLogIndex - Log Index to read from the receipt
      */
     function receiveMessage(bytes memory inputData) public virtual {
-        bytes memory message = _validateAndExtractMessage(inputData);
-        _processMessageFromChild(message);
+        // bytes memory message = _validateAndExtractMessage(inputData);
+        // _processMessageFromChild(message);
+        _processMessageFromChild(inputData);
     }
 
     /**
@@ -176,4 +186,11 @@ abstract contract FxBaseRootTunnel {
      * @param message bytes message that was sent from Child Tunnel
      */
     function _processMessageFromChild(bytes memory message) internal virtual;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[42] private __gap;
 }

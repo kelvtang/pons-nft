@@ -1,0 +1,5 @@
+Flow Cli
+	Cadence extension
+Solidity Binaries
+	Metamask	
+	Truffle --> `npm install -g truffle`

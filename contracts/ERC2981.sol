@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 
 import "./IERC2981.sol";
 import "./ERC165.sol";
+import "./Initializable.sol";
 
 /**
  * @dev Implementation of the NFT Royalty Standard, a standardized way to retrieve royalty payment information.
@@ -21,7 +22,12 @@ import "./ERC165.sol";
  *
  * _Available since v4.5._
  */
-abstract contract ERC2981 is IERC2981, ERC165 {
+abstract contract ERC2981Upgradeable is Initializable, IERC2981Upgradeable, ERC165Upgradeable {
+    function __ERC2981_init() internal onlyInitializing {
+    }
+
+    function __ERC2981_init_unchained() internal onlyInitializing {
+    }
     struct RoyaltyInfo {
         address receiver;
         uint96 royaltyFraction;
@@ -33,12 +39,12 @@ abstract contract ERC2981 is IERC2981, ERC165 {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC165) returns (bool) {
-        return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+        return interfaceId == type(IERC2981Upgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /**
-     * @inheritdoc IERC2981
+     * @inheritdoc IERC2981Upgradeable
      */
     function royaltyInfo(uint256 _tokenId, uint256 _salePrice) public view virtual override returns (address, uint256) {
         RoyaltyInfo memory royalty = _tokenRoyaltyInfo[_tokenId];
@@ -108,4 +114,11 @@ abstract contract ERC2981 is IERC2981, ERC165 {
     function _resetTokenRoyalty(uint256 tokenId) internal virtual {
         delete _tokenRoyaltyInfo[tokenId];
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[48] private __gap;
 }
