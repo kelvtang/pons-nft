@@ -4,16 +4,15 @@ pragma solidity ^0.8.0;
 import "./FxERC721.sol";
 import "./Ownable.sol";
 import "./IERC721Receiver.sol";
+import "./FlowTunnel.sol";
 
-contract PonsNftMarket is Ownable, IERC721Receiver{
+contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
 
     event newNftMinted(uint256 tokenId, address to);
     event nftPurchased(address from,address to,uint256 tokenId,uint256 amount);
     event nftListed(address by, uint256 tokenId, uint256 amount);
     event nftUnlisted(uint256 tokenId);
-    
-    error nftNotFound();
-    error nftOfferTooLow();
+
 
     struct listingCertificate {
         address payable listerAddress;
@@ -29,6 +28,7 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
     // mapping(address => uint256) private RoyaltyHolder; // Holds the amount of royalty due to atrist.
 
     address private tokenContractAddress;
+    address private tunnelContractAddress;
 
     constructor (address _tokenContractAddress){
         tokenContractAddress = _tokenContractAddress;
@@ -38,8 +38,9 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
         return FxERC721(tokenContractAddress).exists(tokenId);}
     function tokenOwner(uint256 tokenId) public view returns (address){
         return FxERC721(tokenContractAddress).ownerOf(tokenId);}
+    
     function mintNewNft(uint256 tokenId, uint256 salesPricex100, bytes memory _data) public onlyOwner {
-        require(!tokenExists(tokenId), "NFT already exists");
+        require(!tokenExists(tokenId), "Market: NFT already exists");
         
         FxERC721(tokenContractAddress).mint(address(this), tokenId, _data);
 
@@ -52,8 +53,8 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
 
     // Gives artist their due royalty (in matic) to their polygon address.
     function withdrawRoyalty_flow(string calldata flowArtistId, address polygonAddress) public onlyOwner {
-        require(RoyaltyHolder_flow[flowArtistId]>0, "No royalty due for this artist");
-        require(polygonAddress != address(0x0), "Cannot send token to an empty address");
+        require(RoyaltyHolder_flow[flowArtistId]>0, "Market: No royalty due for this artist");
+        require(polygonAddress != address(0x0), "Market: Cannot send token to an empty address");
         
         // create payable address.
         address payable polygonAddressPaybale = payable(polygonAddress);
@@ -78,8 +79,8 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
     }
 
     function listForSale(uint256 tokenId, uint256 salesPricex100) public returns (listingCertificate memory){
-        require(tokenExists(tokenId), "NFT by this Token ID does not exist");
-        require(tokenOwner(tokenId) == msg.sender || (tokenOwner(tokenId) == address(this) && msg.sender == owner()), "NFT can only be listed by account that owns it.");
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) == msg.sender || (tokenOwner(tokenId) == address(this) && msg.sender == owner()), "Market: NFT can only be listed by account that owns it.");
 
         listingCertificate memory cert;
 
@@ -98,16 +99,18 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
 
         // TODO: some approval system to allow for contract to move token.
         // TODO: crate artist
-        if (tokenOwner(tokenId) != address(this)){
-            FxERC721(tokenContractAddress).safeTransferFrom(msg.sender, address(this), tokenId);
-        }
+        // if (tokenOwner(tokenId) != address(this)){
+        //     FxERC721(tokenContractAddress).safeTransferFrom(msg.sender, address(this), tokenId);
+        // }
 
         emit nftListed(msg.sender, tokenId, salesPricex100);
         return cert;
     }
 
-    function unlist(uint256 tokenId) public onlyOwner {
-        require(nftSalesPrice[tokenId] > 0, "Only listed NFTs can be delisted.");
+    function unlist(uint256 tokenId) public {
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) != address(this), "Market: withdraw token before unlisting.");
+        require(nftSalesPrice[tokenId] > 0, "Market: Only listed NFTs can be delisted.");
         uint256 end = nftForSale.length;
         for (uint256 i = 0; i < nftForSale.length; i++) {
             if (nftForSale[i] == tokenId) {
@@ -121,53 +124,51 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
         }
     }
 
+    function sendThroughTunnel(uint256 tokenId) public {
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tunnelContractAddress != address(0x0), "Market: Tunnel contract address not set");
+        require(islisted(tokenId), "Market: Cannot send an unlisted nft");
 
+        FlowTunnel(tunnelContractAddress).setupTunnel(tokenId);             // setup tunnel for use
+        FxERC721(tokenContractAddress).safeTransferFrom(
+                address(this), tunnelContractAddress, tokenId);             // transfer nft to tunnel
+        FlowTunnel(tunnelContractAddress).sendThroughTunnel(tokenId, "");   // empty flowAddress goes to PonsNftMarket in Flow blockchain.
+                                                                            // --> Handle in relay.
+    }
 
     function withdrawListing(uint256 tokenId) public {
-        require (tokenExists(tokenId), "NFT by this token ID does not exist");
-        require (tokenOwner(tokenId) == address(this), "Only NFT held by market contract can be withdrawn");
-        require (listingCertificateCollection[tokenId].listerAddress == msg.sender, "Only original lister account can request widthrawal");
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) == address(this), "Market: Only NFT held by market contract can be withdrawn");
+        require(listingCertificateCollection[tokenId].listerAddress == msg.sender, "Market: Only original lister account can request widthrawal");
         
         FxERC721(tokenContractAddress).safeTransferFrom(address(this), msg.sender, tokenId);
         unlist(tokenId);
     }
     
-    function purchase(uint256 tokenId) external payable returns (bool) {
-        if (listingCertificateCollection[tokenId].listingCount >= 1) {
-            if ( msg.value < nftSalesPrice[tokenId] ) {
-
-                (string memory _artistID, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo_flow(tokenId, nftSalesPrice[tokenId]);
-                delete _artistID;
-
-                
-                // If flow royalty exist, then royalty will be held.
-                if (FxERC721(tokenContractAddress).flowRoyaltyExist(tokenId)){
-                    setRoyalty_flow(tokenId, uint256(msg.value)); // Store royalty into contract
-                }
-                
-                // Deduct royalty value before transfering 
-                listingCertificateCollection[tokenId].listerAddress.transfer((msg.value - _royaltyAmount)); 
-               
-
-                // Initiate transfer of nft from listed seller to new owner.
-                FxERC721(tokenContractAddress).safeTransferFrom(
-                    address(this),
-                    msg.sender,
-                    tokenId
-                );
-
-                emit nftPurchased(
-                    listingCertificateCollection[tokenId].listerAddress,
-                    msg.sender,
-                    tokenId,
-                    msg.value
-                );
-                unlist(tokenId);
-            } else {
-                revert nftOfferTooLow();
-            }
+    function purchase(uint256 tokenId) external payable {
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) == address(this), "Market: Cannot sale NFT unless it is given to PonsNftMarket");
+        require(listingCertificateCollection[tokenId].listingCount >= 1, "Market: NFT not listed");
+        require(msg.value < nftSalesPrice[tokenId], "Market: Value offered is too low");
+        
+        
+        (string memory _artistID, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo_flow(tokenId, nftSalesPrice[tokenId]);
+        delete _artistID;
+       
+        // If flow royalty exist, then royalty will be held.
+        if (FxERC721(tokenContractAddress).flowRoyaltyExist(tokenId)){
+            setRoyalty_flow(tokenId, uint256(msg.value)); // Store royalty into contract
         }
-        revert nftNotFound();
+        
+        // Deduct royalty value before transfering 
+        listingCertificateCollection[tokenId].listerAddress.transfer((msg.value - _royaltyAmount)); 
+        
+        // Initiate transfer of nft from listed seller to new owner.
+        FxERC721(tokenContractAddress).safeTransferFrom(address(this),msg.sender,tokenId);
+
+        emit nftPurchased(listingCertificateCollection[tokenId].listerAddress,msg.sender,tokenId,msg.value);
+        unlist(tokenId);
+        
     }
 
     function getForSaleIds() public view returns (uint256[] memory) {
@@ -183,11 +184,12 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
     }
 
     function setTokenContractAddress(address _tokenContractAddress) public onlyOwner{
-        require(_tokenContractAddress != address(0x0), "Cannot be set to null value");
+        require(_tokenContractAddress != address(0x0), "Market: Cannot be set token to empty address");
         tokenContractAddress = _tokenContractAddress;
     }
-
-    function getTokenContractAddress() public view returns (address) {
-        return tokenContractAddress;
+    
+    function setTunnelContractAddress(address _tunnelContractAddress) public onlyOwner{
+        require(_tunnelContractAddress != address(0x0), "Market: Cannot set tunnel to empty address");
+        tunnelContractAddress = _tunnelContractAddress;
     }
 }

@@ -96,20 +96,11 @@ contract FxERC721ChildTunnel is
         // withdraw tokens
         childTokenContract.burn(tokenId);
 
-<<<<<<< HEAD
-        // name, symbol
-        FxERC721 rootTokenContract = FxERC721(childToken);
-        string memory name = rootTokenContract.name();
-        string memory symbol = rootTokenContract.symbol();
-        bytes memory metaData = abi.encode(name, symbol);
-
-=======
         bytes memory syncData = abi.encode(
             tokenUri,
             royaltyReceiver,
             royaltyNumerator
         );
->>>>>>> Ethereum-polygon-solidity-contracts
         // send message to root regarding token burn
         _sendMessageToRoot(
             abi.encode(rootProxy, childProxy, msg.sender, tokenId, syncData)

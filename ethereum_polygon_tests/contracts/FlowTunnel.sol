@@ -6,7 +6,7 @@ import "./Ownable.sol";
 import "./IERC721Receiver.sol";
 import "./PonsNftMarket.sol";
 
-contract FlowTunnel is Ownable, IERC721Receiver { 
+contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable { 
 
     address private tokenContractAddress;
     address private marketContractAddress;
@@ -37,53 +37,75 @@ contract FlowTunnel is Ownable, IERC721Receiver {
         return FxERC721(tokenContractAddress).ownerOf(tokenId);
     }
 
-    function mintNewNft(address user, uint256 tokenId, bytes memory _data) internal returns (uint256) {
+    /**
+    * Transfer NFT held by this contract to an address.
+    */
+    function transferToken(uint256 tokenId, address to) public onlyOwner {
+        require(tokenOwner(tokenId)!=to, "Tunnel: Transfer NFT to owner");
+        FxERC721(tokenContractAddress).safeTransferFrom(address(this), to, tokenId);
+    }
+
+    function mintNewNft(uint256 tokenId, bytes memory _data) internal returns (uint256) {
         require(!tokenExists(tokenId), "NFT already exists"); // test if nft already exists.
         
-        FxERC721(tokenContractAddress).mint(user, tokenId, _data); // --> mint new nft token
-
-        /* moving with assumption that it is minted to the pons account, will be transferred out. */
-
-        emit newNftMinted(tokenId, user);
+        // New nft minted and owned by tunnel contract
+        FxERC721(tokenContractAddress).mint(address(this), tokenId, _data); 
+        
+        emit newNftMinted(tokenId, address(this));
         return tokenId;
     }
 
-    function sendThroughTunnel(uint256 tokenId, string calldata flowAddress) public {
-        require (tokenExists(tokenId), "Nft by this token does not exist"); 
-        require (tokenOwner(tokenId) == msg.sender, "Nft not held by sender");
 
-        /**
-        * nft will be transfered from user to contract.
-        * nft will be held in FlowTunnel.sol contract.
-        */    
-        FxERC721(tokenContractAddress).transfer(msg.sender, address(this), tokenId);
-        
-        /**
-        * Delist nft from marketplace, nft should not be sold in two places at once.
-        */
+    mapping(uint256 => address) private tunnelUserAddress;
+    
+    function setupTunnel(uint256 tokenId) public {
+        require(tokenExists(tokenId), "Tunnel: NFT by this token ID doesn't exist");
+        require(tokenOwner(tokenId) == msg.sender, "Tunnel: NFT can only be sent by owner");
+        // List who originally owns the NFT.
+        tunnelUserAddress[tokenId] = msg.sender;
+    }
+
+    function sendThroughTunnel(uint256 tokenId, string calldata flowAddress) public {
+        require(tokenExists(tokenId), "Tunnel: NFT by this token ID doesn't exist"); 
+        require (tunnelUserAddress[tokenId] == msg.sender, "Tunnel: NFT can only be sent by original owner.");
+        require (tokenOwner(tokenId) == address(this), "Tunnel: NFT not held by contract. Send nft to contract.");
+
+        // No need to transfers, nft is held by Tunnel contract.
+
+        // Revoke any approvals on NFT.
+        FxERC721(tokenContractAddress).revokeApproval(tokenId);
+        assert(FxERC721(tokenContractAddress).getApproved(tokenId) == address(0x0));
+
+        // Delist nft from marketplace.
         if (PonsNftMarket(marketContractAddress).islisted(tokenId)){
             PonsNftMarket(marketContractAddress).unlist(tokenId);
         }
 
+        delete tunnelUserAddress[tokenId];
+
         emit nftSentThroughTunnel(tokenId, msg.sender, flowAddress);
     }
 
-    function getFromTunnel(uint256 tokenId, address to, bytes calldata data) public onlyOwner {
-        require(to != address(0x0), "Nft being transfered to 0x0 address.");
+    function getFromTunnel(uint256 tokenId, address to, bytes calldata data, uint256 tokenPrice) public onlyOwner {
+        require(to != address(0x0), "Tunnel: NFT being transfered to 0x0 address.");
         if (!tokenExists(tokenId)){
             bytes memory _data = data;
-            tokenId = mintNewNft(address(this), tokenId, _data);
+            tokenId = mintNewNft(tokenId, _data);
         }
 
-        FxERC721(tokenContractAddress).transfer(address(this), to, tokenId);
+        /**
+        * You must list token on market place before transferring it.
+        */
+        if (to == marketContractAddress){
+            PonsNftMarket(marketContractAddress).listForSale(tokenId, tokenPrice); //TODO: Replace dummy price
+        }
+        FxERC721(tokenContractAddress).safeTransferFrom(address(this), to, tokenId);
         assert(tokenOwner(tokenId) == to);
 
         /**
         * To handle inter-blockchain purchases, we list transfered nft on polygon marketplace.
          */
-        if (to == marketContractAddress){
-            PonsNftMarket(marketContractAddress).listForSale(tokenId, 5000); //TODO: Dummy price
-        }
+        
 
         emit nftReceievedFromTunnel(tokenId, msg.sender);
     }

@@ -21,6 +21,8 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
     using AddressUpgradeable for address;
     using StringsUpgradeable for uint256;
 
+
+    
     // Token name
     string private _name;
 
@@ -124,6 +126,12 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
         );
 
         _approve(to, tokenId);
+    }
+
+    function revokeApproval(uint256 tokenId) public {
+        require(ERC721Upgradeable.ownerOf(tokenId) == msg.sender, "ERC721: only NFT owner can revoke approvals");
+        // remove any address from approved.
+        delete _tokenApprovals[tokenId];
     }
 
     /**

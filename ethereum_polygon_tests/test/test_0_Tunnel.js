@@ -2,7 +2,9 @@ const Tunnel = artifacts.require("FlowTunnel");
 const Market = artifacts.require("PonsNftMarket");
 const Token = artifacts.require("FxERC721");
 
+const { assert } = require("console");
 const ethers = require("ethers");
+const { closeSync } = require("fs");
 
 
 
@@ -32,7 +34,9 @@ contract("FlowTunnel", (accounts)=>{
 
         token = await Token.new({from: ponsAccountAddress});
         market = await Market.new(token.address, {from: ponsAccountAddress});
+        
         tunnel = await Tunnel.new(token.address, market.address, {from: ponsAccountAddress});
+        await market.setTunnelContractAddress(tunnel.address);
     });
 
     describe("Test Contract Owner", async function(){
@@ -41,10 +45,11 @@ contract("FlowTunnel", (accounts)=>{
         });
     });
 
-    // Since both tests uses the same token, we place this dummy tokenId as a global variable.
-    const tokenId = 267876449; // Dummy value
+    
 
     describe("Testing Tunnel Functionality", function(){
+        // Since both tests uses the same token, we place this dummy tokenId as a global variable.
+        const tokenId = 787675267876449;
         const abiCoder = ethers.utils.defaultAbiCoder;
 
         describe("Testing token", async function(){
@@ -60,7 +65,7 @@ contract("FlowTunnel", (accounts)=>{
                 /**
                  * The following `getFromTunnel` not only tests the tunnel contract but also triggers the mint function as well.
                  */
-                await tunnel.getFromTunnel(tokenId, userAddress, data, {from: ponsAccountAddress});
+                await tunnel.getFromTunnel(tokenId, userAddress, data, 0, {from: ponsAccountAddress});
             });
             it("Test if token now exists", async function(){
                 expect(
@@ -78,51 +83,42 @@ contract("FlowTunnel", (accounts)=>{
              */
             after("Send into Tunnel - after getting from tunnel", function(){
                 describe("Send into Tunnel", function(){
-                    before("Trigger contract transaction", async function(){
-                        /**
-                         * Send existing nft into polygon (simulate relay node)
-                         */
-                        await tunnel.sendThroughTunnel(tokenId, "0x78564534" /* Dummy flow address */, {from: userAddress});
+                    before(async function(){
+
+                        this.timeout(20000); // trasaction takes too long.
+                        // setup tunnel
+                        await tunnel.setupTunnel(tokenId, {from: userAddress});
+                        await token.safeTransferFrom(userAddress, tunnel.address, tokenId, {from: userAddress});
+                        await tunnel.sendThroughTunnel(tokenId, "0xffff", {from:userAddress});
+
                     });
-                    it("Testing that owner of nft is the tunnel contract", async function(){
-                        /**
-                         * Test that, after sending, nft is being held by Tunnel Contract.
-                         */
-                        expect(
-                            await tunnel.tokenOwner(tokenId, {from: userAddress})
-                        ).to.equal(tunnel.address, {from: ponsAccountAddress});
-                    });
-                    it("Testing that sent nft's are delisted", async function(){
-                        /**
-                         * Test that, after sending, nft has been delisted from polygon marketplace.
-                         */
-                        expect(
-                            await market.islisted(tokenId, {from:userAddress})
-                        ).to.be.false;
-                    });
-                    after("Testing Inter-Blockchain purchases", function(){
-                        describe("Testing Tunnel Direct Market", function(){
-                            before("Receive NFT from tunnel which is due for market", async function(){
-                                /**
-                                 * We pass the market address so that nft is set to be listed for sale instead of being handed to a user.
-                                 */
-                                await tunnel.getFromTunnel(tokenId, market.address, data, {from: ponsAccountAddress});
-                            });
-                            it("Test if token is listed", async function(){
-                                expect(
-                                    await market.islisted(tokenId, {from: ponsAccountAddress})
-                                ).to.be.true;
-                            });
-                            it("Test if token is owned by Pons Market", async function(){
-                                expect(
-                                    await tunnel.tokenOwner(tokenId, {from: ponsAccountAddress})
-                                ).to.equal(market.address);
-                            });
-                            // it("", async function(){});
-                        });
+                    it("Test for NFT after sending", async function(){
+                        expect(await tunnel.tokenOwner(tokenId, {from:userAddress})).to.equal(tunnel.address);
                     });
                 })
             });
         });
+    });
+
+    describe("Test direct market to flow", function(){
+
+        const abiCoder = ethers.utils.defaultAbiCoder;
+        const tokenId = 787675288888449;
+        before(async function(){
+
+            this.timeout(50_000);
+            
+            let data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccountAddress, "alfram45", 89]);
+            await market.mintNewNft(tokenId, 25, data, {from: ponsAccountAddress});
+            let token_exist_flag = await market.tokenExists(tokenId, {from:ponsAccountAddress});
+            assert(await token_exist_flag, "Token should exist");
+            
+            await market.sendThroughTunnel(tokenId, {from:ponsAccountAddress});
+
+        });
+        it("Test that token has entered tunnel", async function(){
+            expect(await tunnel.tokenOwner(tokenId)).to.equal(tunnel.address);
+        })
+        
     });
 });

@@ -114,7 +114,7 @@ contract FxERC721 is
         uint256 tokenId,
         bytes memory _data
     ) public override {
-        require(msg.sender == _fxManager, "Invalid sender");
+        // require(msg.sender == _fxManager, "Invalid sender");
 
         (
             string memory tokenUri,
@@ -146,14 +146,6 @@ contract FxERC721 is
         );
 
         _burn(tokenId);
-    }
-
-    function _transfer(address from, address to, uint256 tokenId) internal override {
-        ERC721._transfer(from, to, tokenId);
-    }
-
-    function transfer(address from, address to, uint256 tokenId) public {
-        _transfer(from, to, tokenId);
     }
 
 }

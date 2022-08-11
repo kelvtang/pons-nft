@@ -56,10 +56,7 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
     ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
-<<<<<<< HEAD
 
-=======
->>>>>>> Ethereum-polygon-solidity-contracts
 
     // before calling, need to prompt user to accept adding us as approved owner from js 
     function deposit(
