@@ -23,7 +23,6 @@ contract FxERC721 is
     PausableUpgradeable,
     OwnableUpgradeable
 {
-    // address internal _fxManager; @red
 
     mapping(address => bool) internal _fxManager;
     address internal _connectedToken;
@@ -76,6 +75,11 @@ contract FxERC721 is
         uint256 tokenId
     ) internal whenNotPaused virtual override(ERC721Upgradeable, ERC721EnumerableUpgradeable) {
         super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    // test is address is fxManager
+    function isFxManager(address fxManager_) public view returns (bool) {
+        return _fxManager[fxManager_];
     }
 
     // // fxManager returns fx manager
