@@ -96,27 +96,28 @@ contract PonsNftMarket is Ownable, IERC721Receiver{
         nftSalesPrice[tokenId] = salesPricex100;
         nftForSale.push(tokenId);
 
-        //TODO: IMPLEMENTED getting from user
+        // TODO: some approval system to allow for contract to move token.
+        // TODO: crate artist
+        if (tokenOwner(tokenId) != address(this)){
+            FxERC721(tokenContractAddress).safeTransferFrom(msg.sender, address(this), tokenId);
+        }
 
         emit nftListed(msg.sender, tokenId, salesPricex100);
         return cert;
     }
 
     function unlist(uint256 tokenId) public onlyOwner {
-        if (nftSalesPrice[tokenId] > 0){
-            uint256 end = nftForSale.length;
-            for (uint256 i = 0; i < nftForSale.length; i++) {
-                if (nftForSale[i] == tokenId) {
-                    nftForSale[i] = 0;
-                    nftSalesPrice[tokenId] = 0;
-                    delete end;
-                    delete listingCertificateCollection[tokenId];
-                    emit nftUnlisted(tokenId);
-                    break;
-                }
+        require(nftSalesPrice[tokenId] > 0, "Only listed NFTs can be delisted.");
+        uint256 end = nftForSale.length;
+        for (uint256 i = 0; i < nftForSale.length; i++) {
+            if (nftForSale[i] == tokenId) {
+                nftForSale[i] = 0;
+                nftSalesPrice[tokenId] = 0;
+                delete end;
+                delete listingCertificateCollection[tokenId];
+                emit nftUnlisted(tokenId);
+                break;
             }
-        }else{
-            revert nftNotFound();
         }
     }
 
