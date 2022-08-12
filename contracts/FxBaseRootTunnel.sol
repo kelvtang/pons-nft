@@ -47,6 +47,7 @@ abstract contract FxBaseRootTunnelUpgradeable is Initializable {
     ICheckpointManager public checkpointManager;
     // child tunnel contract which receives and sends messages
     address public fxChildTunnel;
+    event rootToChild(bytes data);
 
     // storage to avoid duplicate exits
     mapping(bytes32 => bool) public processedExits;
@@ -75,7 +76,8 @@ abstract contract FxBaseRootTunnelUpgradeable is Initializable {
      *   abi.encode(messageType, messageData);
      */
     function _sendMessageToChild(bytes memory message) internal {
-        fxRoot.sendMessageToChild(fxChildTunnel, message);
+        // fxRoot.sendMessageToChild(fxChildTunnel, message);
+        emit rootToChild(message);
     }
 
     function _validateAndExtractMessage(bytes memory inputData) internal returns (bytes memory) {
@@ -171,8 +173,9 @@ abstract contract FxBaseRootTunnelUpgradeable is Initializable {
      *  9 - receiptLogIndex - Log Index to read from the receipt
      */
     function receiveMessage(bytes memory inputData) public virtual {
-        bytes memory message = _validateAndExtractMessage(inputData);
-        _processMessageFromChild(message);
+        // bytes memory message = _validateAndExtractMessage(inputData);
+        // _processMessageFromChild(message);
+        _processMessageFromChild(inputData);
     }
 
     /**

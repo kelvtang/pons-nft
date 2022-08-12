@@ -20,7 +20,6 @@ contract ERC1967ProxyCreate is Proxy, ERC1967UpgradeUpgradeable {
      * function call, and allows initializing the storage of the proxy like a Solidity constructor.
      */
 
-
     function _initialize (
         address _logic,
         bytes memory _data

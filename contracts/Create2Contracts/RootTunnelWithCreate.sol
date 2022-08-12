@@ -109,7 +109,7 @@ contract FxERC721RootTunnelCreate is FxBaseRootTunnelUpgradeable, Create2, IERC7
         bytes32 salt = keccak256(abi.encodePacked(childToken));
         address rootToken = createClone(salt, rootTokenTemplate);
 
-        // TODO: Change function if this going to be used to not use hardcoded values
+        // TODO: Remove hardcoded values and actually replace them
         TransparentUpgradeableProxyCreate(payable(rootToken)).initialize(0xEC09dAc224D8b23587af223f2447dCc4478D504C, 0xc5AF66f2ec8E039eEE3e1a679e75656905B51550, "0x");
 
         FxERC721(rootToken).initialize(address(this), childToken, name, symbol);
