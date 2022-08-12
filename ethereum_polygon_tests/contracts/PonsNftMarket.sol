@@ -154,7 +154,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tokenOwner(tokenId) == address(this), "Market: Cannot sell NFT unless it is given to PonsNftMarket");
         require(listingCertificateCollection[tokenId].listingCount >= 1, "Market: NFT not listed");
-        require(msg.value < nftSalesPrice[tokenId], "Market: Value offered is too low");
+        require(msg.value >= nftSalesPrice[tokenId], "Market: Value offered is too low");
         
         
         (string memory _artistID, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo_flow(tokenId, nftSalesPrice[tokenId]);

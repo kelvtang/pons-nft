@@ -597,7 +597,7 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
 }
 
 
-// deploy_contracts_()
+deploy_contracts_()
 // mint_on_polygon_(5)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
 // burning_on_polygon_and_transfer_to_ethereum_(7)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
 // ethereum_to_polygon_transfer_(ACCOUNT_ADDRESSES[1])(7)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)

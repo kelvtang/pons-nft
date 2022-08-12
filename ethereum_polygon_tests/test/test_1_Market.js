@@ -84,5 +84,47 @@ contract("PonsNftMarket", function(accounts){
         });
     });
 
+    describe("Purchase NFT", function(){
+        let tokenId = 8978988745878; // Dummy ID
+        before(async function(){
+            this.timeout(5_000);
+            let data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccountAddress, "alfram45", 89]);
+            // Mint new NFT and list for 5 ETH.
+            await market.mintNewNft(tokenId, 5, data, {from:ponsAccountAddress});
+        })
+        it("Test for Purchase", async function(){
+            this.timeout(3_000);
+            // User 1 purchases it.
+            await market.purchase(tokenId, {from: userAddress_1, value: ethers.utils.parseEther("5")});
+            expect(await market.tokenOwner(tokenId)).to.equal(userAddress_1);
+            expect(await market.islisted(tokenId)).to.be.false;
+        });
+        after(function(){
+            tokenId = 8978666655878; // Dummy ID
+            describe("Test Listing and Purchase", async function(){
+                before(async function(){
+                    let data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccountAddress, "alfram45", 89]);
+                    // Owner mints nft as gift for a user.
+                    await market.mintGiftNft(tokenId, userAddress_2, data, {from: ponsAccountAddress});
+                });
+                it("Test for listing and Purchase", async function(){
+                    this.timeout(5_000);
+                    expect(await market.tokenOwner(tokenId, {from: userAddress_2})).to.equal(userAddress_2);
+                
+                    await market.listForSale(tokenId, 30, {from: userAddress_2});
+                    await token.safeTransferFrom(userAddress_2, market.address, tokenId, {from: userAddress_2});
+                    expect(await market.islisted(tokenId, {from:userAddress_1})).to.be.true;
+                    
+                    await market.purchase(tokenId, {from: userAddress_1, value: ethers.utils.parseEther(
+                        /* Buys at asking price */
+                        (await market.getPrice(tokenId, {from:userAddress_1})).toString()
+                    )})
+                    expect(await market.tokenOwner(tokenId, {from:userAddress_2})).to.equal(userAddress_1);
+                    expect(await market.islisted(tokenId, {from:userAddress_2})).to.be.false;
+                })
+            })
+        });
+    });
+
 });
 
