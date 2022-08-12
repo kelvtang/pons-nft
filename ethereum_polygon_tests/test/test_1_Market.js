@@ -74,7 +74,7 @@ contract("PonsNftMarket", function(accounts){
                 expect(await market.tokenOwner(tokenId, {from: userAddress_2})).to.equal(market.address);
             });
             it("Testing withdrawal and unlisting", async function(){
-                this.timeout(50_000);
+                this.timeout(5000);
                 await market.withdrawListing(tokenId, {from: userAddress_1});
                 // nft returned to original owner
                 expect(await market.tokenOwner(tokenId, {from: userAddress_2})).to.equal(userAddress_1);
@@ -92,7 +92,7 @@ contract("PonsNftMarket", function(accounts){
             await market.mintNewNft(tokenId, 5, data, {from:ponsAccountAddress});
         })
         it("Test for Purchase", async function(){
-            this.timeout(50_000);
+            this.timeout(5000);
             // User 1 purchases it.
             await market.purchase(tokenId, {from: userAddress_1, value: ethers.utils.parseEther("5")});
             expect(await market.tokenOwner(tokenId)).to.equal(userAddress_1);
@@ -102,12 +102,13 @@ contract("PonsNftMarket", function(accounts){
             tokenId = 8978666655878; // Dummy ID
             describe("Test Listing and Purchase", async function(){
                 before(async function(){
+                    this.timeout(50000);
                     let data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccountAddress, "alfram45", 89]);
                     // Owner mints nft as gift for a user.
                     await market.mintGiftNft(tokenId, userAddress_2, data, {from: ponsAccountAddress});
                 });
                 it("Test for listing and Purchase", async function(){
-                    this.timeout(60000);
+                    this.timeout(50000);
                     expect(await market.tokenOwner(tokenId, {from: userAddress_2})).to.equal(userAddress_2);
                 
                     await market.listForSale(tokenId, 2, {from: userAddress_2});
