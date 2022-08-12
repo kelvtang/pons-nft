@@ -3,7 +3,7 @@ secret
 node_modules/
 ad-hoc.mjs
 deployment-contracts
-nkeys.json
+#nkeys.json
 
 solc_binaries/
 ethereum_polygon_tests/.secret

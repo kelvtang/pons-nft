@@ -4,6 +4,7 @@ import FlowToken from 0xFLOWTOKEN
 import FUSD from 0xFUSD
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
+import PonsNftMarketContract from 0xPONS
 import PonsUtils from 0xPONS
 import PonsEscrowTunnelContract from 0xPONS
 
@@ -30,19 +31,23 @@ pub contract PonsTunnelContract{
 		pub let metadata: {String:String} 
 		pub let artistAddressFlow: Address
 		pub var artistAddressPolygon: String?
+		pub var flowToken: PonsUtils.FlowUnits?
+		pub var fusdToken: PonsUtils.FusdUnits?
 		pub let royalty: UFix64
 
 		pub fun setArtistAddressPolygon (artistAddressPolygon: String){
 			self .artistAddressPolygon = artistAddressPolygon;
 		}
 
-		init (nftId:String, nftSerialId:UInt64, metadata: {String:String}, artistAddressFlow:Address, royalty:UFix64){
+		init (nftId:String, nftSerialId:UInt64, metadata: {String:String}, artistAddressFlow:Address, royalty:UFix64, flowToken: PonsUtils.FlowUnits?, fusdToken: PonsUtils.FusdUnits?){
 			self .nftId = nftId
 			self .nftSerialId = nftSerialId
 			self .metadata = metadata
 			self .artistAddressFlow = artistAddressFlow
 			self .artistAddressPolygon = nil
-			self .royalty = royalty}}
+			self .royalty = royalty
+			self .flowToken = flowToken
+			self .fusdToken = fusdToken}}
 
 	pub struct sentTunnelData{
 		pub let nft: nftDetails
@@ -62,11 +67,16 @@ pub contract PonsTunnelContract{
 	}
 
 	access(self) fun generateNftEmitData(nftRef: &PonsNftContractInterface.NFT):PonsTunnelContract.nftDetails{
-
 		let artistAddressFlow:Address = PonsNftContract .getArtistAddress (PonsNftContract .borrowArtistById (ponsArtistId: PonsNftContract .implementation .getArtistIdFromId(nftRef .nftId)))!;
-		
 		let royalty:UFix64 = PonsNftContract .getRoyalty(nftRef) .amount;
-		let nftEmitData: PonsTunnelContract.nftDetails = PonsTunnelContract .nftDetails(nftId:nftRef .nftId, nftSerialId:nftRef .id, metdata: PonsNftContract .getMetadata(nftRef), artistAddressFlow:artistAddressFlow, royalty:royalty)
+
+		/* 
+		Add flowToken, fusdToken if listed on Marketplace.
+		 */
+		let flowToken = PonsNftMarketContract .ponsMarket .getPriceFlow(nftId: nftRef .nftId);
+		let fusdToken = PonsNftMarketContract .ponsMarket .getPriceFusd(nftId: nftRef .nftId);
+
+		let nftEmitData: PonsTunnelContract.nftDetails = PonsTunnelContract .nftDetails(nftId:nftRef .nftId, nftSerialId:nftRef .id, metdata: PonsNftContract .getMetadata(nftRef), artistAddressFlow:artistAddressFlow, royalty:royalty, flowToken:flowToken, fusdToken:fusdToken)
 		return nftEmitData;}
 
 	access(self) fun generateSentTunnelEmitData(nftRef: &PonsNftContractInterface.NFT, artistAddressPolygon: String?, polygonRecipientAddress: String):PonsTunnelContract.sentTunnelData{

@@ -77,7 +77,7 @@ contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable {
         assert(FxERC721(tokenContractAddress).getApproved(tokenId) == address(0x0));
 
         // Delist nft from marketplace.
-        if (PonsNftMarket(marketContractAddress).islisted(tokenId)){
+        if (PonsNftMarket(marketContractAddress).isListed(tokenId)){
             PonsNftMarket(marketContractAddress).unlist(tokenId);
         }
 

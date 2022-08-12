@@ -115,7 +115,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
     function unlist(uint256 tokenId) public {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tokenOwner(tokenId) != address(this), "Market: withdraw token before unlisting.");
-        require(islisted(tokenId), "Market: Only listed NFTs can be delisted.");
+        require(isListed(tokenId), "Market: Only listed NFTs can be delisted.");
         uint256 end = nftForSale.length;
         for (uint256 i = 0; i < nftForSale.length; i++) {
             if (nftForSale[i] == tokenId) {
@@ -132,7 +132,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
     function sendThroughTunnel(uint256 tokenId) public {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tunnelContractAddress != address(0x0), "Market: Tunnel contract address not set");
-        require(islisted(tokenId), "Market: Cannot send an unlisted nft");
+        require(isListed(tokenId), "Market: Cannot send an unlisted nft");
 
         FlowTunnel(tunnelContractAddress).setupTunnel(tokenId);             // setup tunnel for use
         FxERC721(tokenContractAddress).safeTransferFrom(
@@ -142,8 +142,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
     }
 
     function withdrawListing(uint256 tokenId) public {
-        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
-        require(tokenOwner(tokenId) == address(this), "Market: Only NFT held by market contract can be withdrawn");
+        require(isForSale(tokenId), "Market: NFT is not for sale");
         require(listingCertificateCollection[tokenId].listerAddress == msg.sender, "Market: Only original lister account can request widthrawal");
         
         FxERC721(tokenContractAddress).safeTransferFrom(address(this), msg.sender, tokenId);
@@ -181,10 +180,18 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
     }
 
     function getPrice(uint256 tokenId) public view returns (uint256) {
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) == address(this), "Market: Nft not transfered to Market");
         return nftSalesPrice[tokenId];
     }
 
-    function islisted(uint256 tokenId) public view returns (bool){
+    function isForSale(uint256 tokenId) public view returns (bool){
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) == address(this), "Market: Nft not transfered to Market");
+        return isListed(tokenId);
+    }
+    function isListed(uint256 tokenId) public view returns (bool){
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         return (listingCertificateCollection[tokenId].listerAddress != address(0x0));
     }
 
