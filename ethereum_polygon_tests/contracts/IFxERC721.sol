@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./IERC721.sol";
 
 interface IFxERC721Upgradeable is IERC721Upgradeable {
-    // function fxManager() external returns (address);
+    function fxManager() external returns (address);
 
     function connectedToken() external returns (address);
 

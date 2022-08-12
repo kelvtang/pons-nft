@@ -25,12 +25,16 @@ contract FxERC721 is
 {
 
     mapping(address => bool) internal _fxManager;
+    address internal fxManager_initialized; // Holds fx manager set by `initialize` function.
     address internal _connectedToken;
 
     constructor() {
         _disableInitializers();
     }
 
+    /**
+    * we can set multiple contracts to be fxManager.
+    */
     function addFxManager(address fxManager_) public onlyOwner{
         _fxManager[fxManager_] = true;
     }
@@ -42,6 +46,8 @@ contract FxERC721 is
         string memory symbol_
     ) initializer public override {
         addFxManager(fxManager_);
+        fxManager_initialized = fxManager_;
+
         _connectedToken = connectedToken_;
         __Context_init();
         __Ownable_init();
@@ -82,10 +88,10 @@ contract FxERC721 is
         return _fxManager[fxManager_];
     }
 
-    // // fxManager returns fx manager
-    // function fxManager() public view override returns (address) {
-    //     return _fxManager;
-    // }
+    // fxManager returns fx manager
+    function fxManager() public view override returns (address) {
+        return fxManager_initialized; // Returs the fxManager set during initialization.
+    }
 
     // connectedToken returns root token
     function connectedToken() public view override returns (address) {
@@ -124,7 +130,7 @@ contract FxERC721 is
         uint256 tokenId,
         bytes memory _data
     ) public override {
-        require(_fxManager[msg.sender], "Invalid sender");
+        // require(_fxManager[msg.sender], "Invalid sender");
 
         (
             string memory tokenUri,

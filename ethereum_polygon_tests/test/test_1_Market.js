@@ -17,6 +17,8 @@ contract("PonsNftMarket", function(accounts){
     before(async function(){
         token = await Token.new({from: ponsAccountAddress});
         market = await Market.new(token.address, {from: ponsAccountAddress});
+        
+        // await token.addFxManager(market.address, {from: ponsAccountAddress});
     });
 
     describe("Test Contract Owner", function(){

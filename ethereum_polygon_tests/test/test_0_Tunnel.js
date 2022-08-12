@@ -37,6 +37,9 @@ contract("FlowTunnel", (accounts)=>{
         
         tunnel = await Tunnel.new(token.address, market.address, {from: ponsAccountAddress});
         await market.setTunnelContractAddress(tunnel.address);
+
+        // await token.addFxManager(market.address, {from: ponsAccountAddress});
+        // await token.addFxManager(tunnel.address, {from: ponsAccountAddress});
     });
 
     describe("Test Contract Owner", async function(){
