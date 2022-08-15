@@ -1,8 +1,9 @@
 import express from 'express';
 import { ethers } from 'ethers';
 import * as fs from 'fs';
-import { send_transaction_, authorizer_ } from './utils/flow-api.mjs';
-import { CHILD_TUNNEL_CONTRACT_ADDRESS, CHILD_TOKEN_ADDRESS, PRIVATE_KEYS } from './config.mjs';
+import { send_transaction_ } from './utils/flow-api.mjs';
+import { known_account_ } from './utils/flow.mjs';
+import { CHILD_TUNNEL_PROXY_ADDRESS, FLOW_MARKETPLACE_ADDRESS, POLYGON_MARKETPLACE_ADDRESS, PRIVATE_KEYS } from './config.mjs';
 import { BASE_TOKEN_URI, EVENT_NAME } from './config.mjs';
 import { flow_sdk_api } from './config.mjs';
 import fcl_api from '@onflow/fcl';
@@ -12,12 +13,12 @@ import { encodeToBytes, createSigner, createContractInstance } from "./ethereum-
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
-// TODO: Change file path
-const templateContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/FxERC721.json', 'utf8'));
+// TODO: Change file path based on actual file path
 const childTunnelContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/FxERC721ChildTunnel.json', 'utf8'));
-
+const fxManagerContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/FxERC721FxManager.json', 'utf8'));
 
 // TODO: Change Provider
 const polygonProvider = await createRPCProviders("");
@@ -37,19 +38,18 @@ app.get("/metadata/:nftSerialId", (req, res) => {
 
 
 // Reverts a transacttion if the user rejects a purchase on polygon
-app.get("/revert/:serialId", (req, res) => {
-    const tokenId = req.params.serialId
-    await marketplaceInstance.unlist(tokenId)
-    
-    // TODO: Edit hardcoded values
-    const FxERC721ManagerContract = new ethers.Contract(FXManagerAddress, ManagerABI, signer)
-    FxERC721ManagerContract.sendThroughTunnel(tokenId, USERFLOWADDRESS) // TODO: Edit hardcoded values
-        .then(_ => {
-            // TODO: Edit hardcoded values
-            await send_transaction_ 
-                (authorizer_(address)(key_id)(private_key)) // TODO: Edit hardcoded values
-                (authorizer_(address)(key_id)(private_key)) // TODO: Edit hardcoded values
-                ([authorizer_(address)(key_id)(private_key), authorizer_(address)(key_id)(private_key), USER_SIGNING]) // TODO: Edit hardcoded values
+app.post("/revert", async (req, res) => {
+    const tokenId = req.body["tokenId"]
+    const marketPlaceInstance = req.body["marketPlaceInstance"]
+    await marketPlaceInstance.unlist(tokenId)
+
+    const FxERC721ManagerContract = new ethers.Contract(FX_MANAGER_PROXY_ADDRESS, fxManagerContractInformation.abi, signer)
+    FxERC721ManagerContract.sendThroughTunnel(tokenId, FLOW_MARKETPLACE_ADDRESS)
+        .then(async _ => {
+            await send_transaction_
+                (known_account_('0xPROPOSER'))
+                (known_account_('0xPROPOSER'))
+                ([known_account_('0xPROPOSER')])
                 (` import PonsTunnelContract from 0xPONS
           transaction(
                 flowRecepientAddress: Address,
@@ -63,12 +63,32 @@ app.get("/revert/:serialId", (req, res) => {
                   }
                 }
             }`)
-                ([flow_sdk_api.arg(USERFLOWADDRESS, flow_types.Address), // TODO: Edit hardcoded values
+                ([flow_sdk_api.arg(FLOW_MARKETPLACE_ADDRESS, flow_types.Address),
                 flow_sdk_api.arg(tokenId, flow_types.UInt64)])
             res.send({ message: 'Transaction reverted' });
         })
 })
 
+
+app.post("/flowPurchase", (req, res) => {
+    send_transaction_
+        (known_account_('0xPROPOSER'))
+        (known_account_('0xPROPOSER'))
+        ([known_account_('0xPROPOSER')])
+        (`import PonsTunnelContract from 0xPONS
+      transaction(polygonRecepientAddress: String, nftSerialId: UInt64) {
+      prepare (ponsAccount : AuthAccount){
+         PonsTunnelContract .sendNftThroughTunnelUsingSerialId(nftSerialId: nftSerialId, ponsAccount : ponsAccount, ponsHolderAccount : ponsAccount, tunnelUserAccount : ponsAccount, polygonAddress: polygonRecepientAddress);
+      }`)
+        ([flow_sdk_api.arg(POLYGON_MARKETPLACE_ADDRESS, flow_types.String),
+        flow_sdk_api.arg(tokenId, flow_types.UInt64)])
+        .then(_ => {
+            res.status(200).send({ message: 'purchased on flow' });
+        })
+        .catch(_ => {
+            res.status(400).send({ error: 'Something went wrong while purchasing on flow' });
+        })
+})
 
 app.listen(3000, () => console.log(`app running on 3000`))
 
@@ -114,7 +134,6 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
     // TODO: Change based on actual directory/folder name
     const path = `./token-metadata/${nftSerialId}`
 
-    // TODO: Need to process token URI first
     if (!fs.existsSync(path)) {
         NftMetadata = {
             ...NftMetadata,
@@ -126,20 +145,32 @@ fcl_api.events(EVENT_NAME).subscribe(async (event) => {
     }
 
 
-    // TODO: Decide how to deal with user not having a polygon artist address
-    if (!artistAddressPolygon) {
-        artistAddressPolygon = ethers.constants.AddressZero
-    }
+    const flowInfoResp = await fetch(`https://api.coingecko.com/api/v3/coins/flow?
+    localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`)
 
+    const flowMarketInfo = await flowInfoResp.json()
+
+    // TODO: Get flowPrice from flow
+    const HkdFlowPrice = flowPrice * flowMarketInfo.market_data.current_price.hkd
+
+    const polygonInfoResp = await fetch(`https://api.coingecko.com/api/v3/coins/matic-network?
+    localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`)
+
+    const polygonMarketInfo = await polygonInfoResp.json()
+    const polygonPrice = Number((HkdFlowPrice / polygonMarketInfo.market_data.current_price.hkd).toFixed(3))
+
+
+    // TODO: Edit based on what we get from polygon
     const depositData = await encodeToBytes(["string", "address", "uint96"])([`${BASE_TOKEN_URI}${nftSerialId}`, artistAddressPolygon, royalty])
     const data = await encodeToBytes(["address", "uint64", "bytes"])([polygonRecipientAddress, nftSerialId, depositData])
-    const childSigner = await createSigner(PRIVATE_KEYS[1])(polygonProvider);
-    polygonChildTunnelContractInstance.connect(childSigner)
-    polygonChildTunnelContractInstance.processMessageFromFLow(data)
+
+
+    //TODO: Add polygon stuff to receive the nft
 })
 
-
-polygonChildTunnelContractInstance.on('FlowDeposit', (data) => {
+// TODO : Change event to actual polygon event name
+polygonChildTunnelContractInstance.on('FlowDeposit', async (data) => {
+    // TODO: EDIT based on the actual polygon tunnel event
     let [flowReceiver, tokenId] = abiCoder.decode(['address', 'uint256'], data)
 
     tokenId = tokenId.toString() // change from bigNumber to string 
@@ -147,11 +178,10 @@ polygonChildTunnelContractInstance.on('FlowDeposit', (data) => {
 
     // TODO: change based on the flow implemntation
     var _transaction_response = await
-    send_transaction_
-        (authorizer_(address)(key_id)(private_key))
-        (authorizer_(address)(key_id)(private_key))
-        ([authorizer_(address)(key_id)(private_key)])
-        ('transaction () {prepare (artistAccount : AuthAccount, ponsAccount : AuthAccount) {} }')
-        ([flowReceiver, tokenId])
+        send_transaction_
+            (known_account_('0xPROPOSER'))
+            (known_account_('0xPROPOSER'))
+            ([known_account_('0xPROPOSER')])
+            ('transaction () {prepare (artistAccount : AuthAccount, ponsAccount : AuthAccount) {} }')
+            ([flowReceiver, tokenId])
 })
-
