@@ -110,12 +110,53 @@ const createTest = async function(){
         _test.test("Testing Tunnel", async _test => {
             let dummyTokenId = 8978333398;
             const abiCoder = ethers.utils.defaultAbiCoder;
-            _test.test("Get unknown NFT from tunnel", async _test => {});
-            _test.test("Send NFT through tunnel", async _test => {});
-            _test.test("Get known NFT from tunnel", async _test => {});
+            _test.test("Get unknown NFT from tunnel", async _test => {
+                _test.notOk(await tunnelInstance.tokenExists(dummyTokenId), "NFT should not previously exist in Polygon network");
+                let data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccount.address, "alfram45", 89]);
+                await tunnelInstance.getFromTunnel(dummyTokenId, user1_signer.address, data, 0);
+                _test.ok(await tunnelInstance.tokenExists(dummyTokenId), "NFT should now exist in Polygon network");
+                _test.equal(await tunnelInstance.tokenOwner(dummyTokenId), user1_signer.address, "NFT was sent through tunnel to User1");
+            });
 
-            _test.test("Get Market NFT from tunnel", async _test => {});
-            _test.test("Send Market NFT through tunnel", async _test => {})
+            _test.test("Send NFT through tunnel", async _test => {
+                // User1 sends nft through tunnel
+                await tunnel_user1.setupTunnel(dummyTokenId);
+                await token_user1["safeTransferFrom(address,address,uint256)"](user1_signer.address, tunnelInstance.address, dummyTokenId);
+                await tunnel_user1.sendThroughTunnel(dummyTokenId, "0x542c041498a42359");
+                
+                _test.equal(await tunnelInstance.tokenOwner(dummyTokenId), tunnelInstance.address, "NFT now held by contract");
+            });
+            _test.test("Get known NFT from tunnel", async _test => {
+                // NFT exchanged hands in flow, user2 sends nft to polygon.
+                await tunnelInstance.getFromTunnel(dummyTokenId, user2_signer.address, abiCoder.encode([],[]), 0);
+                _test.equal(await tunnelInstance.tokenOwner(dummyTokenId), user2_signer.address, "NFT released from hold. Given to User2");
+            });
+
+            _test.test("Send Market NFT through tunnel", async _test => {
+                let dummyTokenId = 89788880003398;
+                let data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccount.address, "alfram45", 89]);
+                // Create NFT listed in market
+                await marketInstance.mintNewNft(dummyTokenId, 3, data);
+                _test.equal(await marketInstance.tokenOwner(dummyTokenId), marketInstance.address, "NFT should be owned by market");
+                _test.ok(await market_user1.isListed(dummyTokenId), "NFT should be listed for sale");
+                _test.ok((await market_user1.getPrice(dummyTokenId)).eq(ethers.BigNumber.from(3)), "NFT price same as set");
+    
+                await market_user1.sendThroughTunnel(dummyTokenId);
+                _test.equal(await tunnel_user1.tokenOwner(dummyTokenId), tunnelInstance.address, "NFT owned by tunnel contract");
+                _test.notOk(await market_user1.isListed(dummyTokenId), "NFT no longer listed for sale.");
+            })
+            _test.test("Get Market NFT from tunnel", async _test => {
+                let dummyTokenId = 89788887703398;
+                let data = abiCoder.encode(["string", "address", "string", "uint96"], ["https://ipadd", ponsAccount.address, "alfram45", 89]);
+                
+                // From tunnel directly to Marketplace
+                await tunnelInstance.getFromTunnel(dummyTokenId, marketInstance.address /* Market address creates listing signal */, data, 5);
+                _test.ok(await tunnelInstance.tokenExists(dummyTokenId), "NFT token should exist");
+                _test.equal(await tunnelInstance.tokenOwner(dummyTokenId), marketInstance.address, "NFT should be owned by market contract");
+                _test.ok(await market_user1.isListed(dummyTokenId), "NFT should be listed");
+                _test.ok(await market_user1.isForSale(dummyTokenId), "NFT should be up for sale");
+                _test.ok((await market_user1.getPrice(dummyTokenId)).eq(ethers.BigNumber.from("5")), "NFT price should be same as set");
+            });
         });
     })
 };
