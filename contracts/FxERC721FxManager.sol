@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "./OwnableUpgradeable.sol";
 import "./FxERC721.sol";
 import "./IERC721Receiver.sol";
+import "./Initializable.sol";
 
-contract FxERC721FxManager is OwnableUpgradeable, IERC721ReceiverUpgradeable {
+contract FxERC721FxManager is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable {
 
     mapping(address => bool) private _approvedProxyTunnels;
     
