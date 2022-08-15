@@ -2,55 +2,40 @@
 pragma solidity ^0.8.0;
 
 import "./FxBaseChildTunnel.sol";
-import "./FxERC721.sol";
 import "./IERC721Receiver.sol";
-import "./OwnableUpgradeable.sol";
 import "./Initializable.sol";
 import "./TransparentUpgradeableProxy.sol";
+import "./FxERC721FxManager.sol";
 
 contract FxERC721ChildTunnel is
     Initializable,
-    OwnableUpgradeable,
     FxBaseChildTunnelUpgradeable,
     IERC721ReceiverUpgradeable
 {
     // maybe DEPOSIT can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     
-    // child proxy address
-    address public childProxy;
-    // root proxy address
-    address public rootProxy;
+    address public childFxManagerProxy;
 
-
-    event FlowDeposit(bytes data);
 
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(
-        address _fxChild
-    ) initializer public {
-        __Context_init();
-        __Ownable_init();
-        __FxBaseChildTunnel_init(_fxChild);
-    }
+    function initialize(address _fxChild, address _childFxManagerProxy) public initializer {
 
-    function setProxyAddresses(
-        address _childProxy,
-        address _rootProxy
-    ) public onlyOwner {
         require(
-            _isContract(_childProxy),
-            "Child proxy address is not contract"
+            _isContract(_childFxManagerProxy),
+            "Proxy address is not contract"
         );
-        
-        require(childProxy == address(0x0), "FxERC721ChildTunnel: Child Proxy address already set");
-        require(rootProxy == address(0x0), "FxERC721ChildTunnel: Root Proxy address already set");
 
-        childProxy = _childProxy;
-        rootProxy = _rootProxy;
+        require(
+            childFxManagerProxy == address(0x0),
+            "FxERC721ChildTunnel: Child fx manager proxy address already set"
+        );
+
+        childFxManagerProxy = _childFxManagerProxy;
+        __FxBaseChildTunnel_init(_fxChild);
     }
 
     function onERC721Received(
@@ -89,66 +74,17 @@ contract FxERC721ChildTunnel is
         address royaltyReceiver,
         uint96 royaltyNumerator
     ) public {
-        FxERC721 childTokenContract = FxERC721(childProxy);
-        require(
-            msg.sender == childTokenContract.ownerOf(tokenId),
-            "Caller not owner of token"
-        );
+        FxERC721FxManager childFxManagerProxyContract = FxERC721FxManager(childFxManagerProxy);
+
         // withdraw tokens
-        childTokenContract.burn(tokenId);
+        childFxManagerProxyContract.burnToken(msg.sender, tokenId);
+
 
         bytes memory syncData = abi.encode(tokenUri, royaltyReceiver, royaltyNumerator);
         // send message to root regarding token burn
         _sendMessageToRoot(
-            abi.encode(
-                rootProxy,
-                childProxy,
-                msg.sender,
-                tokenId,
-                syncData
-            )
+            abi.encode(msg.sender, tokenId, syncData)
         );
-    }
-
-    function processMessageFromFLow(bytes memory data) public onlyOwner {
-        (
-            address to,
-            uint64 flowTokenId,
-            bytes memory depositData // royalty receiver should be sent from the relay and not the user
-        ) = abi.decode(data, (address, uint64, bytes));
-
-        uint256 tokenId = uint256(flowTokenId);
-        // deposit tokens
-        FxERC721 childTokenContract = FxERC721(childProxy);
-
-        address _rootProxy = childTokenContract.connectedToken();
-
-        // validate root and child token mapping
-        require(
-            childProxy != address(0x0) &&
-                _rootProxy != address(0x0),
-            "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
-        );
-
-        // childTokenContract.setApproval(true, tokenId);
-        childTokenContract.mint(to, tokenId, depositData);
-    }
-
-    function withdrawToFlow(
-        address to,
-        uint256 tokenId
-    ) public {
-        FxERC721 childTokenContract = FxERC721(childProxy);
-        require(
-            msg.sender == childTokenContract.ownerOf(tokenId),
-            "Caller not owner of token"
-        );
-        // childTokenContract.setApproval(true, tokenId);
-        childTokenContract.burn(tokenId);
-
-        bytes memory message = abi.encode(to, tokenId);
-
-        emit FlowDeposit(message);
     }
 
     //
@@ -175,24 +111,15 @@ contract FxERC721ChildTunnel is
 
     function _syncDeposit(bytes memory syncData) internal {
         (
-            address _rootProxy,
-            address _childProxy,
             address to,
             uint256 tokenId,
             bytes memory depositData
-        ) = abi.decode(syncData, (address, address, address, uint256, bytes));
-        
-        // validate root and child token mapping
-        require(
-            childProxy == _childProxy &&
-                rootProxy == _rootProxy,
-            "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
-        );
+        ) = abi.decode(syncData, (address, uint256, bytes));
 
-        // deposit tokens
-        FxERC721 childTokenContract = FxERC721(childProxy);
-        // childTokenContract.setApproval(true, tokenId);
-        childTokenContract.mint(to, tokenId, depositData);
+        FxERC721FxManager childFxManagerProxyContract = FxERC721FxManager(childFxManagerProxy);
+
+        //mint token
+        childFxManagerProxyContract.mintToken(to, tokenId, depositData);
     }
 
     // check if address is contract
@@ -203,4 +130,11 @@ contract FxERC721ChildTunnel is
         }
         return (size > 0);
     }
+
+    /**
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
+    uint256[48] private __gap;
 }
