@@ -1,5 +1,5 @@
 /**
- * @Run 
+ * @README
  * You can run this by creating a ganache node using @command ganache-cli -p 7545 -m radar blur cabbage chef fix engine embark joy scheme fiction master release
  * Then create the executables by using @command truffle compile
  * Then, in a separate terminal, run @command node tests_2.mjs
@@ -100,13 +100,8 @@ const createTest = async function(){
                     _test.equal(await marketInstance.tokenOwner(dummyTokenId), user2_signer.address, "NFT should be returned to User2 (Original Lister)");
                     _test.notOk(await marketInstance.isListed(dummyTokenId), "NFT should be delisted.");
                 })
-            })
-            
-
-
-           
+            }) 
         });
-        
         _test.test("Testing Tunnel", async _test => {
             let dummyTokenId = 8978333398;
             const abiCoder = ethers.utils.defaultAbiCoder;
