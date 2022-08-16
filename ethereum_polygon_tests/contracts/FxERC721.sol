@@ -8,6 +8,7 @@ import "./ERC721Enumerable.sol";
 import "./Initializable.sol";
 import "./Pausable.sol";
 import "./OwnableUpgradeable.sol";
+import "./ERC721ArtistID.sol";
 
 
 /**
@@ -20,6 +21,7 @@ contract FxERC721 is
     ERC721EnumerableUpgradeable,
     ERC721URIStorageUpgradeable,
     ERC721RoyaltyUpgradeable,
+    ERC721ArtistID,
     PausableUpgradeable,
     OwnableUpgradeable
 {
@@ -118,9 +120,17 @@ contract FxERC721 is
 
         (
             string memory tokenUri,
+            address polygonArtistAddress,
+            string memory flowArtistId,
             address royaltyReceiver,
             uint96 royaltyNumerator
-        ) = abi.decode(_data, (string, address, uint96));
+        ) = abi.decode(_data, (string, address, string, address, uint96));
+        setFlowArtistID(tokenId, flowArtistId);
+
+        if (polygonArtistAddress != address(0x0)){
+            setPolygonArtistID(tokenId, polygonArtistAddress);
+        }
+        
         _safeMint(user, tokenId);
         _setTokenURI(tokenId, tokenUri);
         _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
