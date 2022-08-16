@@ -5,8 +5,8 @@ import cors from 'cors';
 import { send_transaction_ } from './utils/flow-api.mjs';
 import flow_types from '@onflow/types'
 import { known_account_ } from './utils/flow.mjs';
-import { FLOW_MARKETPLACE_ADDRESS, POLYGON_MARKETPLACE_ADDRESS, PONS_NFT_TUNNEL_ADDRESS, PRIVATE_KEYS } from './config.mjs';
-import { BASE_TOKEN_URI, FLOW_EVENT_NAME, FLOW_EVENT_NAME_NOT_LISTED, POLYGON_EVENT_NAME } from './config.mjs';
+import { FLOW_MARKETPLACE_ADDRESS, POLYGON_MARKETPLACE_ADDRESS, PONS_NFT_TUNNEL_ADDRESS, METAMASK_ACCOUNT_PRIVATE_KEY } from './config.mjs';
+import { BASE_TOKEN_URI, FLOW_EVENT_NAME, FLOW_EVENT_NAME_NOT_LISTED, POLYGON_EVENT_NAME, POLYGON_PROVIDER_URL } from './config.mjs';
 import { flow_sdk_api } from './config.mjs';
 import fcl_api from '@onflow/fcl';
 import { fileTypeFromBuffer } from 'file-type';
@@ -22,11 +22,12 @@ app.use(express.urlencoded({ extended: true }));
 // TODO: Change file path based on actual file path
 const childTunnelContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/FxERC721ChildTunnel.json', 'utf8'));
 const ponsNftTunnelContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/PonsNftTunnel.json', 'utf8'))
+const marketPlaceContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/PonsNftMarket.json', 'utf8'))
 
-// TODO: Change Provider
-const polygonProvider = await createRPCProviders("");
-const signer = await createSigner(PRIVATE_KEYS[1])(polygonProvider)
+const polygonProvider = await createRPCProviders(POLYGON_PROVIDER_URL);
+const signer = await createSigner(METAMASK_ACCOUNT_PRIVATE_KEY)(polygonProvider)
 const polygonChildTunnelContractInstance = await createContractInstance(CHILD_TUNNEL_CONTRACT_ADDRESS)(childTunnelContractInformation.abi)(signer)
+const marketPlaceInstance = await createContractInstance(POLYGON_MARKETPLACE_ADDRESS)(marketPlaceContractInformation.abi)(signer)
 
 app.get("/metadata/:nftSerialId", (req, res) => {
     const nftSerialId = req.params.nftSerialId
@@ -43,14 +44,10 @@ app.get("/metadata/:nftSerialId", (req, res) => {
 // Reverts a transacttion if the user rejects a purchase on polygon
 app.post("/market/revert", async (req, res) => {
     const tokenId = req.body["tokenId"]
-    const marketPlaceInstance = req.body["marketPlaceInstance"]
-    // TODO: Edit on actual function marketplace contract
-    await marketPlaceInstance.unlist(tokenId)
 
-    // TODO: Add flow bridge instance
-    const ponsNftTunnel = new ethers.Contract(PONS_NFT_TUNNEL_ADDRESS, ponsNftTunnelContractInformation.abi, signer)
-    ponsNftTunnel.sendThroughTunnel(tokenId, FLOW_MARKETPLACE_ADDRESS)
+    marketPlaceInstance.sendThroughTunnel(tokenId, FLOW_MARKETPLACE_ADDRESS)
         .then(async _ => {
+            await marketPlaceInstance.unlist(tokenId)
             await send_transaction_
                 (known_account_('0xPROPOSER'))
                 (known_account_('0xPROPOSER'))
@@ -149,7 +146,7 @@ fcl_api.events(FLOW_EVENT_NAME).subscribe(async (event) => {
         fs.writeFileSync(`${path}.json`, JSON.stringify(NftMetadata, null, 2))
     }
 
-    let HkdFlowPrice = 0, polygonPrice = 0
+    let HkdFlowPrice = 0
     if (flowToken !== null) {
         const flowInfoResp = await fetch(`https://api.coingecko.com/api/v3/coins/flow?
     localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`)
@@ -165,7 +162,7 @@ fcl_api.events(FLOW_EVENT_NAME).subscribe(async (event) => {
     localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`)
 
     const polygonMarketInfo = await polygonInfoResp.json()
-    polygonPrice = Number((HkdFlowPrice / polygonMarketInfo.market_data.current_price.hkd).toFixed(3))
+    const polygonPrice = Number((HkdFlowPrice / polygonMarketInfo.market_data.current_price.hkd).toFixed(3))
 
 
     // TODO: Edit based on what we need in polygon
@@ -174,6 +171,7 @@ fcl_api.events(FLOW_EVENT_NAME).subscribe(async (event) => {
     //TODO: Add polygon stuff to receive the nft
     const ponsNftTunnel = new ethers.Contract(PONS_NFT_TUNNEL_ADDRESS, ponsNftTunnelContractInformation.abi, signer)
     ponsNftTunnel.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData)
+    marketPlaceInstance.listForSale(nftSerialId, polygonPrice)
 })
 
 
@@ -243,7 +241,7 @@ polygonChildTunnelContractInstance.on(POLYGON_EVENT_NAME, async (data) => {
     tokenId = tokenId.toString() // change from bigNumber to string
 
     // TODO: Make sure this is correct
-    if (flowReceiver == ethers.constants.AddressZero) {
+    if (flowReceiver == "") {
         flowReceiver = FLOW_MARKETPLACE_ADDRESS
     }
 
