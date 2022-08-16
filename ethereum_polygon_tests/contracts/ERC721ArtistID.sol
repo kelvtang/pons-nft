@@ -2,9 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "./ERC721.sol";
-import "./Ownable.sol";
 
-contract ERC721ArtistID is Ownable{
+contract ERC721ArtistID {
     mapping(uint256 => string) private flowArtistID;
     mapping(uint256 => address) private polygonArtistID;
     mapping(string => address) private flowPolygonArtistID;
@@ -16,11 +15,11 @@ contract ERC721ArtistID is Ownable{
     }
 
     constructor(){
-        addFxManager(owner()); // Owner can call functions.
+        addFxManager(msg.sender); // Owner can call functions.
     }
 
-    function addFxManager(address _fxManager) public onlyOwner{fxManagers[_fxManager] = true;}
-    function revokeFxManager(address _fxManager) public onlyOwner{delete fxManagers[_fxManager];}
+    function addFxManager(address _fxManager) public onlyFxManager{fxManagers[_fxManager] = true;}
+    function revokeFxManager(address _fxManager) public onlyFxManager{delete fxManagers[_fxManager];}
 
 
     function setFlowArtistID(uint256 tokenId, string memory _flowArtistId) public onlyFxManager{
@@ -30,7 +29,7 @@ contract ERC721ArtistID is Ownable{
         polygonArtistID[tokenId] = _polygonArtistId;
     }
     
-    function setFlowIdToPolygonId(address _polygonArtistId, string memory _flowArtistId) public onlyOwner {
+    function setFlowIdToPolygonId(address _polygonArtistId, string memory _flowArtistId) public onlyFxManager{
         flowPolygonArtistID[_flowArtistId] = _polygonArtistId;
     }
 

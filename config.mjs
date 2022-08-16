@@ -9,33 +9,33 @@ import { send } from '@onflow/transport-grpc'
 
 
 
-let access_node_origin = /*/'http://lvh.me:8888'/*/'https://rest-testnet.onflow.org'//'https://rest-mainnet.onflow.org'/**/
+let access_node_origin = /**/'http://lvh.me:8888'/*/'https://rest-testnet.onflow.org'//'https://rest-mainnet.onflow.org'/**/
 
 
 /*Emulator*/
-// let address_of_names =
-// 	{ '0xFUNGIBLETOKEN': '0xee82856bf20e2aa6'
-// 	, '0xFLOWTOKEN': '0x0ae53cb6e3f42a79' 
-// 	, '0xNONFUNGIBLETOKEN': '0xf8d6e0586b0a20c7'
-// 	, '0xFUSD':'0xf8d6e0586b0a20c7' 
-// 	, '0xPONS': '0xf8d6e0586b0a20c7'
-// 	, '0xPROPOSER': '0xf8d6e0586b0a20c7' }
-// let private_keys_of_names =
-// 	{ '0xPONS': [ '4b01a799da096bddda4c19d04e966cb05cfbe610df117ef9713d382483956070' ]
-// 	, '0xPROPOSER': [ '4b01a799da096bddda4c19d04e966cb05cfbe610df117ef9713d382483956070' ] }
+let address_of_names =
+	{ '0xFUNGIBLETOKEN': '0xee82856bf20e2aa6'
+	, '0xFLOWTOKEN': '0x0ae53cb6e3f42a79' 
+	, '0xNONFUNGIBLETOKEN': '0xf8d6e0586b0a20c7'
+	, '0xFUSD':'0xf8d6e0586b0a20c7' 
+	, '0xPONS': '0xf8d6e0586b0a20c7'
+	, '0xPROPOSER': '0xf8d6e0586b0a20c7' }
+let private_keys_of_names =
+	{ '0xPONS': [ '4b01a799da096bddda4c19d04e966cb05cfbe610df117ef9713d382483956070' ]
+	, '0xPROPOSER': [ '4b01a799da096bddda4c19d04e966cb05cfbe610df117ef9713d382483956070' ] }
 
 
 /*Testnet*/
-let address_of_names =
-        { '0xFUNGIBLETOKEN': '0x9a0766d93b6608b7'
-        , '0xFLOWTOKEN': '0x7e60df042a9c0868'
-        , '0xNONFUNGIBLETOKEN': '0x631e88ae7f1d7c20'
-		   , '0xFUSD':'0xe223d8a629e49c68'
-        , '0xPONS': '0x9c41d8ea4c088c6d'
-        , '0xPROPOSER': '0x9c41d8ea4c088c6d'}
-let private_keys_of_names =
-        { '0xPONS': [ 'be7c7412844fd3c013f71550e2ad7588f7c19f4b7da0a9e6e0d692283e03a60d']
-        , '0xPROPOSER': [ 'be7c7412844fd3c013f71550e2ad7588f7c19f4b7da0a9e6e0d692283e03a60d']}
+// let address_of_names =
+//         { '0xFUNGIBLETOKEN': '0x9a0766d93b6608b7'
+//         , '0xFLOWTOKEN': '0x7e60df042a9c0868'
+//         , '0xNONFUNGIBLETOKEN': '0x631e88ae7f1d7c20'
+// 		   , '0xFUSD':'0xe223d8a629e49c68'
+//         , '0xPONS': '0x9c41d8ea4c088c6d'
+//         , '0xPROPOSER': '0x9c41d8ea4c088c6d'}
+// let private_keys_of_names =
+//         { '0xPONS': [ 'be7c7412844fd3c013f71550e2ad7588f7c19f4b7da0a9e6e0d692283e03a60d']
+//         , '0xPROPOSER': [ 'be7c7412844fd3c013f71550e2ad7588f7c19f4b7da0a9e6e0d692283e03a60d']}
 
 
 
