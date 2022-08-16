@@ -4,18 +4,20 @@ import {
     deployContract, createSigner, createRPCProviders, createContractInstance, encodeToBytes, createAndEncodeFunctionInterface
 } from '../ethereum-api.mjs';
 import {
-    CHILD_TUNNEL_PROXY_ADDRESS, ROOT_TUNNEL_PROXY_ADDRESS, CHILD_TOKEN_PROXY_ADDRESS, ROOT_TOKEN_PROXY_ADDRESS,
-    CHILD_ADMIN_PROXY, ROOT_ADMIN_PROXY
+    CHILD_TUNNEL_PROXY_ADDRESS, ROOT_TUNNEL_PROXY_ADDRESS, CHILD_FX_TOKEN_PROXY_ADDRESS, ROOT_FX_TOKEN_PROXY_ADDRESS, CHILD_PROXY_ADMIN_ADDRESS,
+    ROOT_PROXY_ADMIN_ADDRESS, FX_MANAGER_PROXY_ADDRESS
 } from '../config.mjs';
 import {
     ACCOUNT_ADDRESSES, PRIVATE_KEYS, GANACHE_PROVIDER_CHILD, GANACHE_PROVIDER_ROOT
 } from '../config.mjs';
+import { ZERO_ADDRESS } from '../ethereum-api.mjs';
 
 const fxErc721ContractInformation = JSON.parse(fs.readFileSync('./build/contracts/FxERC721.json', 'utf8'));
 const rootTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contracts/FxERC721RootTunnel.json', 'utf8'));
 const childTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contracts/FxERC721ChildTunnel.json', 'utf8'));
 const proxyAdminContractInformation = JSON.parse(fs.readFileSync('./build/contracts/ProxyAdmin.json', 'utf8'));
 const transparentProxyContractInformation = JSON.parse(fs.readFileSync('./build/contracts/TransparentUpgradeableProxy.json', 'utf8'));
+const FxERC721ManagerInformation = JSON.parse(fs.readFileSync('./build/contracts/FxERC721FxManager.json', 'utf8'));
 
 /*
  * Child chain refers to polygon while root chain refers to ethereum 
@@ -31,18 +33,27 @@ const transparentProxyContractInformation = JSON.parse(fs.readFileSync('./build/
  * Deployment process is as follows:
  * Deploy ProxyAdmin on both ethereum and polygon
  * Deploy FxERC721 tokens on both Ethereum and polygon
- * Deploy root and child Tunnels on Ethereum and polygon respectively
- * Deploy root and child Tunnels proxies on ethereum and polygon respectively with data variable containing the initialize function encoded 
+ * Deploy root tunnel on Ethereum
+ * Deploy child tunnel on polygon
+ * Deploy Fx Manager on polygon
+ * Deploy Fx Manager Proxy on polygon with data variable containing the initialize function encoded 
    with required arguments
- * Deploy FxERC721 proxies on both Ethereum and polygon with data variable containing the initialize function encoded with required arguments 
+ * Deploy FxERC721 token proxy on polygon with data variable containing the initialize function encoded with required arguments 
    and connected_token address to 0x0
- * Set the tunnels proxy addresses when u get the proxy addresses
- * Set Fxroot and FxChild addresses respectively 
+ * Deploy child tunnel proxy on polygon with data variable containing the initialize function encoded with required arguments
+ * Deploy root tunnel proxy on ethereum with data variable containing the initialize function encoded with required arguments
+ * Deploy FxERC721 token proxy on Etheruem with data variable containing the initialize function encoded with required arguments 
+   and connected_token address to 0x0
+ * Add approval for the child tunnel proxy in the Fx Manager contract
+ * setFxChildTunnel and setFxRootTunnel with the tunnel proxy addresses on ethereum and polygon for the tunnel proxy contracts
+ * Set the connected token with the opposite chain token proxy address on ethereum and polygon for the token proxy contract
+ * setTokenProxy with the token proxy address on ethereum for the tunnel proxy contract
+ * setTokenProxy with token proxy address on polygon for the Fx Manager proxy contract
 */
 
 // NB: After deploying, change the contract addresses in the config file
-const deploy_contracts_ = async () => {
-    test("Deploy all contracts", async _test => {
+const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
+    test("Deploying all contracts", async _test => {
 
         const rootProvider = await createRPCProviders(GANACHE_PROVIDER_ROOT);
         const childProvider = await createRPCProviders(GANACHE_PROVIDER_CHILD);
@@ -50,156 +61,108 @@ const deploy_contracts_ = async () => {
         const rootSigner = await createSigner(PRIVATE_KEYS[0])(rootProvider);
         const childSigner = await createSigner(PRIVATE_KEYS[1])(childProvider);
 
-        // Deploy admin proxy contracts that manage all other proxy contracts and are used to upgrade proxy implementations
-        let adminProxyRoot = await deployContract(rootSigner)(proxyAdminContractInformation.abi)(proxyAdminContractInformation.bytecode)([])
-        let adminProxyChild = await deployContract(childSigner)(proxyAdminContractInformation.abi)(proxyAdminContractInformation.bytecode)([])
+        // Deploy proxy admin contracts that manage all other proxy contracts and are used to upgrade proxy implementations
+        const rootProxyAdmin = await deployContract(rootSigner)(proxyAdminContractInformation.abi)(proxyAdminContractInformation.bytecode)([])
+        const childProxyAdmin = await deployContract(childSigner)(proxyAdminContractInformation.abi)(proxyAdminContractInformation.bytecode)([])
 
-        // Deploy FxERC721 Token Contract
-        let FxERC721Root = await deployContract(rootSigner)(fxErc721ContractInformation.abi)(fxErc721ContractInformation.bytecode)([])
-        let FxERC721Child = await deployContract(childSigner)(fxErc721ContractInformation.abi)(fxErc721ContractInformation.bytecode)([])
+        // Deploy FxERC721 Token Contracts
+        const rootFxErc721Token = await deployContract(rootSigner)(fxErc721ContractInformation.abi)(fxErc721ContractInformation.bytecode)([])
+        const childFxErc721Token = await deployContract(childSigner)(fxErc721ContractInformation.abi)(fxErc721ContractInformation.bytecode)([])
 
-        // Deploy root and child tunnel contracts on ethereum and polygon respectively
-        let rootTunnel = await deployContract(rootSigner)(rootTunnelContractInformation.abi)(rootTunnelContractInformation.bytecode)([])
-        let childTunnel = await deployContract(childSigner)(childTunnelContractInformation.abi)(childTunnelContractInformation.bytecode)([])
+        // Deploy root and child tunnel contracts
+        const rootTunnel = await deployContract(rootSigner)(rootTunnelContractInformation.abi)(rootTunnelContractInformation.bytecode)([])
+        const childTunnel = await deployContract(childSigner)(childTunnelContractInformation.abi)(childTunnelContractInformation.bytecode)([])
 
-        // Deploy the TransparentUpgradeable proxy for the child tunnel on polygon
-        const childTunnelInitializerEncoded = await createAndEncodeFunctionInterface("function initialize(address _fxChild)")("initialize")
-            (["0x0000000000000000000000000000000000000000"])
-        let childTunnelProxy = await deployContract(childSigner)(transparentProxyContractInformation.abi)
+        // Deploy FxManager contract to allow multiple contracts to send a request to the same fx token
+        const childFxManager = await deployContract(childSigner)(FxERC721ManagerInformation.abi)(FxERC721ManagerInformation.bytecode)([])
+
+        // Deploy Fx Manager Proxy contract
+        const fxManagerinitializerEncoded = await createAndEncodeFunctionInterface('function initialize()')('initialize')([])
+        const childFxManagerProxy = await deployContract(childSigner)(transparentProxyContractInformation.abi)
             (transparentProxyContractInformation.bytecode)
-            ([childTunnel.contractAddress, adminProxyChild.contractAddress, childTunnelInitializerEncoded])
+            ([childFxManager.contractAddress, childProxyAdmin.contractAddress, fxManagerinitializerEncoded])
 
-        // Deploy the TransparentUpgradeable proxy for the root tunnel on ethereum
+        // Deploy Fx token proxy on polygon
+        const childFxErc721InitializerEncoded = await createAndEncodeFunctionInterface
+            ('function initialize(address fxManager_,address connectedToken_,string memory name_,string memory symbol_)')
+            ('initialize')([childFxManagerProxy.contractAddress, ZERO_ADDRESS, tokenName, tokenSymbol])
+        const childFxErc721TokenProxy = await deployContract(childSigner)(transparentProxyContractInformation.abi)
+            (transparentProxyContractInformation.bytecode)
+            ([childFxErc721Token.contractAddress, childProxyAdmin.contractAddress, childFxErc721InitializerEncoded])
+
+        // Deploy tunnel proxy on polygon
+        const childTunnelInitializerEncoded = await createAndEncodeFunctionInterface
+            ('function initialize(address _fxChild, address _childFxManagerProxy)')('initialize')
+            ([ZERO_ADDRESS, childFxManagerProxy.contractAddress])
+        const childTunnelProxy = await deployContract(childSigner)(transparentProxyContractInformation.abi)
+            (transparentProxyContractInformation.bytecode)
+            ([childTunnel.contractAddress, childProxyAdmin.contractAddress, childTunnelInitializerEncoded])
+
+        // Deploy tunnel proxy on ethereum
         const rootTunnelInitializerEncoded = await createAndEncodeFunctionInterface
-            ("function initialize(address _checkpointManager, address _fxRoot)")("initialize")
-            (["0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000"])
-
-        let rootTunnelProxy = await deployContract(rootSigner)(transparentProxyContractInformation.abi)
+            ('function initialize(address _checkpointManager,address _fxRoot)')('initialize')
+            ([ZERO_ADDRESS, ZERO_ADDRESS])
+        const rootTunnelProxy = await deployContract(rootSigner)(transparentProxyContractInformation.abi)
             (transparentProxyContractInformation.bytecode)
-            ([rootTunnel.contractAddress, adminProxyRoot.contractAddress, rootTunnelInitializerEncoded])
+            ([rootTunnel.contractAddress, rootProxyAdmin.contractAddress, rootTunnelInitializerEncoded])
 
-        // Deploy proxy contract for FxERC721 Token on polygon
-        const fxERC721ChildInitializerEncoded = await createAndEncodeFunctionInterface
-            ("function initialize(address fxManager_,address connectedToken_,string memory name_,string memory symbol_)")
-            ("initialize")([childTunnelProxy.contractAddress, "0x0000000000000000000000000000000000000000", "test101", "tst"])
-
-        let fxERC721ChildProxy = await deployContract(childSigner)(transparentProxyContractInformation.abi)
+        // Deploy Fx token proxy on ethereum
+        const rootFxErc721InitializerEncoded = await createAndEncodeFunctionInterface
+            ('function initialize(address fxManager_,address connectedToken_,string memory name_,string memory symbol_)')
+            ('initialize')([rootTunnelProxy.contractAddress, ZERO_ADDRESS, tokenName, tokenSymbol])
+        const rootFxErc721TokenProxy = await deployContract(rootSigner)(transparentProxyContractInformation.abi)
             (transparentProxyContractInformation.bytecode)
-            ([FxERC721Child.contractAddress, adminProxyChild.contractAddress, fxERC721ChildInitializerEncoded])
+            ([rootFxErc721Token.contractAddress, rootProxyAdmin.contractAddress, rootFxErc721InitializerEncoded])
 
-        const fxERC721RootInitializerEncoded = await createAndEncodeFunctionInterface
-            ("function initialize(address fxManager_,address connectedToken_,string memory name_,string memory symbol_)")
-            ("initialize")([rootTunnelProxy.contractAddress, "0x0000000000000000000000000000000000000000", "test101", "tst"])
-
-        let fxERC721RootProxy = await deployContract(rootSigner)(transparentProxyContractInformation.abi)
-            (transparentProxyContractInformation.bytecode)
-            ([FxERC721Root.contractAddress, adminProxyRoot.contractAddress, fxERC721RootInitializerEncoded])
-
+        // Create contract instances to call needed setup functions
+        const childFxManagerProxyInstance = await createContractInstance(childFxManagerProxy.contractAddress)(FxERC721ManagerInformation.abi)(childSigner)
         const childTunnelProxyInstance = await createContractInstance(childTunnelProxy.contractAddress)(childTunnelContractInformation.abi)(childSigner)
+        const childFxErc721TokenProxyInstance = await createContractInstance(childFxErc721TokenProxy.contractAddress)(fxErc721ContractInformation.abi)(childSigner)
         const rootTunnelProxyInstance = await createContractInstance(rootTunnelProxy.contractAddress)(rootTunnelContractInformation.abi)(rootSigner)
+        const rootFxErc721TokenProxyInstance = await createContractInstance(rootFxErc721TokenProxy.contractAddress)(fxErc721ContractInformation.abi)(rootSigner)
 
-        const childFxERC721ProxyInstance = await createContractInstance(fxERC721ChildProxy.contractAddress)(fxErc721ContractInformation.abi)(childSigner)
-        const rootFxERC721ProxyInstance = await createContractInstance(fxERC721RootProxy.contractAddress)(fxErc721ContractInformation.abi)(rootSigner)
+        _test.pass(JSON.stringify({
+            childTokenProxyAddress: childFxErc721TokenProxy.contractAddress,
+            rootTokenProxyAddress: rootFxErc721TokenProxy.contractAddress,
+            childTunnelProxyAddress: childTunnelProxy.contractAddress,
+            rootTunnelProxyAddress: rootTunnelProxy.contractAddress,
+            childAdminProxy: childProxyAdmin.contractAddress,
+            rootAdminProxy: rootProxyAdmin.contractAddress,
+            FxManagerProxy: childFxManagerProxy.contractAddress
+        }, null, 2))
 
-        const addressObject = {
-            childProxyToken: childFxERC721ProxyInstance.address,
-            rootProxyToken: rootFxERC721ProxyInstance.address,
-            childTunnelProxy: childTunnelProxyInstance.address,
-            rootTunnelProxy: rootTunnelProxyInstance.address,
-            childAdminProxy: adminProxyChild.contractAddress,
-            rootAdminProxy: adminProxyRoot.contractAddress,
-        }
+        _test.test("Owner adding Approval for the child tunnel proxy", async _test => {
+            try {
+                await childFxManagerProxyInstance.addApproval(childTunnelProxy.contractAddress)
+                _test.pass("Approval added successfully")
+            } catch (e) {
+                _test.fail("Address should not have been approved")
+            }
+        })
 
-        _test.pass(JSON.stringify(addressObject, null, '\t'))
-
-        _test.test("Non-owner trying to updateConnectedToken on child Fx proxy token", async _test => {
+        _test.test("Non-owner removing Approval for the child tunnel proxy", async _test => {
             try {
                 const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(childProvider);
-                const contractWithWrongSigner = childFxERC721ProxyInstance.connect(nonOwnerSigner)
-                await contractWithWrongSigner.updateConnectedToken(rootFxERC721ProxyInstance.address)
-                _test.fail("Should not be able to update connected token on child Fx proxy contract")
+                const contractWithWrongSigner = childFxManagerProxyInstance.connect(nonOwnerSigner)
+                await contractWithWrongSigner.removeApproval(childTunnelProxy.contractAddress)
+                _test.fail("Address should not have been removed")
             } catch (e) {
-                _test.pass("connected token address did not change on child Fx proxy")
+                _test.pass("Address was not removed")
             }
         })
 
-        _test.test("Non-owner trying to updateConnectedToken on root Fx proxy token", async _test => {
-            try {
-                const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(rootProvider);
-                const contractWithWrongSigner = rootFxERC721ProxyInstance.connect(nonOwnerSigner)
-                await contractWithWrongSigner.updateConnectedToken(childFxERC721ProxyInstance.address)
-                _test.fail("Should not be able to update connected token on root Fx proxy contract")
-            } catch (e) {
-                _test.pass("connected token address did not change on root Fx proxy")
-            }
-        })
-
-        await childFxERC721ProxyInstance.updateConnectedToken(rootFxERC721ProxyInstance.address)
-        await rootFxERC721ProxyInstance.updateConnectedToken(childFxERC721ProxyInstance.address)
-
-        _test.test("cannot reset child tunnel connected proxy token address after it is set", async _test => {
-            try {
-                await childFxERC721ProxyInstance.updateConnectedToken(rootFxERC721ProxyInstance.address)
-                _test.fail("Should not be able to set connected proxy token address again")
-            } catch (e) {
-                _test.pass("Root tunnel address did not change")
-            }
-        })
-
-        _test.test("cannot reset root tunnel connected proxy token address after it is set", async _test => {
-            try {
-                await rootFxERC721ProxyInstance.updateConnectedToken(childFxERC721ProxyInstance.address)
-                _test.fail("Should not be able to set the connected proxy token address  again")
-            } catch (e) {
-                _test.pass("Root tunnel address did not change")
-            }
-        })
-
-        _test.test("Non-owner trying to setProxy addresses on child tunnel proxy", async _test => {
+        _test.test("Non-owner adding Approval for the child tunnel proxy", async _test => {
             try {
                 const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(childProvider);
-                const contractWithWrongSigner = childTunnelProxyInstance.connect(nonOwnerSigner)
-                await contractWithWrongSigner.setProxyAddresses(childFxERC721ProxyInstance.address, rootFxERC721ProxyInstance.address)
-                _test.fail("Proxy addresses should not have been set since signer is not the owner")
+                const contractWithWrongSigner = childFxManagerProxyInstance.connect(nonOwnerSigner)
+                await contractWithWrongSigner.addApproval(childTunnelProxy.contractAddress)
+                _test.fail("Address should not have been approved")
             } catch (e) {
-                _test.pass("Non-owner signer could not set proxy addresses on child tunnel proxy")
+                _test.pass("Address was not approved")
             }
         })
 
-        _test.test("Non-owner trying to setProxy addresses on root tunnel proxy", async _test => {
-            try {
-                const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(rootProvider);
-                const contractWithWrongSigner = rootTunnelProxyInstance.connect(nonOwnerSigner)
-                await contractWithWrongSigner.setProxyAddresses(childFxERC721ProxyInstance.address, rootFxERC721ProxyInstance.address)
-                _test.fail("Proxy addresses should not have been set since signer is not the owner")
-            } catch (e) {
-                _test.pass("Non-owner signer could not set proxy addresses on root tunnel proxy")
-            }
-        })
-
-        await childTunnelProxyInstance.setProxyAddresses(childFxERC721ProxyInstance.address, rootFxERC721ProxyInstance.address)
-        await rootTunnelProxyInstance.setProxyAddresses(childFxERC721ProxyInstance.address, rootFxERC721ProxyInstance.address)
-
-        _test.test("cannot reset child tunnel proxy addresses after it is set", async _test => {
-            try {
-                await childTunnelProxyInstance.setProxyAddresses(childFxERC721ProxyInstance.address, rootFxERC721ProxyInstance.address)
-                _test.fail("Should not be able to set proxy addresses again")
-            } catch (e) {
-                _test.pass("Root tunnel address did not change")
-            }
-        })
-
-        _test.test("cannot reset root tunnel proxy addresses after it is set", async _test => {
-            try {
-                await rootTunnelProxyInstance.setProxyAddresses(childFxERC721ProxyInstance.address, rootFxERC721ProxyInstance.address)
-                _test.fail("Should not be able to set the proxy addresses again")
-            } catch (e) {
-                _test.pass("Root tunnel address did not change")
-            }
-        })
-
-        await childTunnelProxyInstance.setFxRootTunnel(rootTunnelProxyInstance.address)
-        await rootTunnelProxyInstance.setFxChildTunnel(childTunnelProxyInstance.address)
+        await rootTunnelProxyInstance.setFxChildTunnel(childTunnelProxy.contractAddress)
 
         _test.test("cannot reset FxChildTunnel address after it is set", async _test => {
             try {
@@ -210,12 +173,126 @@ const deploy_contracts_ = async () => {
             }
         })
 
+        await childTunnelProxyInstance.setFxRootTunnel(rootTunnelProxyInstance.address)
+
         _test.test("cannot reset FxRootTunnel address after it is set", async _test => {
             try {
                 await childTunnelProxyInstance.setFxRootTunnel(rootTunnelProxyInstance.address)
                 _test.fail("Should not be able to set the root tunnel again")
             } catch (e) {
                 _test.pass("Root tunnel address did not change")
+            }
+        })
+
+        _test.test("Non-owner trying to set connected token address on child fx token proxy contract", async _test => {
+            try {
+                const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(childProvider);
+                const contractWithWrongSigner = childFxErc721TokenProxyInstance.connect(nonOwnerSigner)
+                await contractWithWrongSigner.updateConnectedToken(rootFxErc721TokenProxyInstance.address)
+                _test.fail("Should not be able to update connected token on child Fx proxy contract")
+            } catch (e) {
+                _test.pass("connected token address did not change on child Fx proxy")
+            }
+        })
+
+        _test.test("Owner trying to set connected token address on child fx token proxy contract", async _test => {
+            try {
+                await childFxErc721TokenProxyInstance.updateConnectedToken(rootFxErc721TokenProxyInstance.address)
+                _test.pass("Connected token address set successfully")
+                _test.test("Owner trying to set connected token address when it is already set", async _test => {
+                    try {
+                        await childFxErc721TokenProxyInstance.updateConnectedToken(rootFxErc721TokenProxyInstance.address)
+                        _test.fail("Connected token address should have changed")
+                    } catch (e) {
+                        _test.pass("Connected token address did not change")
+                    }
+                })
+            } catch (e) {
+                _test.fail("Connected token address should have been set")
+            }
+        })
+
+        _test.test("Non-owner trying to set connected token address on root fx token proxy contract", async _test => {
+            try {
+                const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(rootProvider);
+                const contractWithWrongSigner = rootFxErc721TokenProxyInstance.connect(nonOwnerSigner)
+                await contractWithWrongSigner.updateConnectedToken(childFxErc721TokenProxyInstance.address)
+                _test.fail("Should not be able to set connected token on root fx token proxy contract")
+            } catch (e) {
+                _test.pass("connected token address did not change on root fx token proxy")
+            }
+        })
+
+        _test.test("Owner trying to set connected token address on root fx token proxy contract", async _test => {
+            try {
+                await rootFxErc721TokenProxyInstance.updateConnectedToken(childFxErc721TokenProxyInstance.address)
+                _test.pass("Connected token address set successfully")
+                _test.test("Owner trying to set connected token address when it is already set", async _test => {
+                    try {
+                        await rootFxErc721TokenProxyInstance.updateConnectedToken(childFxErc721TokenProxyInstance.address)
+                        _test.fail("Connected token address should have changed")
+                    } catch (e) {
+                        _test.pass("Connected token address did not change")
+                    }
+                })
+            } catch (e) {
+                _test.fail("Connected token address should have been set")
+            }
+        })
+
+        _test.test("Non-owner trying to set token proxy address on root tunnel proxy contract", async _test => {
+            try {
+                const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(rootProvider);
+                const contractWithWrongSigner = rootTunnelProxyInstance.connect(nonOwnerSigner)
+                await contractWithWrongSigner.setTokenProxy(rootFxErc721TokenProxyInstance.address)
+                _test.fail("Should not be able to set token proxy address on root tunnel proxy contract")
+            } catch (e) {
+                _test.pass("Token proxy address did not change on root tunnel proxy contract")
+            }
+        })
+
+        _test.test("Owner trying to set token proxy address on root tunnel proxy contract", async _test => {
+            try {
+                await rootTunnelProxyInstance.setTokenProxy(rootFxErc721TokenProxyInstance.address)
+                _test.pass("Token proxy address set successfully")
+                _test.test("Owner trying to set token proxy address when it is already set", async _test => {
+                    try {
+                        await rootTunnelProxyInstance.setTokenProxy(rootFxErc721TokenProxyInstance.address)
+                        _test.fail("Token proxy address should have changed")
+                    } catch (e) {
+                        _test.pass("Token proxy address did not change")
+                    }
+                })
+            } catch (e) {
+                _test.fail("Token proxy address should have been set")
+            }
+        })
+
+        _test.test("Non-owner trying to set token proxy address on the fx manager proxy contract", async _test => {
+            try {
+                const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(childProvider);
+                const contractWithWrongSigner = childFxManagerProxyInstance.connect(nonOwnerSigner)
+                await contractWithWrongSigner.setTokenProxy(childFxErc721TokenProxy.contractAddress)
+                _test.fail("Token proxy should not be set")
+            } catch (e) {
+                _test.pass("Token proxy address was not set")
+            }
+        })
+
+        _test.test("Owner trying to set token proxy address on the fx manager proxy contract", async _test => {
+            try {
+                await childFxManagerProxyInstance.setTokenProxy(childFxErc721TokenProxy.contractAddress)
+                _test.pass("Token proxy address set successfully")
+                _test.test("Owner trying to set token proxy address when it is already set", async _test => {
+                    try {
+                        await childFxManagerProxyInstance.setTokenProxy(childFxErc721TokenProxy.contractAddress)
+                        _test.fail("Token proxy address should have changed")
+                    } catch (e) {
+                        _test.pass("Token proxy address did not change")
+                    }
+                })
+            } catch (e) {
+                _test.fail("Token proxy address should have been set")
             }
         })
     })
@@ -227,7 +304,7 @@ const mint_on_polygon_ = (tokenId) => (tokenUri) => (royaltyReceiver) => async (
     const childProvider = await createRPCProviders(GANACHE_PROVIDER_CHILD);
     let childSigner = await createSigner(PRIVATE_KEYS[1])(childProvider);
     let childTunnelProxyInstance = await createContractInstance(CHILD_TUNNEL_PROXY_ADDRESS)(childTunnelContractInformation.abi)(childSigner);
-    let childTokenProxyInstance = await createContractInstance(CHILD_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
+    let childTokenProxyInstance = await createContractInstance(CHILD_FX_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
 
     test("Minting a token on child chain through Fx proxy contract directly", async _test => {
 
@@ -301,10 +378,10 @@ const mint_on_polygon_ = (tokenId) => (tokenUri) => (royaltyReceiver) => async (
                 const childAdminProxy = await createContractInstance(CHILD_ADMIN_PROXY)(proxyAdminContractInformation.abi)(childSigner);
 
                 let FxERC721Child = await deployContract(childSigner)(fxErc721ContractInformation.abi)(fxErc721ContractInformation.bytecode)([])
-                await childAdminProxy.upgrade(CHILD_TOKEN_PROXY_ADDRESS, FxERC721Child.contractAddress)
+                await childAdminProxy.upgrade(CHILD_FX_TOKEN_PROXY_ADDRESS, FxERC721Child.contractAddress)
 
                 // update instances to use new implementations
-                childTokenProxyInstance = await createContractInstance(CHILD_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
+                childTokenProxyInstance = await createContractInstance(CHILD_FX_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
                 childTunnelProxyInstance = await createContractInstance(CHILD_TUNNEL_PROXY_ADDRESS)(childTunnelContractInformation.abi)(childSigner);
                 _test.pass("Upgrading done successfully")
             } catch (e) {
@@ -361,8 +438,8 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
     let childTunnelProxyInstance = await createContractInstance(CHILD_TUNNEL_PROXY_ADDRESS)(childTunnelContractInformation.abi)(childSigner);
     let rootTunnelProxyInstance = await createContractInstance(ROOT_TUNNEL_PROXY_ADDRESS)(rootTunnelContractInformation.abi)(rootSigner);
 
-    let childTokenProxyInstance = await createContractInstance(CHILD_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
-    let rootTokenProxyInstance = await createContractInstance(ROOT_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(rootSigner);
+    let childTokenProxyInstance = await createContractInstance(CHILD_FX_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
+    let rootTokenProxyInstance = await createContractInstance(ROOT_FX_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(rootSigner);
 
     test("Burning on child chain by calling Fx Proxy contract directly", async _test => {
         try {
@@ -427,10 +504,10 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
                 const childAdminProxy = await createContractInstance(CHILD_ADMIN_PROXY)(proxyAdminContractInformation.abi)(childSigner);
 
                 let FxERC721Child = await deployContract(childSigner)(fxErc721ContractInformation.abi)(fxErc721ContractInformation.bytecode)([])
-                await childAdminProxy.upgrade(CHILD_TOKEN_PROXY_ADDRESS, FxERC721Child.contractAddress)
+                await childAdminProxy.upgrade(CHILD_FX_TOKEN_PROXY_ADDRESS, FxERC721Child.contractAddress)
 
                 // update instances to use new implementations
-                childTokenProxyInstance = await createContractInstance(CHILD_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
+                childTokenProxyInstance = await createContractInstance(CHILD_FX_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
                 childTunnelProxyInstance = await createContractInstance(CHILD_TUNNEL_PROXY_ADDRESS)(childTunnelContractInformation.abi)(childSigner);
                 _test.pass("Upgrading done successfully")
             } catch (e) {
@@ -518,9 +595,9 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
     let rootSigner = await createSigner(PRIVATE_KEYS[1])(rootProvider);
 
     const childTunnelProxyInstance = await createContractInstance(CHILD_TUNNEL_PROXY_ADDRESS)(childTunnelContractInformation.abi)(childSigner);
-    const childTokenProxyInstace = await createContractInstance(CHILD_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
+    const childTokenProxyInstace = await createContractInstance(CHILD_FX_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(childSigner)
     const rootTunnelProxyInstance = await createContractInstance(ROOT_TUNNEL_PROXY_ADDRESS)(rootTunnelContractInformation.abi)(rootSigner);
-    const rootTokenProxyInstance = await createContractInstance(ROOT_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(rootSigner);
+    const rootTokenProxyInstance = await createContractInstance(ROOT_FX_TOKEN_PROXY_ADDRESS)(fxErc721ContractInformation.abi)(rootSigner);
 
     test("Transfer of an exisitng token from ethereum to polygon without owner's approval", async _test => {
         try {
@@ -597,7 +674,7 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
 }
 
 
-deploy_contracts_()
+// deploy_contracts_("test200")("tt1")
 // mint_on_polygon_(5)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
 // burning_on_polygon_and_transfer_to_ethereum_(7)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
 // ethereum_to_polygon_transfer_(ACCOUNT_ADDRESSES[1])(7)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)

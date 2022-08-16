@@ -9,16 +9,18 @@ const { Web3ClientPlugin } = pkg1
 const { FxPortalClient } = pkg2
 use(Web3ClientPlugin);
 
-const createFxClient = (privateKey) => (rootProviderLink) => async (childProviderLink) => {
+const ZERO_ADDRESS = ethers.constants.AddressZero
+
+const createFxClient = (privateKey) => (rootProvider) => async (childProvider) => {
 	const fxPortalClient = new FxPortalClient()
 	await fxPortalClient.init({
 		network: NETWORK_TYPE,
 		version: NETWORK_NAME,
 		parent: {
-			provider: new Wallet(privateKey, rootProviderLink)
+			provider: new Wallet(privateKey, rootProvider)
 		},
 		child: {
-			provider: new Wallet(privateKey, childProviderLink)
+			provider: new Wallet(privateKey, childProvider)
 		}
 	});
 	return fxPortalClient
@@ -34,7 +36,7 @@ const generateBurnProof = (client) => async (transactionHash) => {
 
 // for ethereum to polygon transactions
 const checkIfTransactionDeposited = (client) => async (transactionHash) => {
-	const isDeposited = await client.exitUtil.isDeposited(transactionHash)
+	const isDeposited = await client.isDeposited(transactionHash)
 	return isDeposited
 }
 
@@ -85,8 +87,8 @@ const encodeToBytes = (typeArr) => async (dataArr) => {
  * Creates an interface for a function, encodes it and returns the encoded output
  * An example is as follows:
  * We have the the following function in a contract: function initialize(address _fxChild) initializer public { <logic> }
- * functionName would be 'initialize'
  * functionHeader would be 'function initialize(address _fxChild)'
+ * functionName would be 'initialize'
  * functionArgs would be an array of values for the function arguements i.e [<someAddress>] in this case
  * returns encoded function interface
 */
@@ -97,3 +99,4 @@ const createAndEncodeFunctionInterface = (functionHeader) => (functionName) => a
 
 export { createFxClient, generateBurnProof, checkIfTransactionDeposited, checkLatestProcessedBlock, checkIfTransactionCheckpointed };
 export { deployContract, createSigner, createRPCProviders, createContractInstance, encodeToBytes, createAndEncodeFunctionInterface };
+export { ZERO_ADDRESS };

@@ -14,9 +14,7 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
     // maybe DEPOSIT can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
 
-    address public rootProxy;
-    // child proxy address
-    address public childProxy;
+    address public rootFxTokenProxy;
     
     constructor() {
         _disableInitializers();
@@ -31,8 +29,7 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
         __FxBaseRootTunnel_init(_checkpointManager, _fxRoot);
     }
 
-    function setProxyAddresses(
-        address _childProxy,
+    function setTokenProxy(
         address _rootProxy
     ) public onlyOwner {
         
@@ -41,11 +38,9 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
             "Root proxy address is not contract"
         );
 
-        require(childProxy == address(0x0), "FxERC721RootTunnel: Child Proxy address already set");
-        require(rootProxy == address(0x0), "FxERC721RootTunnel: Root Proxy address already set");
+        require(rootFxTokenProxy == address(0x0), "FxERC721RootTunnel: Root Proxy address already set");
 
-        rootProxy = _rootProxy;
-        childProxy = _childProxy;
+        rootFxTokenProxy = _rootProxy;
     }
 
     function onERC721Received(
@@ -66,17 +61,19 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
         address royaltyReceiver,
         uint96 royaltyNumerator
     ) public {
+        FxERC721 fxTokenProxyContract = FxERC721(rootFxTokenProxy);
+        
+        address _connectedFxChildProxy = fxTokenProxyContract.connectedToken();
 
         // validate root and child token mapping
         require(
-            childProxy != address(0x0) &&
-                rootProxy != address(0x0),
+                rootFxTokenProxy != address(0x0) && _connectedFxChildProxy != address(0x0),
             "FxERC721RootTunnel: NO_MAPPED_TOKEN"
         );
 
         bytes memory data = abi.encode(tokenUri, royaltyReceiver, royaltyNumerator);
         // transfer from depositor to this contract
-        FxERC721(rootProxy).safeTransferFrom(
+        fxTokenProxyContract.safeTransferFrom(
             msg.sender, // depositor
             address(this), // manager contract
             tokenId,
@@ -84,32 +81,31 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
         );
         
         // DEPOSIT, encode(rootToken, depositor, user, tokenId, extra data)
-        bytes memory message = abi.encode(DEPOSIT, abi.encode(rootProxy, childProxy, user, tokenId, data));
+        bytes memory message = abi.encode(DEPOSIT, abi.encode(user, tokenId, data));
         _sendMessageToChild(message);
     }
 
     // exit processor
     function _processMessageFromChild(bytes memory data) internal override {
-        (address _rootProxy, address _childProxy, address to, uint256 tokenId, bytes memory syncData) = abi.decode(
+        (address to, uint256 tokenId, bytes memory syncData) = abi.decode(
             data,
-            (address, address, address, uint256, bytes)
+            (address, uint256, bytes)
         );
 
         // validate root and child token mapping
         require(
-            _childProxy == childProxy &&
-                _rootProxy == rootProxy,
-            "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
+                rootFxTokenProxy != address(0x0),
+            "FxERC721RootTunnel: NO_MAPPED_TOKEN"
         );
 
-        FxERC721 tokenObj = FxERC721(rootProxy);
+        FxERC721 fxTokenProxyContract = FxERC721(rootFxTokenProxy);
 
         //approve token transfer
-        if (!tokenObj.exists(tokenId)) {
-            tokenObj.mint(to, tokenId, syncData);
+        if (!fxTokenProxyContract.exists(tokenId)) {
+            fxTokenProxyContract.mint(to, tokenId, syncData);
         } else {
             // transfer from tokens
-            tokenObj.safeTransferFrom(
+            fxTokenProxyContract.safeTransferFrom(
                 address(this),
                 to,
                 tokenId,
@@ -126,4 +122,11 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
         }
         return (size > 0);
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[48] private __gap;
 }
