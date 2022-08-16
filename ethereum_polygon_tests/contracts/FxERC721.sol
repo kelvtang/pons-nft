@@ -23,20 +23,11 @@ contract FxERC721 is
     PausableUpgradeable,
     OwnableUpgradeable
 {
-
-    mapping(address => bool) internal _fxManager;
-    address internal fxManager_initialized; // Holds fx manager set by `initialize` function.
+    address internal _fxManager;
     address internal _connectedToken;
 
     constructor() {
         _disableInitializers();
-    }
-
-    /**
-    * we can set multiple contracts to be fxManager.
-    */
-    function addFxManager(address fxManager_) public onlyOwner{
-        _fxManager[fxManager_] = true;
     }
 
     function initialize(
@@ -45,9 +36,7 @@ contract FxERC721 is
         string memory name_,
         string memory symbol_
     ) initializer public override {
-        addFxManager(fxManager_);
-        fxManager_initialized = fxManager_;
-
+        _fxManager = fxManager_;
         _connectedToken = connectedToken_;
         __Context_init();
         __Ownable_init();
@@ -83,14 +72,9 @@ contract FxERC721 is
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    // test is address is fxManager
-    function isFxManager(address fxManager_) public view returns (bool) {
-        return _fxManager[fxManager_];
-    }
-
     // fxManager returns fx manager
     function fxManager() public view override returns (address) {
-        return fxManager_initialized; // Returs the fxManager set during initialization.
+        return _fxManager;
     }
 
     // connectedToken returns root token
@@ -130,14 +114,13 @@ contract FxERC721 is
         uint256 tokenId,
         bytes memory _data
     ) public override {
-        // require(_fxManager[msg.sender], "Invalid sender");
+        require(msg.sender == _fxManager, "Invalid sender");
 
         (
             string memory tokenUri,
             address royaltyReceiver,
-            string memory flowArtistId, // Extra parameter added to abi. Holds artist address in flow.
             uint96 royaltyNumerator
-        ) = abi.decode(_data, (string, address, string, uint96));
+        ) = abi.decode(_data, (string, address, uint96));
         _safeMint(user, tokenId);
         _setTokenURI(tokenId, tokenUri);
         _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
@@ -154,7 +137,7 @@ contract FxERC721 is
     }
 
     function burn(uint256 tokenId) public override {
-        require(_fxManager[msg.sender], "Invalid sender");
+        require(msg.sender == _fxManager, "Invalid sender");
 
         require(
             exists(tokenId) == true,
