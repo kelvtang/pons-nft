@@ -17,6 +17,7 @@
     "@onflow/sdk": "^1.1.0-alpha.2",
     "@onflow/transport-grpc": "^1.1.0",
     "@onflow/types": "^1.0.1",
+    "cors": "^2.8.5",
     "elliptic": "^6.5.4",
     "express": "^4.18.1",
     "file-type": "^17.1.4",
