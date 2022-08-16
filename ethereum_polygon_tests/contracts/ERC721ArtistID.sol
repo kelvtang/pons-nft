@@ -22,10 +22,10 @@ contract ERC721ArtistID {
     function revokeFxManager(address _fxManager) public onlyFxManager{delete fxManagers[_fxManager];}
 
 
-    function setFlowArtistID(uint256 tokenId, string memory _flowArtistId) public onlyFxManager{
+    function setFlowArtistID(uint256 tokenId, string memory _flowArtistId) internal{
         flowArtistID[tokenId] = _flowArtistId;
     }
-    function setPolygonArtistID(uint256 tokenId, address _polygonArtistId) public onlyFxManager{
+    function setPolygonArtistID(uint256 tokenId, address _polygonArtistId) internal{
         polygonArtistID[tokenId] = _polygonArtistId;
     }
     
@@ -44,6 +44,9 @@ contract ERC721ArtistID {
     }
     function getPolygonFromFlow_memory(string memory _flowArtistId) public view returns (address) {
         return flowPolygonArtistID[_flowArtistId];
+    }
+    function getPolygonFromFlow_tokenID(uint256 tokenId) public view returns (address) {
+        return (polygonArtistID[tokenId] != address(0x0) ? polygonArtistID[tokenId] : flowPolygonArtistID[flowArtistID[tokenId]]);
     }
 
 }

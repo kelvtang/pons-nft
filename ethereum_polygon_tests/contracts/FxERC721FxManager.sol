@@ -48,6 +48,38 @@ contract FxERC721FxManager is OwnableUpgradeable, IERC721ReceiverUpgradeable {
         delete _approvedProxyTunnels[tunnelProxy];
     }
 
+    function appendFlowRoyaltyDue(uint256 _tokenId, uint256 value) public {
+        require (_approvedProxyTunnels[msg.sender] == true, "Caller contract not approved");
+        require (fxTokenProxy != address(0x0), "No connected token proxy contract to call");
+
+        FxERC721 childTokenContract = FxERC721(fxTokenProxy);
+        // child token contract will have root token
+        address _connectedProxy = childTokenContract.connectedToken();
+
+        // validate root and child token mapping
+        require(
+            _connectedProxy != address(0x0),
+            "FxERC721FxManager: NO_MAPPED_TOKEN"
+        );
+        FxERC721(fxTokenProxy)._appendFlowRoyaltyDue(_tokenId, value);
+    }
+
+    function emptyFlowRoyaltyDue(string calldata _flowArtistId) public {
+        require (_approvedProxyTunnels[msg.sender] == true, "Caller contract not approved");
+        require (fxTokenProxy != address(0x0), "No connected token proxy contract to call");
+
+        FxERC721 childTokenContract = FxERC721(fxTokenProxy);
+        // child token contract will have root token
+        address _connectedProxy = childTokenContract.connectedToken();
+
+        // validate root and child token mapping
+        require(
+            _connectedProxy != address(0x0),
+            "FxERC721FxManager: NO_MAPPED_TOKEN"
+        );
+        FxERC721(fxTokenProxy)._emptyFlowRoyaltyDue(_flowArtistId);
+    }
+
     function mintToken(
         address to,
         uint256 tokenId,
