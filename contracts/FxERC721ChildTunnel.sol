@@ -47,27 +47,6 @@ contract FxERC721ChildTunnel is
         return this.onERC721Received.selector;
     }
 
-    //To mint tokens on child chain
-    // TODO: To enable this function, a way has to be figured out on how to ensure a token with the same Id is not minted on flow
-    // function mintToken(
-    //     uint256 tokenId,
-    //     bytes memory data
-    // ) public {
-    //     FxERC721 childTokenContract = FxERC721(childProxy);
-    //     // child token contract will have root token
-    //     address _rootProxy = childTokenContract.connectedToken();
-
-    //     // validate root and child token mapping
-    //     require(
-    //         childProxy != address(0x0) &&
-    //             _rootProxy != address(0x0),
-    //         "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
-    //     );
-
-    //     //mint token
-    //     childTokenContract.mint(msg.sender, tokenId, data);
-    // }
-
     function withdraw(
         uint256 tokenId,
         string memory tokenUri, 

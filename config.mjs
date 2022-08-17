@@ -135,7 +135,7 @@ const NETWORK_NAME = "mumbai"
 
 const FLOW_EVENT_NAME = ""
 const FLOW_EVENT_NAME_NOT_LISTED = ""
-const POLYGON_EVENT_NAME = ""
+const POLYGON_EVENT_NAME = "nftSentThroughTunnel"
 
 const BASE_TOKEN_URI = "";
 
