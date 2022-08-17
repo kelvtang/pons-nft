@@ -2,11 +2,19 @@
 pragma solidity ^0.8.0;
 
 import "./ERC721.sol";
+import "./Initializable.sol";
 
-contract ERC721ArtistID {
+contract ERC721ArtistID is Initializable {
+
     mapping(uint256 => string) private artistID;
     mapping(uint256 => address) private polygonArtistAddress;
     mapping(string => address) internal flowPolygonArtistAddress;
+
+    function __ERC721ArtistID_init() internal onlyInitializing {
+    }
+
+    function __ERC721ArtistID_init_unchained() internal onlyInitializing {
+    }
 
     /**
         @notice Each NFT is mapped to a flow ArtistID. This is because we assume all NFT were minted on Flow or by a user with a flow account.
@@ -44,4 +52,11 @@ contract ERC721ArtistID {
         return (polygonArtistAddress[tokenId] != address(0x0) ? polygonArtistAddress[tokenId] : flowPolygonArtistAddress[artistID[tokenId]]);
     }
 
+
+    /**
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
+    uint256[47] private __gap;
 }
