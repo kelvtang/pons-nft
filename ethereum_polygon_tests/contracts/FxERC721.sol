@@ -125,11 +125,11 @@ contract FxERC721 is
             address royaltyReceiver,
             uint96 royaltyNumerator
         ) = abi.decode(_data, (string, address, string, address, uint96));
-        setFlowArtistID(tokenId, flowArtistId);
+        setArtistId(tokenId, flowArtistId);
 
         if (polygonArtistAddress != address(0x0)){
             // If polygon artist address is available then we will set royalty recipient to be same as artist address
-            setPolygonArtistID(tokenId, polygonArtistAddress);
+            setPolygonArtistAddress(tokenId, polygonArtistAddress);
             _setTokenRoyalty(tokenId, polygonArtistAddress, royaltyNumerator);
         }else{
             // We may set royalty recpient to be anyone (manually set to PonsNftMarket address), since we donot have Polygon Address for Artist.
@@ -141,7 +141,16 @@ contract FxERC721 is
         _setTokenURI(tokenId, tokenUri);
     }
 
-
+    /**
+        @notice We can map Flow Artist ID to polygon account addresses.
+        @dev The account must be manually verified by PONs and this function must be triggered 
+            by Owner or other approved address.
+        @dev This will allow for newly registered accounts to be able to get royalties directly 
+            on transaction of older NFT's which were minted before the artist's account registration.
+    */
+    function setArtistIdToPolygonAddress(address _polygonArtistAddress, string calldata _artistId) public onlyOwner{
+        flowPolygonArtistAddress[_artistId] = _polygonArtistAddress;
+    }
 
     /**
     * This function can be called by the approved _fxManager
