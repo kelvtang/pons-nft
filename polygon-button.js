@@ -60,7 +60,7 @@ function App() {
             })
             .catch(_ => {
               // TODO: Based on actual path
-              fetch(`http://localhost:3010/market/revert`, { method: 'POST', body: { tokenId: tokenId, marketPlaceInstance: marketplaceInstance } })
+              fetch(`http://localhost:3010/market/revert`, { method: 'POST', body: { tokenId: tokenId } })
             })
         } else {
           setTimeout(executePoll, 1000, resolve, reject);
