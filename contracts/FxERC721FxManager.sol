@@ -4,9 +4,8 @@ pragma solidity ^0.8.0;
 import "./OwnableUpgradeable.sol";
 import "./FxERC721.sol";
 import "./IERC721Receiver.sol";
-import "./Initializable.sol";
 
-contract FxERC721FxManager is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable {
+contract FxERC721FxManager is OwnableUpgradeable, IERC721ReceiverUpgradeable {
 
     mapping(address => bool) private _approvedProxyTunnels;
     
@@ -47,6 +46,38 @@ contract FxERC721FxManager is Initializable, OwnableUpgradeable, IERC721Receiver
     function removeApproval(address tunnelProxy) public onlyOwner {
         require(_approvedProxyTunnels[tunnelProxy] == true, "Tunnel proxy address has no exisiting approval");
         delete _approvedProxyTunnels[tunnelProxy];
+    }
+
+    function appendFlowRoyaltyDue(uint256 _tokenId, uint256 value) public {
+        require (_approvedProxyTunnels[msg.sender] == true, "Caller contract not approved");
+        require (fxTokenProxy != address(0x0), "No connected token proxy contract to call");
+
+        FxERC721 childTokenContract = FxERC721(fxTokenProxy);
+        // child token contract will have root token
+        address _connectedProxy = childTokenContract.connectedToken();
+
+        // validate root and child token mapping
+        require(
+            _connectedProxy != address(0x0),
+            "FxERC721FxManager: NO_MAPPED_TOKEN"
+        );
+        FxERC721(fxTokenProxy)._appendFlowRoyaltyDue(_tokenId, value);
+    }
+
+    function emptyFlowRoyaltyDue(string calldata _flowArtistId) public {
+        require (_approvedProxyTunnels[msg.sender] == true, "Caller contract not approved");
+        require (fxTokenProxy != address(0x0), "No connected token proxy contract to call");
+
+        FxERC721 childTokenContract = FxERC721(fxTokenProxy);
+        // child token contract will have root token
+        address _connectedProxy = childTokenContract.connectedToken();
+
+        // validate root and child token mapping
+        require(
+            _connectedProxy != address(0x0),
+            "FxERC721FxManager: NO_MAPPED_TOKEN"
+        );
+        FxERC721(fxTokenProxy)._emptyFlowRoyaltyDue(_flowArtistId);
     }
 
     function mintToken(

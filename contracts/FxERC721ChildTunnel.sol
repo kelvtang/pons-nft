@@ -14,15 +14,16 @@ contract FxERC721ChildTunnel is
 {
     // maybe DEPOSIT can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
-    
-    address public childFxManagerProxy;
 
+    // child proxy address
+    address public childFxManagerProxy;
 
     constructor() {
         _disableInitializers();
     }
 
     function initialize(address _fxChild, address _childFxManagerProxy) public initializer {
+        __FxBaseChildTunnel_init(_fxChild);
 
         require(
             _isContract(_childFxManagerProxy),
@@ -35,7 +36,6 @@ contract FxERC721ChildTunnel is
         );
 
         childFxManagerProxy = _childFxManagerProxy;
-        __FxBaseChildTunnel_init(_fxChild);
     }
 
     function onERC721Received(
@@ -49,18 +49,10 @@ contract FxERC721ChildTunnel is
 
     //To mint tokens on child chain
     function mintToken(uint256 tokenId, bytes memory data) public {
-        FxERC721 childTokenContract = FxERC721(childProxy);
-        // child token contract will have root token
-        address _rootProxy = childTokenContract.connectedToken();
-
-        // validate root and child token mapping
-        require(
-            childProxy != address(0x0) && _rootProxy != address(0x0),
-            "FxERC721ChildTunnel: NO_MAPPED_TOKEN"
-        );
+        FxERC721FxManager childFxManagerProxyContract = FxERC721FxManager(childFxManagerProxy);
 
         //mint token
-        childTokenContract.mint(msg.sender, tokenId, data);
+        childFxManagerProxyContract.mintToken(msg.sender, tokenId, data);
     }
 
     function withdraw(
@@ -73,7 +65,6 @@ contract FxERC721ChildTunnel is
 
         // withdraw tokens
         childFxManagerProxyContract.burnToken(msg.sender, tokenId);
-
 
         bytes memory syncData = abi.encode(
             tokenUri,
@@ -131,9 +122,9 @@ contract FxERC721ChildTunnel is
     }
 
     /**
-    * @dev This empty reserved space is put in place to allow future versions to add new
-    * variables without shifting down storage in the inheritance chain.
-    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    */
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
     uint256[48] private __gap;
 }

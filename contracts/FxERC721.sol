@@ -8,6 +8,7 @@ import "./ERC721Enumerable.sol";
 import "./Initializable.sol";
 import "./Pausable.sol";
 import "./OwnableUpgradeable.sol";
+import "./ERC721ArtistID.sol";
 
 
 /**
@@ -20,23 +21,15 @@ contract FxERC721 is
     ERC721EnumerableUpgradeable,
     ERC721URIStorageUpgradeable,
     ERC721RoyaltyUpgradeable,
+    ERC721ArtistID,
     PausableUpgradeable,
     OwnableUpgradeable
 {
-
-    mapping(address => bool) internal _fxManager;
-    address internal fxManager_initialized; // Holds fx manager set by `initialize` function.
+    address internal _fxManager;
     address internal _connectedToken;
 
     constructor() {
         _disableInitializers();
-    }
-
-    /**
-    * we can set multiple contracts to be fxManager.
-    */
-    function addFxManager(address fxManager_) public onlyOwner{
-        _fxManager[fxManager_] = true;
     }
 
     function initialize(
@@ -45,9 +38,7 @@ contract FxERC721 is
         string memory name_,
         string memory symbol_
     ) initializer public override {
-        addFxManager(fxManager_);
-        fxManager_initialized = fxManager_;
-
+        _fxManager = fxManager_;
         _connectedToken = connectedToken_;
         __Context_init();
         __Ownable_init();
@@ -83,14 +74,9 @@ contract FxERC721 is
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    // test is address is fxManager
-    function isFxManager(address fxManager_) public view returns (bool) {
-        return _fxManager[fxManager_];
-    }
-
     // fxManager returns fx manager
     function fxManager() public view override returns (address) {
-        return fxManager_initialized; // Returs the fxManager set during initialization.
+        return _fxManager;
     }
 
     // connectedToken returns root token
@@ -130,18 +116,53 @@ contract FxERC721 is
         uint256 tokenId,
         bytes memory _data
     ) public override {
-        // require(_fxManager[msg.sender], "Invalid sender");
+        require(msg.sender == _fxManager, "Invalid sender");
 
         (
             string memory tokenUri,
+            address polygonArtistAddress,
+            string memory flowArtistId,
             address royaltyReceiver,
-            string memory flowArtistId, // Extra parameter added to abi. Holds artist address in flow.
             uint96 royaltyNumerator
-        ) = abi.decode(_data, (string, address, string, uint96));
+        ) = abi.decode(_data, (string, address, string, address, uint96));
+        setFlowArtistID(tokenId, flowArtistId);
+
+        if (polygonArtistAddress != address(0x0)){
+            // If polygon artist address is available then we will set royalty recipient to be same as artist address
+            setPolygonArtistID(tokenId, polygonArtistAddress);
+            _setTokenRoyalty(tokenId, polygonArtistAddress, royaltyNumerator);
+        }else{
+            // We may set royalty recpient to be anyone (manually set to PonsNftMarket address), since we donot have Polygon Address for Artist.
+            _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
+            _setTokenRoyalty_flow(tokenId, flowArtistId, royaltyNumerator);
+        }
+        
         _safeMint(user, tokenId);
         _setTokenURI(tokenId, tokenUri);
-        _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
     }
+
+
+
+    /**
+    * This function can be called by the approved _fxManager
+    * It notes the amount of matic token owed to a flow Address in royalty
+    */
+    function _appendFlowRoyaltyDue(uint256 _tokenId, uint256 value) public {
+        require(msg.sender == _fxManager, "Invalid sender");
+        _flowRoyaltyDue[_tokenRoyaltyInfo_flow[_tokenId].flowArtistId] += value;
+    }
+    /**
+    * This function can be called by the approved _fxManager
+    * It clears the amount of matic token owed to a flow Address in royalty
+    */
+    function _emptyFlowRoyaltyDue(string calldata _flowArtistId) public {
+        require(msg.sender == _fxManager, "Invalid sender");
+        delete _flowRoyaltyDue[_flowArtistId];
+    }
+
+
+
+
 
     function _burn(uint256 tokenId)
         internal
@@ -154,7 +175,7 @@ contract FxERC721 is
     }
 
     function burn(uint256 tokenId) public override {
-        require(_fxManager[msg.sender], "Invalid sender");
+        require(msg.sender == _fxManager, "Invalid sender");
 
         require(
             exists(tokenId) == true,
@@ -163,11 +184,11 @@ contract FxERC721 is
 
         _burn(tokenId);
     }
-    
+
     /**
-    * @dev This empty reserved space is put in place to allow future versions to add new
-    * variables without shifting down storage in the inheritance chain.
-    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    */
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
     uint256[48] private __gap;
 }

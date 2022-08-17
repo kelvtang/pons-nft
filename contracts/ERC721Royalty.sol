@@ -48,22 +48,15 @@ abstract contract ERC721RoyaltyUpgradeable is Initializable, ERC2981Upgradeable,
     }
 
     // maps nftId to royalty information.
-    mapping(uint256 => RoyaltyInfo_flow) private _tokenRoyaltyInfo_flow;
+    mapping(uint256 => RoyaltyInfo_flow) internal _tokenRoyaltyInfo_flow;
+    mapping(string => uint256) internal _flowRoyaltyDue;
+
+    function getRoyaltyDue(string calldata _flowArtistId) public view returns (uint256){
+        return _flowRoyaltyDue[_flowArtistId];
+    }
 
     function flowRoyaltyExist(uint256 _tokenId) public view returns (bool){
         return (_tokenRoyaltyInfo_flow[_tokenId].royaltyFraction != uint96(0));
-    }
-
-    function royaltyInfo_flow(uint256 _tokenId, uint256 _salePrice) public view returns (string memory, uint256) {
-        RoyaltyInfo_flow memory royalty = _tokenRoyaltyInfo_flow[_tokenId];
-
-        if (royalty.royaltyFraction == 0) {
-            return (royalty.flowArtistId, uint256(0));
-        }
-
-        uint256 royaltyAmount = (_salePrice * royalty.royaltyFraction) / super._feeDenominator(); // Denominator is 10,000
-
-        return (royalty.flowArtistId, royaltyAmount);
     }
 
     function _setTokenRoyalty_flow(

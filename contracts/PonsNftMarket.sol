@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
+import "./FxERC721FxManager.sol";
 import "./Ownable.sol";
 import "./IERC721Receiver.sol";
 import "./FlowTunnel.sol";
@@ -24,14 +25,20 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
     mapping(uint256 => uint256) private nftSalesPrice; // denominator 10,000 // tokenId ==> listingPrice
     uint256[] private nftForSale; // list of for sale. --> keys for nftSalesPrice
     
-    mapping(string => uint256) private RoyaltyHolder_flow; // Holds the amount of royalty due to atrist.
-    // mapping(address => uint256) private RoyaltyHolder; // Holds the amount of royalty due to atrist.
 
     address private tokenContractAddress;
+    address private fxManagerContractAddress;
     address private tunnelContractAddress;
 
-    constructor (address _tokenContractAddress){
+    /**
+    @notice constructor has two parameters
+        @param _tokenContractAddress requires the contract addresses of FxERC721
+        @param _fxManagerContractAddress requires the contract addresses of FxERC721FxManager
+    @dev contract address of PonsNftMarket.sol should be added to FxERC721FxManager by owner.
+    */
+    constructor (address _tokenContractAddress, address _fxManagerContractAddress){
         tokenContractAddress = _tokenContractAddress;
+        fxManagerContractAddress = _fxManagerContractAddress;
     }
 
     function tokenExists(uint256 tokenId) public view returns (bool){
@@ -40,12 +47,12 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         return FxERC721(tokenContractAddress).ownerOf(tokenId);}
     
-    function mintNewNft(uint256 tokenId, uint256 salesPricex100, bytes memory _data) public onlyOwner {
+    function mintNewNft(uint256 tokenId, uint256 salesPrice, bytes memory _data) public onlyOwner {
         require(!tokenExists(tokenId), "Market: NFT already exists");
         
         FxERC721(tokenContractAddress).mint(address(this), tokenId, _data);
 
-        listForSale(tokenId, salesPricex100);
+        listForSale(tokenId, salesPrice);
 
         emit newNftMinted(tokenId, address(this));
     }
@@ -61,22 +68,15 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
 
 
 
-    // Gives artist their due royalty (in matic) to their polygon address.
-    function withdrawRoyalty_flow(string calldata flowArtistId, address polygonAddress) public onlyOwner {
-        require(RoyaltyHolder_flow[flowArtistId]>0, "Market: No royalty due for this artist");
-        require(polygonAddress != address(0x0), "Market: Cannot send token to an empty address");
-        
-        // create payable address.
-        address payable polygonAddressPaybale = payable(polygonAddress);
-
-        // send value to address.
-        //  // Denominator of 10,000 since floating point values is still an experimental feature in solidity
-        polygonAddressPaybale.transfer((RoyaltyHolder_flow[flowArtistId]/10_000)); 
-    }
-
-    function setRoyalty_flow(uint256 tokenId, uint256 salePrice) internal {
-        (string memory _artistID, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo_flow(tokenId, salePrice);
-        RoyaltyHolder_flow[_artistID] += _royaltyAmount;
+    /**
+    @notice widthdrawFlowRoyalty takes the @param _flowArtistId and transfers the amount of matic due to the artist in royalties.
+    @dev This is only allowed when the artist has registered his flowArtist account with Pons. and the Pons account calls the function setFlowIdToPolygonId in ./contracts/ERC721ArtistID.sol
+     */
+    function widthdrawFlowRoyalty(string calldata _flowArtistId) public {
+        require(FxERC721(tokenContractAddress).getPolygonFromFlow_calldata(_flowArtistId) == msg.sender, "Market: Only Registered Artists may widthdraw their royalty. Please register your Flow Artist ID with Pons");
+        require(FxERC721(tokenContractAddress).getRoyaltyDue(_flowArtistId) > 0, "Market: There are no funds due to this Artist ID");
+        payable(msg.sender).transfer(FxERC721(tokenContractAddress).getRoyaltyDue(_flowArtistId)/10_000);
+        FxERC721FxManager(fxManagerContractAddress).emptyFlowRoyaltyDue(_flowArtistId);
     }
     
     function onERC721Received(
@@ -88,7 +88,13 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
         return this.onERC721Received.selector;
     }
 
-    function listForSale(uint256 tokenId, uint256 salesPricex100) public returns (listingCertificate memory){
+    /**
+    @notice listForSale takes two arguments:
+        @param tokenId is the ID of the NFT
+        @param salesPrice is the Price of the NFT
+    @dev since the argument @param salesPrice is a numerator of a function, we must know that denominator is 10_000.
+    */
+    function listForSale(uint256 tokenId, uint256 salesPrice) public returns (listingCertificate memory){
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tokenOwner(tokenId) == msg.sender || (tokenOwner(tokenId) == address(this) && msg.sender == owner()), "Market: NFT can only be listed by account that owns it.");
 
@@ -104,22 +110,22 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
 
         listingCertificateCollection[tokenId] = cert;
 
-        nftSalesPrice[tokenId] = salesPricex100;
+        nftSalesPrice[tokenId] = salesPrice;
         nftForSale.push(tokenId);
         
         
-        emit nftListed(msg.sender, tokenId, salesPricex100);
+        emit nftListed(msg.sender, tokenId, salesPrice);
         return cert;
     }
 
     function unlist(uint256 tokenId) public {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tokenOwner(tokenId) != address(this), "Market: withdraw token before unlisting.");
-        require(islisted(tokenId), "Market: Only listed NFTs can be delisted.");
+        require(isListed(tokenId), "Market: Only listed NFTs can be delisted.");
         uint256 end = nftForSale.length;
         for (uint256 i = 0; i < nftForSale.length; i++) {
             if (nftForSale[i] == tokenId) {
-                nftForSale[i] = 0;
+                delete nftForSale[i];
                 delete nftSalesPrice[tokenId];
                 delete end;
                 delete listingCertificateCollection[tokenId];
@@ -132,7 +138,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
     function sendThroughTunnel(uint256 tokenId) public {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tunnelContractAddress != address(0x0), "Market: Tunnel contract address not set");
-        require(islisted(tokenId), "Market: Cannot send an unlisted nft");
+        require(isListed(tokenId), "Market: Cannot send an unlisted nft");
 
         FlowTunnel(tunnelContractAddress).setupTunnel(tokenId);             // setup tunnel for use
         FxERC721(tokenContractAddress).safeTransferFrom(
@@ -142,8 +148,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
     }
 
     function withdrawListing(uint256 tokenId) public {
-        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
-        require(tokenOwner(tokenId) == address(this), "Market: Only NFT held by market contract can be withdrawn");
+        require(isForSale(tokenId), "Market: NFT is not for sale");
         require(listingCertificateCollection[tokenId].listerAddress == msg.sender, "Market: Only original lister account can request widthrawal");
         
         FxERC721(tokenContractAddress).safeTransferFrom(address(this), msg.sender, tokenId);
@@ -154,15 +159,23 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tokenOwner(tokenId) == address(this), "Market: Cannot sell NFT unless it is given to PonsNftMarket");
         require(listingCertificateCollection[tokenId].listingCount >= 1, "Market: NFT not listed");
-        require(msg.value >= nftSalesPrice[tokenId], "Market: Value offered is too low");
+        require(msg.value >= (nftSalesPrice[tokenId]/10_000), "Market: Value offered is too low");
         
-        
-        (string memory _artistID, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo_flow(tokenId, nftSalesPrice[tokenId]);
-        delete _artistID;
-       
-        // If flow royalty exist, then royalty will be held.
-        if (FxERC721(tokenContractAddress).flowRoyaltyExist(tokenId)){
-            setRoyalty_flow(tokenId, uint256(msg.value)); // Store royalty into contract
+
+        // extract the royalty details
+        (address royaltyRecipient, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo(tokenId, nftSalesPrice[tokenId]);
+        if (royaltyRecipient != address(this)){
+            // if recipient is not this contract itself then payout immediately
+            payable(royaltyRecipient).transfer(_royaltyAmount);
+        }else{
+            address _royaltyRecipient = FxERC721(tokenContractAddress).getPolygonFromFlow_tokenID(tokenId);
+            if (_royaltyRecipient != address(0x0)){
+                // if the NFT has recipient detail OR recipient has registered himself with PONS
+                payable(_royaltyRecipient).transfer(_royaltyAmount);
+            }else if (FxERC721(tokenContractAddress).flowRoyaltyExist(tokenId)){
+                // test for flow details and store value owed to artist
+                FxERC721FxManager(fxManagerContractAddress).appendFlowRoyaltyDue(tokenId, (_royaltyAmount*10_000));
+            }
         }
         
         // Deduct royalty value before transfering 
@@ -176,15 +189,28 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
         
     }
 
+
     function getForSaleIds() public view returns (uint256[] memory) {
         return nftForSale;
     }
 
+    /**
+    @notice returns price numerator of listed NFT.
+    @dev the denominator of price is 10_000; (as of writing solidity doesnot support floating point values.)
+    */
     function getPrice(uint256 tokenId) public view returns (uint256) {
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) == address(this), "Market: Nft not transfered to Market");
         return nftSalesPrice[tokenId];
     }
 
-    function islisted(uint256 tokenId) public view returns (bool){
+    function isForSale(uint256 tokenId) public view returns (bool){
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) == address(this), "Market: Nft not transfered to Market");
+        return isListed(tokenId);
+    }
+    function isListed(uint256 tokenId) public view returns (bool){
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         return (listingCertificateCollection[tokenId].listerAddress != address(0x0));
     }
 
