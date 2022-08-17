@@ -475,6 +475,38 @@ pub contract PonsNftMarketContract_v1 {
 
 			return <- nft }
 
+		/* Unlist a Pons NFT from the marketplace */
+		access(account) fun unlist_onlyParameters (nftId: String) : @PonsNftContractInterface.NFT {
+			
+
+			// Retrieve the NFT market data, and check that the NFT is not freshly minted
+			let salePriceFlow = self .removeSalePriceFlow (nftId: nftId)
+			let salePriceFusd = self .removeSalePriceFusd (nftId: nftId)
+			if salePriceFlow == nil && salePriceFusd == nil{
+				panic ("Nft not found in sales price dictionary.")
+			}
+
+			
+			// Withdraw the NFT from the market collection
+			var nft <- self .collection .withdrawNft (nftId: nftId)
+			let nftRef = & nft as &PonsNftContractInterface.NFT
+
+			// Emit the Pons NFT Market unlisted event
+			if salePriceFlow != nil {
+				PonsNftMarketContract .emitPonsNFTUnlistedFlow (
+					nftId: nftId,
+					serialNumber: PonsNftContract .getSerialNumber (nftRef),
+					editionLabel: PonsNftContract .getEditionLabel (nftRef),
+					price: salePriceFlow! )
+			}else{
+				PonsNftMarketContract .emitPonsNFTUnlistedFusd (
+					nftId: nftId,
+					serialNumber: PonsNftContract .getSerialNumber (nftRef),
+					editionLabel: PonsNftContract .getEditionLabel (nftRef),
+					price: salePriceFusd! )
+			}
+			return <- nft;
+		}
 		
 		/* Unlist a Pons NFT from the marketplace */
 		pub fun unlist (_ ponsListingCertificate : @{PonsNftMarketContract.PonsListingCertificate}) : @PonsNftContractInterface.NFT {

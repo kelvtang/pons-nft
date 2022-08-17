@@ -194,6 +194,10 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
         return nftForSale;
     }
 
+    /**
+    @notice returns price numerator of listed NFT.
+    @dev the denominator of price is 10_000; (as of writing solidity doesnot support floating point values.)
+    */
     function getPrice(uint256 tokenId) public view returns (uint256) {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tokenOwner(tokenId) == address(this), "Market: Nft not transfered to Market");

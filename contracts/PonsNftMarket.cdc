@@ -199,6 +199,27 @@ pub contract PonsNftMarketContract {
 					"Failed to purchase the Pons NFT" } }
 		
 		/* Unlist a Pons NFT from the marketplace */
+		/*
+			This function aims at only removing the parameters of listed nft.
+			Since NFT is due to be withdrawn and held without a listing certificate, we cannot 
+				implement the procedures necessary for the verifcation and destruction of listingCertificate.
+		*/
+		access(account) fun unlist_onlyParameters (nftId: String) : @PonsNftContractInterface.NFT{
+			pre {
+				// WORKAROUND -- ignore
+				/*
+				// Flow implementation seems to be inconsistent regarding owners of nested resources
+				// https://github.com/onflow/cadence/issues/1320
+				// For the moment, allow all listing certificate holders redeem...
+				ponsListingCertificate .listerAddress == ponsListingCertificate .owner !.address:
+					"Only the lister can redeem his Pons NFT"
+				*/
+				self .borrowNft (nftId: nftId) != nil:
+					"This Pons NFT is not on the market anymore" 
+				}	 
+		} 
+		
+		/* Unlist a Pons NFT from the marketplace */
 		pub fun unlist (_ ponsListingCertificate : @{PonsListingCertificate}) : @PonsNftContractInterface.NFT {
 			pre {
 				// WORKAROUND -- ignore
@@ -355,6 +376,8 @@ pub contract PonsNftMarketContract {
 		pub fun purchaseFusd (nftId : String, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
 			panic ("not implemented") }
 		pub fun purchaseBySerialId (nftSerialId : UInt64, _ purchaseVault : @FungibleToken.Vault) : @PonsNftContractInterface.NFT {
+			panic ("not implemented") }
+		access(account) fun unlist_onlyParameters (nftId: String) : @PonsNftContractInterface.NFT{
 			panic ("not implemented") }
 		pub fun unlist (_ ponsListingCertificate : @{PonsListingCertificate}) : @PonsNftContractInterface.NFT {
 			panic ("not implemented") } }

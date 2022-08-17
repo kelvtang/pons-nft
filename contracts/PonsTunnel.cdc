@@ -107,6 +107,16 @@ pub contract PonsTunnelContract{
 			self .flowRecipientAddress = flowRecipientAddress}
 	}
 
+	// Holds the polygon address of PonsNftMarket.sol
+	access(self) var polygonMarketAddress: String
+
+	access(account) fun setPolygonMarketAddress(_polygonMarketAddress: String):Void{
+		PonsTunnelContract .polygonMarketAddress = _polygonMarketAddress
+	}
+	pub fun getPolygonMarketAddress():String{
+		return PonsTunnelContract .polygonMarketAddress
+	}
+
 	access(self) fun generateNftEmitData_Market(nftRef: &PonsNftContractInterface.NFT): PonsTunnelContract.nftDetails_Market{
 		let artistAddressFlow: Address = PonsNftContract .getArtistAddress (PonsNftContract .borrowArtistById (ponsArtistId: PonsNftContract .implementation .getArtistIdFromId(nftRef .nftId)))!;
 		let royalty: UFix64 = PonsNftContract .getRoyalty(nftRef) .amount;
@@ -638,228 +648,58 @@ pub contract PonsTunnelContract{
 	pub fun sendNftThroughTunnel_Market(nftId: String, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
 		pre {
 			// Test if NFT is listed in marketPlace
-			!(PonsNftMarketContract .ponsMarket .getForSaleIds() .contains(nftId)): panic("Only listed nft can be sent to Polygon Market");
+			PonsNftMarketContract .borrowNft (nftId: nftId) != nil:
+				"Pons NFT with this nftId is not available on the market"
+		}post{
+			PonsNftMarketContract .borrowNft (nftId: nftId) == nil:
+				"NFT withdrawal from marketPlace not successful";
 		}
 
-		let nft <- PonsNftMarketContract .ponsMarket .collection .withdrawNft (nftId: nftId)
-		let nftRef = & nft as &PonsNftContractInterface.NFT
+		let nft <- PonsNftMarketContract .ponsMarket .unlist_onlyParameters(nftId: nftId);
+		let nftRef = & nft as &PonsNftContractInterface.NFT;
+		PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .depositNft (<- nft);
 
-
-		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, polygonRecipientAddress: polygonAddress);
+		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, polygonRecipientAddress: PonsTunnelContract .polygonMarketAddress);
 		emit nftSubmittedThroughTunnel_Market (data: tunnelData)
-		/**
-		[*] withdraw nft 
-			[*] create nftRef for malleability
-			[*] unlist nft
-		[] transfer nft to ponsHolderAccount
-		[*] emit data
-		 */
-
-		
-		/* PonsTunnelContract .submitEscrow (
-			submitter: tunnelUserAccount,
-			id: nftId.concat("Tunnel-User-Escrow"),
-			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [ nftId ] ),
-			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [] ) )
-
-		PonsTunnelContract .submitEscrow (
-			submitter: ponsHolderAccount,
-			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
-			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [] ),
-			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [ nftId ] ) )	
-
-		let escrowManagerRef = ponsAccount .borrow <&PonsEscrowTunnelContract.EscrowManager> (from: /storage/escrowTunnelManager) !
-		
-
-		let subConsummation =
-			fun (_ escrowResourceListRef: &[PonsEscrowTunnelContract.EscrowResource]): Void {
-				escrowManagerRef .consummateEscrow (
-					id: nftId.concat("Tunnel-User-Escrow"),
-					consummation: fun (_ giftEscrowResource: @PonsEscrowTunnelContract.EscrowResource): @PonsEscrowTunnelContract.EscrowResource {
-
-						var emptyEscrowResource <- escrowResourceListRef .remove (at: 0)
-
-						escrowResourceListRef .insert (at: 0, <- giftEscrowResource)
-
-						return <- emptyEscrowResource } ) }
-
-		escrowManagerRef .consummateEscrow (
-			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
-			consummation: fun (_ emptyEscrowResource: @PonsEscrowTunnelContract.EscrowResource): @PonsEscrowTunnelContract.EscrowResource {
-
-				var consummatedEscrowResourceList: @[PonsEscrowTunnelContract.EscrowResource] <- [ <- emptyEscrowResource ]
-
-				let escrowResourceListRef = &consummatedEscrowResourceList as &[PonsEscrowTunnelContract.EscrowResource]
-
-				subConsummation (escrowResourceListRef)
-
-				var giftEscrowResource <- escrowResourceListRef .remove (at: 0)
-
-				destroy consummatedEscrowResourceList
-
-				return <- giftEscrowResource } )
-
-		escrowManagerRef .dismissEscrow (id: nftId.concat("Tunnel-User-Escrow"))
-		escrowManagerRef .dismissEscrow (id: nftId.concat("Tunnel-PonsBurner-Escrow")) */	
-
 		
 	}
 	
-	/* pub fun sendNftThroughTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
-		pre {
-			/* ponsHolderAccount.toString() == "": 
-				panic("Can only go through tunnel by burning using Pons Burner") */
+	pub fun sendNftThroughTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
+		post{
+			PonsNftMarketContract .borrowNft (nftId: nftId) == nil:
+				"NFT withdrawal from marketPlace not successful";
 		}
+		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsAccount) .getNftId (serialId: nftSerialId)!
+		if PonsNftMarketContract .borrowNft (nftId: nftId) != nil{
+			panic("Pons NFT with this nftId is not available on the market");
+		}
+				
+		let nft <- PonsNftMarketContract .ponsMarket .unlist_onlyParameters(nftId: nftId);
+		let nftRef = & nft as &PonsNftContractInterface.NFT;
+		PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .depositNft (<- nft);
 
-		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: tunnelUserAccount) .getNftId (serialId: nftSerialId)!
-		let nftRef: &PonsNftContractInterface.NFT = PonsTunnelContract .borrowOwnPonsCollection (collector: tunnelUserAccount) .borrowNft (nftId: nftId)
-		
-		PonsTunnelContract .submitEscrow (
-			submitter: tunnelUserAccount,
-			id: nftId.concat("Tunnel-User-Escrow"),
-			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [ nftId ] ),
-			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [] ) )
-
-		PonsTunnelContract .submitEscrow (
-			submitter: ponsHolderAccount,
-			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
-			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [] ),
-			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [ nftId ] ) )	
-
-		let escrowManagerRef = ponsAccount .borrow <&PonsEscrowTunnelContract.EscrowManager> (from: /storage/escrowTunnelManager) !
-		
-
-		let subConsummation =
-			fun (_ escrowResourceListRef: &[PonsEscrowTunnelContract.EscrowResource]): Void {
-				escrowManagerRef .consummateEscrow (
-					id: nftId.concat("Tunnel-User-Escrow"),
-					consummation: fun (_ giftEscrowResource: @PonsEscrowTunnelContract.EscrowResource): @PonsEscrowTunnelContract.EscrowResource {
-
-						var emptyEscrowResource <- escrowResourceListRef .remove (at: 0)
-
-						escrowResourceListRef .insert (at: 0, <- giftEscrowResource)
-
-						return <- emptyEscrowResource } ) }
-
-		escrowManagerRef .consummateEscrow (
-			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
-			consummation: fun (_ emptyEscrowResource: @PonsEscrowTunnelContract.EscrowResource): @PonsEscrowTunnelContract.EscrowResource {
-
-				var consummatedEscrowResourceList: @[PonsEscrowTunnelContract.EscrowResource] <- [ <- emptyEscrowResource ]
-
-				let escrowResourceListRef = &consummatedEscrowResourceList as &[PonsEscrowTunnelContract.EscrowResource]
-
-				subConsummation (escrowResourceListRef)
-
-				var giftEscrowResource <- escrowResourceListRef .remove (at: 0)
-
-				destroy consummatedEscrowResourceList
-
-				return <- giftEscrowResource } )
-
-		escrowManagerRef .dismissEscrow (id: nftId.concat("Tunnel-User-Escrow"))
-		escrowManagerRef .dismissEscrow (id: nftId.concat("Tunnel-PonsBurner-Escrow"))	
-
-		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, polygonRecipientAddress: polygonAddress);
+		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, polygonRecipientAddress: PonsTunnelContract .polygonMarketAddress);
 		emit nftSubmittedThroughTunnel_Market (data: tunnelData)
-	} */
+
+	}
 	
-    /* pub fun recieveNftFromTunnel_Market(nftId: String, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
-		pre {
-			/* ponsHolderAccount.toString() == "": 
-				panic("Can only go through tunnel by burning using Pons Burner") */
-			
+	/* // relay-server should be able to verify that flowLister is the authourised address to receive nft.
+    pub fun recieveNftFromTunnel_Market(nftId: String, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, flowLister: AuthAccount){
+		pre{
+			PonsNftMarketContract .borrowNft (nftId: nftId) == nil:
+				"NFT already in marketplace";
+		}post{
+			PonsNftMarketContract .borrowNft (nftId: nftId) != nil:
+				"NFT marketplace listing unsuccessful"
 		}
 
-		let nftRef: &PonsNftContractInterface.NFT = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .borrowNft (nftId: nftId)
-		
+		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdrawNft (<- nft);
+		let nftRef = & nft as &PonsNftContractInterface.NFT;
 
-		PonsTunnelContract .submitEscrow (
-			submitter: ponsHolderAccount,
-			id: nftId.concat("Tunnel-User-Escrow"),
-			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [ nftId ] ),
-			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [] ) )
 
-		PonsTunnelContract .submitEscrow (
-			submitter: tunnelUserAccount,
-			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
-			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [] ),
-			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [ nftId ] ) )	
 
-		let escrowManagerRef = ponsAccount .borrow <&PonsEscrowTunnelContract.EscrowManager> (from: /storage/escrowTunnelManager) !
-		
-
-		let subConsummation =
-			fun (_ escrowResourceListRef: &[PonsEscrowTunnelContract.EscrowResource]): Void {
-				escrowManagerRef .consummateEscrow (
-					id: nftId.concat("Tunnel-User-Escrow"),
-					consummation: fun (_ giftEscrowResource: @PonsEscrowTunnelContract.EscrowResource): @PonsEscrowTunnelContract.EscrowResource {
-
-						var emptyEscrowResource <- escrowResourceListRef .remove (at: 0)
-
-						escrowResourceListRef .insert (at: 0, <- giftEscrowResource)
-
-						return <- emptyEscrowResource } ) }
-
-		escrowManagerRef .consummateEscrow (
-			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
-			consummation: fun (_ emptyEscrowResource: @PonsEscrowTunnelContract.EscrowResource): @PonsEscrowTunnelContract.EscrowResource {
-
-				var consummatedEscrowResourceList: @[PonsEscrowTunnelContract.EscrowResource] <- [ <- emptyEscrowResource ]
-
-				let escrowResourceListRef = &consummatedEscrowResourceList as &[PonsEscrowTunnelContract.EscrowResource]
-
-				subConsummation (escrowResourceListRef)
-
-				var giftEscrowResource <- escrowResourceListRef .remove (at: 0)
-
-				destroy consummatedEscrowResourceList
-
-				return <- giftEscrowResource } )
-
-		escrowManagerRef .dismissEscrow (id: nftId.concat("Tunnel-User-Escrow"))
-		escrowManagerRef .dismissEscrow (id: nftId.concat("Tunnel-PonsBurner-Escrow"))
-		
-		let tunnelData = PonsTunnelContract .generateRecieveTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, flowRecipientAddress: tunnelUserAccount .address);
-		emit nftRecievedThroughTunnel_Market (data: tunnelData)
-	} */
-
+	}*/
+	
 	/* pub fun recieveNftFromTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
 		pre {
 			/* ponsHolderAccount.toString() == "": 
@@ -933,4 +773,7 @@ pub contract PonsTunnelContract{
 		emit nftRecievedThroughTunnel_Market (data: tunnelData)
 	} */
 
+	init(){
+		self .polygonMarketAddress = "";
+	}
 }
