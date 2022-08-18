@@ -82,6 +82,7 @@ pub contract PonsNftMarketContract {
 */
 	pub resource interface PonsNftMarket {
 
+		
 		access(account) fun mapPolygonListedNft(nftSerialId: UInt64, polygonAddress: String): String?
 		access(account) fun removePolygonListedNft(nftSerialId: UInt64): String?
 		access(account) fun mapPolygonListerPaymentCapability(polygonAddress: String, flowTokenCapabilty: Capability<&{FungibleToken.Receiver}>, fusdTokenCapability: Capability<&{FungibleToken.Receiver}>):[Capability<&{FungibleToken.Receiver}>; 2]?
