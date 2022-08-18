@@ -29,6 +29,31 @@ pub contract PonsNftMarketContract_v1 {
 
 	/* The concrete Pons NFT Market resource. Striaghtforward implementation of the PonsNftMarket interface */
 	pub resource PonsNftMarket_v1 : PonsNftMarketContract.PonsNftMarket {
+
+		/* Stores the polygon Address of lister
+			In event that nft was listed by Pons in behalf of a lister from polygon
+			See: PonsTunnelContract */
+		access(account) var nftPolygonListers: {UInt64: String}
+		/* Stores the payment capabilities for polygon lister
+			Listed as String => [FlowToken, FUSD];
+			In event that nft was listed by Pons in behalf of a lister from polygon
+			See: PonsTunnelContract */
+		access(account) var polygonListerPaymentCapability: {String: [Capability<&{FungibleToken.Receiver}>; 2]}
+
+		access(account) fun mapPolygonListedNft(nftSerialId: UInt64, polygonAddress: String): String?{
+			return self .nftPolygonListers .insert(key: nftSerialId, polygonAddress);
+		}
+		access(account) fun removePolygonListedNft(nftSerialId: UInt64): String?{
+			return self .nftPolygonListers .remove(key: nftSerialId)
+		}
+		access(account) fun mapPolygonListerPaymentCapability(polygonAddress: String, flowTokenCapabilty: Capability<&{FungibleToken.Receiver}>, fusdTokenCapability: Capability<&{FungibleToken.Receiver}>):[Capability<&{FungibleToken.Receiver}>; 2]?{
+			return self .polygonListerPaymentCapability .insert(key: polygonAddress, [flowTokenCapabilty, fusdTokenCapability])
+		}
+		access(account) fun getPolygonListerPaymentCapability(polygonAddress: String): [Capability<&{FungibleToken.Receiver}>; 2]?{
+			return self .polygonListerPaymentCapability[polygonAddress]
+		}
+
+
 		/* Pons v1 collection to store the NFTs on sale */
 		access(account) let collection : @PonsNftContract_v1.Collection
 

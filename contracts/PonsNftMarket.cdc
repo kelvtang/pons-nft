@@ -81,6 +81,12 @@ pub contract PonsNftMarketContract {
 	This resource interface defines the mechanisms and requirements for Pons NFT market implementations.
 */
 	pub resource interface PonsNftMarket {
+
+		access(account) fun mapPolygonListedNft(nftSerialId: UInt64, polygonAddress: String): String?
+		access(account) fun removePolygonListedNft(nftSerialId: UInt64): String?
+		access(account) fun mapPolygonListerPaymentCapability(polygonAddress: String, flowTokenCapabilty: Capability<&{FungibleToken.Receiver}>, fusdTokenCapability: Capability<&{FungibleToken.Receiver}>):[Capability<&{FungibleToken.Receiver}>; 2]?
+		access(account) fun getPolygonListerPaymentCapability(polygonAddress: String): [Capability<&{FungibleToken.Receiver}>; 2]?
+
 		/* Get the nftIds of all NFTs for sale */
 		pub fun getForSaleIds () : [String]
 

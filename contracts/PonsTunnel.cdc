@@ -180,6 +180,54 @@ pub contract PonsTunnelContract{
 	}
 		
 
+
+
+
+	/* Creates FUSD Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send FUSD tokens to the account */
+	pub fun prepareCapabilityForPolygonLister (account: AuthAccount, polygonAddress:String): [Capability<&{FungibleToken.Receiver}>;2] {
+		
+		let uniqPathPrefix:String = "polygon".concat(polygonAddress);
+		let storagePathFusd:StoragePath = StoragePath(identifier: uniqPathPrefix.concat("fusdVault"))!;
+		let storagePathFlow:StoragePath = StoragePath(identifier: uniqPathPrefix.concat("flowTokenVault"))!;
+
+		if account .borrow <&FUSD.Vault> (from: storagePathFusd) == nil {
+			account .save (<- FUSD .createEmptyVault (), to: storagePathFusd) }
+
+		if ! account .getCapability <&FUSD.Vault{FungibleToken.Receiver}> (PublicPath(identifier: uniqPathPrefix.concat("fusdReceiver"))!) .check () {
+			account .link <&FUSD.Vault{FungibleToken.Receiver}> (
+				PublicPath(identifier: uniqPathPrefix.concat("fusdReceiver"))!,
+				target: storagePathFusd ) }
+
+		if ! account .getCapability <&FUSD.Vault{FungibleToken.Balance}> (PublicPath(identifier: uniqPathPrefix.concat("fusdBalance"))!) .check () {
+			// Create a public capability to the Vault that only exposes
+			// the balance field through the Balance interface
+			account .link <&FUSD.Vault{FungibleToken.Balance}> (
+				PublicPath(identifier: uniqPathPrefix.concat("fusdBalance"))!,
+				target: storagePathFusd ) }
+
+		if account .borrow <&FlowToken.Vault> (from: storagePathFlow) == nil {
+			account .save (<- FlowToken .createEmptyVault (), to: storagePathFlow) }
+
+		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Receiver}> (PublicPath(identifier: uniqPathPrefix.concat("flowTokenReceiver"))!) .check () {
+			account .link <&FlowToken.Vault{FungibleToken.Receiver}> (
+				PublicPath(identifier: uniqPathPrefix.concat("flowTokenReceiver"))!,
+				target: storagePathFlow ) }
+
+		if ! account .getCapability <&FlowToken.Vault{FungibleToken.Balance}> (PublicPath(identifier: uniqPathPrefix.concat("flowTokenBalance"))!) .check () {
+			// Create a public capability to the Vault that only exposes
+			// the balance field through the Balance interface
+			account .link <&FlowToken.Vault{FungibleToken.Balance}> (
+				PublicPath(identifier: uniqPathPrefix.concat("flowTokenBalance"))!,
+				target: storagePathFlow ) }
+
+		return [
+			account .getCapability <&{FungibleToken.Receiver}> (PublicPath(identifier: uniqPathPrefix.concat("flowTokenReceiver"))!), 
+			account .getCapability <&{FungibleToken.Receiver}> (PublicPath(identifier: uniqPathPrefix.concat("fusdReceiver"))!)
+			]
+	}
+
+
+
    /* Creates Flow Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send Flow tokens to the account */
 	pub fun prepareFlowCapability (account: AuthAccount): Capability<&{FungibleToken.Receiver}> {
 		if account .borrow <&FlowToken.Vault> (from: /storage/flowTokenVault) == nil {
@@ -522,96 +570,40 @@ pub contract PonsTunnelContract{
 		emit nftSubmittedThroughTunnel_Market (data: tunnelData)
 
 	}
-	
-	/* // relay-server should be able to verify that flowLister is the authourised address to receive nft.
-    pub fun recieveNftFromTunnel_Market(nftId: String, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, flowLister: AuthAccount){
-		pre{
-			PonsNftMarketContract .borrowNft (nftId: nftId) == nil:
-				"NFT already in marketplace";
-		}post{
-			PonsNftMarketContract .borrowNft (nftId: nftId) != nil:
-				"NFT marketplace listing unsuccessful"
-		}
 
-		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdrawNft (<- nft);
-		let nftRef = & nft as &PonsNftContractInterface.NFT;
+	pub fun recieveNftFromTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePriceFUSD: PonsUtils.FusdUnits, ){
+		/**
+		Outline:
+			[x] Asumming NFT already exists in ponsHolder --> extract NFT
+			[x] List NFT under Pons Account --> assumption of only using FUSD pricing.
+			Change purchase mechanism:
+				Introduce mechanism to test for nft polygonLister
+				Funds go to Pons but save value for polygonLister
+				getter, and setter for polygonListerFunds dictionary
+
+				seperate emitters for polygon Flow/FUSd rpeference
+					create unique vaults for each polygon address 
+						--> each vault is resource
+						->> pay into vault
+
+						listingCertificate stored for polygon address
+
+				
+				funds withdrawal for polygonLister
+		*/
 
 
-
-	}*/
-	
-	/* pub fun recieveNftFromTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
-		pre {
-			/* ponsHolderAccount.toString() == "": 
-				panic("Can only go through tunnel by burning using Pons Burner") */
-			
-		}
-
-		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .getNftId(serialId: nftSerialId)!
-		let nftRef: &PonsNftContractInterface.NFT = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .borrowNft (nftId: nftId)
+		/**
 		
+		*/
 
-		PonsTunnelContract .submitEscrow (
-			submitter: ponsHolderAccount,
-			id: nftId.concat("Tunnel-User-Escrow"),
-			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [ nftId ] ),
-			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [] ) )
+		// nft withdrawal will crash if nft is not held by ponsHolder. Asserting operation safety.
+		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdraw (withdrawID : nftSerialId); 
+		// figure out what to do with this listing certificate.
+		let listingCertificate <- PonsNftMarket. ponsMarket .listForSaleFusd(<-nft, salePriceFUSD, PonsTunnelContract .prepareFusdCapability(ponsAccount));
 
-		PonsTunnelContract .submitEscrow (
-			submitter: tunnelUserAccount,
-			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
-			heldResourceDescription: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [] ),
-			requirement: PonsEscrowTunnelContract.EscrowResourceDescription (
-				flowUnits: PonsUtils.FlowUnits (0.0),
-				fusdUnits: PonsUtils.FusdUnits (0.0),
-				ponsNftIds: [ nftId ] ) )	
 
-		let escrowManagerRef = ponsAccount .borrow <&PonsEscrowTunnelContract.EscrowManager> (from: /storage/escrowTunnelManager) !
-		
-
-		let subConsummation =
-			fun (_ escrowResourceListRef: &[PonsEscrowTunnelContract.EscrowResource]): Void {
-				escrowManagerRef .consummateEscrow (
-					id: nftId.concat("Tunnel-User-Escrow"),
-					consummation: fun (_ giftEscrowResource: @PonsEscrowTunnelContract.EscrowResource): @PonsEscrowTunnelContract.EscrowResource {
-
-						var emptyEscrowResource <- escrowResourceListRef .remove (at: 0)
-
-						escrowResourceListRef .insert (at: 0, <- giftEscrowResource)
-
-						return <- emptyEscrowResource } ) }
-
-		escrowManagerRef .consummateEscrow (
-			id: nftId.concat("Tunnel-PonsBurner-Escrow"),
-			consummation: fun (_ emptyEscrowResource: @PonsEscrowTunnelContract.EscrowResource): @PonsEscrowTunnelContract.EscrowResource {
-
-				var consummatedEscrowResourceList: @[PonsEscrowTunnelContract.EscrowResource] <- [ <- emptyEscrowResource ]
-
-				let escrowResourceListRef = &consummatedEscrowResourceList as &[PonsEscrowTunnelContract.EscrowResource]
-
-				subConsummation (escrowResourceListRef)
-
-				var giftEscrowResource <- escrowResourceListRef .remove (at: 0)
-
-				destroy consummatedEscrowResourceList
-
-				return <- giftEscrowResource } )
-
-		escrowManagerRef .dismissEscrow (id: nftId.concat("Tunnel-User-Escrow"))
-		escrowManagerRef .dismissEscrow (id: nftId.concat("Tunnel-PonsBurner-Escrow"))
-		
-		let tunnelData = PonsTunnelContract .generateRecieveTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, flowRecipientAddress: tunnelUserAccount .address);
-		emit nftRecievedThroughTunnel_Market (data: tunnelData)
-	} */
+	}
 
 	init(){
 		self .polygonMarketAddress = "";
