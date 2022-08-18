@@ -8,6 +8,7 @@ import "./ERC721Enumerable.sol";
 import "./Initializable.sol";
 import "./Pausable.sol";
 import "./OwnableUpgradeable.sol";
+import "./ERC721ArtistID.sol";
 
 
 /**
@@ -20,6 +21,7 @@ contract FxERC721 is
     ERC721EnumerableUpgradeable,
     ERC721URIStorageUpgradeable,
     ERC721RoyaltyUpgradeable,
+    ERC721ArtistID,
     PausableUpgradeable,
     OwnableUpgradeable
 {
@@ -118,13 +120,83 @@ contract FxERC721 is
 
         (
             string memory tokenUri,
+            address polygonArtistAddress,
+            string memory flowArtistId,
             address royaltyReceiver,
             uint96 royaltyNumerator
-        ) = abi.decode(_data, (string, address, uint96));
+        ) = abi.decode(_data, (string, address, string, address, uint96));
+        setArtistId(tokenId, flowArtistId);
+
+        if (polygonArtistAddress != address(0x0)){
+            // If polygon artist address is available then we will set royalty recipient to be same as artist address
+            setPolygonArtistAddress(tokenId, polygonArtistAddress);
+            _setTokenRoyalty(tokenId, polygonArtistAddress, royaltyNumerator);
+        }else{
+            // We may set royalty recpient to be anyone (manually set to PonsNftMarket address), since we donot have Polygon Address for Artist.
+            _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
+            _setTokenRoyalty_flow(tokenId, flowArtistId, royaltyNumerator);
+        }
+        
         _safeMint(user, tokenId);
         _setTokenURI(tokenId, tokenUri);
-        _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
     }
+
+    /**
+        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
+     */
+    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
+        (address royaltyAddress, uint96 royaltyFraction) = getRoyaltyDetails(tokenId);
+        return (
+            abi.encode(
+                getTokenURI(tokenId),
+                getPolygonArtistAddress(tokenId),
+                getArtistId(tokenId),
+                royaltyAddress,
+                royaltyFraction
+            )
+        );
+    }
+
+
+    /**
+        @notice We can map Flow Artist ID to polygon account addresses.
+        @dev The account must be manually verified by PONs and this function must be triggered 
+            by Owner or other approved address.
+        @dev This will allow for newly registered accounts to be able to get royalties directly 
+            on transaction of older NFT's which were minted before the artist's account registration.
+    */
+    function setArtistIdToPolygonAddress(address _polygonArtistAddress, string calldata _artistId) public onlyOwner{
+        flowPolygonArtistAddress[_artistId] = _polygonArtistAddress;
+    }
+
+    /**
+    * This function can be called by the approved _fxManager
+    * It notes the amount of matic token owed to a flow Address
+    */
+    function _appendFundsDue(uint256 _tokenId, uint256 value) public {
+        require(msg.sender == _fxManager, "Invalid sender");
+        _flowRoyaltyDue[_tokenRoyaltyInfo_flow[_tokenId].flowArtistId] += value;
+    }
+    /**
+    * This function can be called by the approved _fxManager
+    * It notes the amount of matic token owed to a flow Address
+    */
+    function _appendFundsDue(string memory _artistId, uint256 value) public {
+        require(msg.sender == _fxManager, "Invalid sender");
+        _flowRoyaltyDue[_artistId] += value;
+    }
+    /**
+    * This function can be called by the approved _fxManager
+    * It clears the amount of matic token owed to a flow Address in royalty
+    */
+    function _emptyFundsDue(string calldata _flowArtistId) public {
+        require(msg.sender == _fxManager, "Invalid sender");
+        delete _flowRoyaltyDue[_flowArtistId];
+    }
+
+
+
+
 
     function _burn(uint256 tokenId)
         internal
