@@ -144,13 +144,16 @@ contract FxERC721 is
     /**
         @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
      */
-    function getNftDataDetails(uint256 tokenId) public view returns (address, string memory, address, uint96){
+    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
         (address royaltyAddress, uint96 royaltyFraction) = getRoyaltyDetails(tokenId);
         return (
-            getPolygonArtistAddress(tokenId),
-            getArtistId(tokenId),
-            royaltyAddress,
-            royaltyFraction
+            abi.encode(
+                getTokenURI(tokenId),
+                getPolygonArtistAddress(tokenId),
+                getArtistId(tokenId),
+                royaltyAddress,
+                royaltyFraction
+            )
         );
     }
 
