@@ -403,7 +403,7 @@ pub contract PonsTunnelContract{
 	}
 	
 	
-	pub fun sendNftThroughTunnelUsingSerialId(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, tunnelUserAccount: AuthAccount, polygonAddress: String){
+	pub fun sendNftThroughTunnel (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, tunnelUserAccount: AuthAccount, polygonAddress: String){
 		pre {
 			/* ponsHolderAccount.toString() == "": 
 				panic("Can only go through tunnel by burning using Pons Burner") */
@@ -474,7 +474,7 @@ pub contract PonsTunnelContract{
 		emit nftSubmittedThroughTunnel_User (data: tunnelData)
 	}
 
-	pub fun recieveNftFromTunnelUsingSerialId(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, tunnelUserAccount: AuthAccount){
+	pub fun recieveNftFromTunnel (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, tunnelUserAccount: AuthAccount){
 		pre {
 			/* ponsHolderAccount.toString() == "": 
 				panic("Can only go through tunnel by burning using Pons Burner") */
@@ -552,7 +552,7 @@ pub contract PonsTunnelContract{
 	// -------------------------------------------------------------------
 	// -------------------------------------------------------------------
 	
-	pub fun sendNftThroughTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
+	pub fun sendNftThroughTunnel_market (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
 		post{
 			PonsNftMarketContract .borrowNft (nftId: nftId) == nil:
 				"NFT withdrawal from marketPlace not successful";
@@ -571,11 +571,8 @@ pub contract PonsTunnelContract{
 
 	}
 
-	pub fun recieveNftFromTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePriceFlow: PonsUtils.FlowUnits?, salePriceFUSD: PonsUtils.FusdUnits?){
-		pre{
-			((salePriceFlow == nil || salePriceFUSD == nil) && !(salePriceFlow == nil && salePriceFUSD == nil)):
-				panic ("Only either of currency can be selected (XOR selection)");
-		}
+	pub fun recieveNftFromTunnel_market_flow (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePriceFlow: PonsUtils.FlowUnits){
+
 		/**
 		Outline:
 			[x] Asumming NFT already exists in ponsHolder --> extract NFT
@@ -601,17 +598,53 @@ pub contract PonsTunnelContract{
 		
 		*/
 
+		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .getNftId(serialId: nftSerialId)!
 		// nft withdrawal will crash if nft is not held by ponsHolder. Asserting operation safety.
-		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdraw (withdrawID : nftSerialId); 
+		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdrawNft (nftId : nftId);
+		
+		let paymentCapability = PonsTunnelContract .prepareCapabilityForPolygonLister(account: ponsAccount, polygonAddress: polygonListingAddress);
+		
+		
+		let listingCertificate <- PonsNftMarketContract .ponsMarket .listForSaleFlow(<-nft, salePriceFlow, paymentCapability[0])
+		PonsNftMarketContract .ponsMarket .setPolygonListingCertificate(nftSerialId: nftSerialId, polygonAddress: polygonListingAddress, listingCertificate: <-listingCertificate);
+	}
+	pub fun recieveNftFromTunnel_market_fusd (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePriceFUSD: PonsUtils.FusdUnits){
+
+		/**
+		Outline:
+			[x] Asumming NFT already exists in ponsHolder --> extract NFT
+			[x] List NFT under Pons Account --> assumption of only using FUSD pricing.
+			Change purchase mechanism:
+				[x] Introduce mechanism to test for nft polygonLister ==> handles on its own since payment capability is unique
+				[x] Funds go to Pons but save value for polygonLister
+				getter, and setter for polygonListerFunds dictionary
+
+				seperate emitters for polygon Flow/FUSd rpeference
+					create unique vaults for each polygon address 
+						[x] --> each vault is resource
+						[x] ->> pay into vault
+
+						listingCertificate stored for polygon address
+
+				
+				funds withdrawal for polygonLister
+		*/
+
+
+		/**
+		
+		*/
+
+		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .getNftId(serialId: nftSerialId)!
+		// nft withdrawal will crash if nft is not held by ponsHolder. Asserting operation safety.
+		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdrawNft (nftId : nftId);
 		
 		let paymentCapability = PonsTunnelContract .prepareCapabilityForPolygonLister(account: ponsAccount, polygonAddress: polygonListingAddress);
 		
 		// figure out what to do with this listing certificate
-		let listingCertificate <- ( salePriceFlow == nil ?
-			PonsNftMarket .ponsMarket .listForSaleFusd(<-nft, salePriceFUSD, paymentCapability[1]):
-			PonsNftMarket .ponsMarket .listForSaleFlow(<-nft, salePriceFlow, paymentCapability[0])
-			);
-		destroy listingCertificate;
+		let listingCertificate <- PonsNftMarketContract .ponsMarket .listForSaleFusd(<-nft, salePriceFUSD, paymentCapability[1]);
+		PonsNftMarketContract .ponsMarket .setPolygonListingCertificate(nftSerialId: nftSerialId, polygonAddress: polygonListingAddress, listingCertificate: <-listingCertificate);
+
 	}
 
 	init(){
