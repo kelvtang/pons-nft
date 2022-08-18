@@ -3,12 +3,11 @@ pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
 import "./FxERC721FxManager.sol";
-import "./OwnableUpgradeable.sol";
+import "./Ownable.sol";
 import "./IERC721Receiver.sol";
 import "./FlowTunnel.sol";
-import "./Initializable.sol";
 
-contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable{
+contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
 
     event newNftMinted(uint256 tokenId, address to);
     event nftPurchased(address from,address to,uint256 tokenId,uint256 amount);
@@ -18,6 +17,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
 
     struct listingCertificate {
         address payable listerAddress;
+        string flowListerId;
         uint256 tokenId;
         uint256 listingCount;
     }
@@ -31,29 +31,35 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
     address private fxManagerContractAddress;
     address private tunnelContractAddress;
 
-    constructor() {
-        _disableInitializers();
-    }
-
     /**
-    @notice initialize has two parameters
+    @notice constructor has two parameters
         @param _tokenContractAddress requires the contract addresses of FxERC721
         @param _fxManagerContractAddress requires the contract addresses of FxERC721FxManager
     @dev contract address of PonsNftMarket.sol should be added to FxERC721FxManager by owner.
     */
-    function initialize(
-        address _tokenContractAddress,
-        address _fxManagerContractAddress
-    ) initializer public {
+    constructor (address _tokenContractAddress, address _fxManagerContractAddress){
         tokenContractAddress = _tokenContractAddress;
         fxManagerContractAddress = _fxManagerContractAddress;
-        __Context_init();
-        __Ownable_init();
+    }
+
+    /**
+        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
+     */
+    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
+        (address royaltyAddress, uint96 royaltyFraction) = FxERC721(tokenContractAddress).getRoyaltyDetails(tokenId);
+        return (
+            abi.encode(
+                FxERC721(tokenContractAddress).getTokenURI(tokenId),
+                FxERC721(tokenContractAddress).getPolygonArtistAddress(tokenId),
+                FxERC721(tokenContractAddress).getArtistId(tokenId),
+                royaltyAddress,
+                royaltyFraction
+            )
+        );
     }
 
     function tokenExists(uint256 tokenId) public view returns (bool){
         return FxERC721(tokenContractAddress).exists(tokenId);}
-
     function tokenOwner(uint256 tokenId) public view returns (address){
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         return FxERC721(tokenContractAddress).ownerOf(tokenId);}
@@ -61,32 +67,33 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
     function mintNewNft(uint256 tokenId, uint256 salesPrice, bytes memory _data) public onlyOwner {
         require(!tokenExists(tokenId), "Market: NFT already exists");
         
-        FxERC721(tokenContractAddress).mint(address(this), tokenId, _data);
+        FxERC721FxManager(fxManagerContractAddress).mintToken(address(this), tokenId, _data);
 
         listForSale(tokenId, salesPrice);
 
         emit newNftMinted(tokenId, address(this));
     }
-
     function mintGiftNft(uint256 tokenId, address to, bytes memory _data) public onlyOwner {
         require(!tokenExists(tokenId), "Market: NFT already exists");
         require(to != address(this), "Market: Should not gift NFT to self");
         require(to != address(0x0), "Market: Should not gift NFT to empty address");
         
-        FxERC721(tokenContractAddress).mint(to, tokenId, _data);
+        FxERC721FxManager(fxManagerContractAddress).mintToken(to, tokenId, _data);
 
         emit newNftMinted(tokenId, to);
     }
 
+
+
     /**
-    @notice widthdrawFlowRoyalty takes the @param _flowArtistId and transfers the amount of matic due to the artist in royalties.
+    @notice widthdrawFundsAndRoyalty takes the @param _flowArtistId and transfers the amount of matic due to the artist in royalties or payment.
     @dev This is only allowed when the artist has registered his flowArtist account with Pons. and the Pons account calls the function setFlowIdToPolygonId in ./contracts/ERC721ArtistID.sol
      */
-    function widthdrawFlowRoyalty(string calldata _flowArtistId) public {
+    function widthdrawFundsAndRoyalty(string calldata _flowArtistId) public {
         require(FxERC721(tokenContractAddress).getPolygonFromFlow_calldata(_flowArtistId) == msg.sender, "Market: Only Registered Artists may widthdraw their royalty. Please register your Flow Artist ID with Pons");
-        require(FxERC721(tokenContractAddress).getRoyaltyDue(_flowArtistId) > 0, "Market: There are no funds due to this Artist ID");
-        payable(msg.sender).transfer(FxERC721(tokenContractAddress).getRoyaltyDue(_flowArtistId)/10_000);
-        FxERC721FxManager(fxManagerContractAddress).emptyFlowRoyaltyDue(_flowArtistId);
+        require(FxERC721(tokenContractAddress).getFundsDue(_flowArtistId) > 0, "Market: There are no funds due to this Artist ID");
+        payable(msg.sender).transfer(FxERC721(tokenContractAddress).getFundsDue(_flowArtistId)/10_000);
+        FxERC721FxManager(fxManagerContractAddress).emptyFundsDue(_flowArtistId);
     }
     
     function onERC721Received(
@@ -111,6 +118,32 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         listingCertificate memory cert;
 
         cert.listerAddress = payable(msg.sender);
+        cert.flowListerId = "";
+        cert.tokenId = tokenId;
+        cert.listingCount = (
+            listingCertificateCollection[tokenId].listingCount == 0
+                ? 1
+                : listingCertificateCollection[tokenId].listingCount + 1
+        ); // reference at: https://stackoverflow.com/a/59463026
+
+        listingCertificateCollection[tokenId] = cert;
+
+        nftSalesPrice[tokenId] = salesPrice;
+        nftForSale.push(tokenId);
+        
+        
+        emit nftListed(msg.sender, tokenId, salesPrice);
+        return cert;
+    }
+
+    function listForSale(uint256 tokenId, uint256 salesPrice, string calldata _flowListerId) public returns (listingCertificate memory){
+        require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
+        require(tokenOwner(tokenId) == msg.sender || (tokenOwner(tokenId) == address(this) && msg.sender == owner()), "Market: NFT can only be listed by account that owns it.");
+
+        listingCertificate memory cert;
+
+        cert.listerAddress = payable(msg.sender);
+        cert.flowListerId = _flowListerId;
         cert.tokenId = tokenId;
         cert.listingCount = (
             listingCertificateCollection[tokenId].listingCount == 0
@@ -182,14 +215,24 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
             if (_royaltyRecipient != address(0x0)){
                 // if the NFT has recipient detail OR recipient has registered himself with PONS
                 payable(_royaltyRecipient).transfer(_royaltyAmount);
-            }else if (FxERC721(tokenContractAddress).flowRoyaltyExist(tokenId)){
+            }else{
                 // test for flow details and store value owed to artist
-                FxERC721FxManager(fxManagerContractAddress).appendFlowRoyaltyDue(tokenId, (_royaltyAmount*10_000));
+                FxERC721FxManager(fxManagerContractAddress).appendFundsDue(tokenId, (_royaltyAmount*10_000));
             }
         }
         
         // Deduct royalty value before transfering 
-        listingCertificateCollection[tokenId].listerAddress.transfer((msg.value - _royaltyAmount)); 
+        uint256 sendingValue = msg.value - _royaltyAmount;
+        if (keccak256(abi.encodePacked(listingCertificateCollection[tokenId].flowListerId)) == keccak256(abi.encodePacked(""))){
+            listingCertificateCollection[tokenId].listerAddress.transfer(sendingValue); 
+        }else{
+            if (FxERC721(tokenContractAddress).getPolygonFromFlow_memory(listingCertificateCollection[tokenId].flowListerId) != address(0)){
+                payable(FxERC721(tokenContractAddress).getPolygonFromFlow_memory(listingCertificateCollection[tokenId].flowListerId)).transfer(sendingValue);
+            }else{
+                FxERC721FxManager(fxManagerContractAddress).appendFundsDue(tokenId, sendingValue);
+            }
+        }
+
         
         // Initiate transfer of nft from listed seller to new owner.
         FxERC721(tokenContractAddress).safeTransferFrom(address(this),msg.sender,tokenId);
@@ -238,11 +281,4 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         return listingCertificateCollection[tokenId].listerAddress;
     }
-
-    /**
-    * @dev This empty reserved space is put in place to allow future versions to add new
-    * variables without shifting down storage in the inheritance chain.
-    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    */
-    uint256[43] private __gap;
 }

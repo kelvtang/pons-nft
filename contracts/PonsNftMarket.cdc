@@ -87,6 +87,8 @@ pub contract PonsNftMarketContract {
 		access(account) fun removePolygonListedNft(nftSerialId: UInt64): String?
 		access(account) fun mapPolygonListerPaymentCapability(polygonAddress: String, flowTokenCapabilty: Capability<&{FungibleToken.Receiver}>, fusdTokenCapability: Capability<&{FungibleToken.Receiver}>):[Capability<&{FungibleToken.Receiver}>; 2]?
 		access(account) fun getPolygonListerPaymentCapability(polygonAddress: String): [Capability<&{FungibleToken.Receiver}>; 2]?
+		access(account) fun setPolygonListingCertificate(nftSerialId: UInt64, polygonAddress: String, listingCertificate: @{PonsListingCertificate}):Void
+		access(account) fun getPolygonListingCertificate(nftSerialId: UInt64, polygonAddress: String): @{PonsListingCertificate}?
 
 		/* Get the nftIds of all NFTs for sale */
 		pub fun getForSaleIds () : [String]
@@ -345,6 +347,19 @@ pub contract PonsNftMarketContract {
 
 	/* An trivial instance of PonsNftMarket which panics on all calls, used on initialization of the PonsNftMarket contract. */
 	pub resource InvalidPonsNftMarket : PonsNftMarket {
+		access(account) fun mapPolygonListedNft(nftSerialId: UInt64, polygonAddress: String): String?{
+			panic ("not implemented") }
+		access(account) fun removePolygonListedNft(nftSerialId: UInt64): String?{
+			panic ("not implemented") }
+		access(account) fun mapPolygonListerPaymentCapability(polygonAddress: String, flowTokenCapabilty: Capability<&{FungibleToken.Receiver}>, fusdTokenCapability: Capability<&{FungibleToken.Receiver}>):[Capability<&{FungibleToken.Receiver}>; 2]?{
+			panic ("not implemented") }
+		access(account) fun getPolygonListerPaymentCapability(polygonAddress: String): [Capability<&{FungibleToken.Receiver}>; 2]?{
+			panic ("not implemented") }
+		access(account) fun setPolygonListingCertificate(nftSerialId: UInt64, polygonAddress: String, listingCertificate: @{PonsListingCertificate}): Void {
+			panic ("not implemented") }
+		access(account) fun getPolygonListingCertificate(nftSerialId: UInt64, polygonAddress: String): @{PonsListingCertificate}? {
+			panic ("not implemented") }
+
 		pub fun getForSaleIds () : [String] {
 			panic ("not implemented") }
 		pub fun getPriceFlow (nftId : String) : PonsUtils.FlowUnits? {

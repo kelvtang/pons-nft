@@ -134,28 +134,13 @@ contract FxERC721 is
         }else{
             // We may set royalty recpient to be anyone (manually set to PonsNftMarket address), since we donot have Polygon Address for Artist.
             _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
-            _setTokenRoyalty_flow(tokenId, flowArtistId, royaltyNumerator);
         }
         
         _safeMint(user, tokenId);
         _setTokenURI(tokenId, tokenUri);
     }
 
-    /**
-        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
-     */
-    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
-        (address royaltyAddress, uint96 royaltyFraction) = getRoyaltyDetails(tokenId);
-        return (
-            abi.encode(
-                getTokenURI(tokenId),
-                getPolygonArtistAddress(tokenId),
-                getArtistId(tokenId),
-                royaltyAddress,
-                royaltyFraction
-            )
-        );
-    }
+    
 
 
     /**
@@ -175,15 +160,7 @@ contract FxERC721 is
     */
     function _appendFundsDue(uint256 _tokenId, uint256 value) public {
         require(msg.sender == _fxManager, "Invalid sender");
-        _flowRoyaltyDue[_tokenRoyaltyInfo_flow[_tokenId].flowArtistId] += value;
-    }
-    /**
-    * This function can be called by the approved _fxManager
-    * It notes the amount of matic token owed to a flow Address
-    */
-    function _appendFundsDue(string memory _artistId, uint256 value) public {
-        require(msg.sender == _fxManager, "Invalid sender");
-        _flowRoyaltyDue[_artistId] += value;
+        _flowRoyaltyDue[getArtistId(_tokenId)] += value;
     }
     /**
     * This function can be called by the approved _fxManager
@@ -193,10 +170,6 @@ contract FxERC721 is
         require(msg.sender == _fxManager, "Invalid sender");
         delete _flowRoyaltyDue[_flowArtistId];
     }
-
-
-
-
 
     function _burn(uint256 tokenId)
         internal

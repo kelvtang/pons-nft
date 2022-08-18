@@ -39,18 +39,30 @@ pub contract PonsNftMarketContract_v1 {
 			In event that nft was listed by Pons in behalf of a lister from polygon
 			See: PonsTunnelContract */
 		access(account) var polygonListerPaymentCapability: {String: [Capability<&{FungibleToken.Receiver}>; 2]}
+		
+		access(account) var polygonListerCertificateCollection: @PonsNftMarketContract.PonsListingCertificateCollection;
 
 		access(account) fun mapPolygonListedNft(nftSerialId: UInt64, polygonAddress: String): String?{
-			return self .nftPolygonListers .insert(key: nftSerialId, polygonAddress);
-		}
+			return self .nftPolygonListers .insert(key: nftSerialId, polygonAddress);}
 		access(account) fun removePolygonListedNft(nftSerialId: UInt64): String?{
-			return self .nftPolygonListers .remove(key: nftSerialId)
-		}
+			return self .nftPolygonListers .remove(key: nftSerialId);}
 		access(account) fun mapPolygonListerPaymentCapability(polygonAddress: String, flowTokenCapabilty: Capability<&{FungibleToken.Receiver}>, fusdTokenCapability: Capability<&{FungibleToken.Receiver}>):[Capability<&{FungibleToken.Receiver}>; 2]?{
-			return self .polygonListerPaymentCapability .insert(key: polygonAddress, [flowTokenCapabilty, fusdTokenCapability])
-		}
+			return self .polygonListerPaymentCapability .insert(key: polygonAddress, [flowTokenCapabilty, fusdTokenCapability])}
 		access(account) fun getPolygonListerPaymentCapability(polygonAddress: String): [Capability<&{FungibleToken.Receiver}>; 2]?{
-			return self .polygonListerPaymentCapability[polygonAddress]
+			return self .polygonListerPaymentCapability[polygonAddress]}
+
+
+		access(account) fun setPolygonListingCertificate(nftSerialId: UInt64, polygonAddress: String, listingCertificate: @{PonsNftMarketContract.PonsListingCertificate}):Void{
+			self .polygonListerCertificateCollection .appendListingCertificate(<- listingCertificate);
+		}
+		access(account) fun getPolygonListingCertificate(nftSerialId: UInt64, polygonAddress: String): @{PonsNftMarketContract.PonsListingCertificate}?{
+			panic("not implemented")
+			// if self .polygonListerCertificateCollection[polygonAddress] == nil{
+			// 	return nil
+			// }
+			// var res <- nil;
+			// self .polygonListerCertificateCollection[polygonAddress][nftSerialId] <-> res;
+			// return <- res;
 		}
 
 
@@ -605,10 +617,17 @@ pub contract PonsNftMarketContract_v1 {
 			self .minimumMintingPriceFlow = minimumMintingPriceFlow
 			self .minimumMintingPriceFusd = minimumMintingPriceFusd
 			self .primaryCommissionRatio = primaryCommissionRatio
-			self .secondaryCommissionRatio = secondaryCommissionRatio }
+			self .secondaryCommissionRatio = secondaryCommissionRatio 
+			
+			self .nftPolygonListers = {};
+			self .polygonListerPaymentCapability = {};
+			self .polygonListerCertificateCollection <- PonsNftMarketContract.createPonsListingCertificateCollection();
+
+			}
 
 		destroy () {
-			destroy self .collection } }
+			destroy self .collection 
+			destroy self .polygonListerCertificateCollection} }
 
 	/* The concrete Pons Listing Certificate resource. Striaghtforward implementation of the PonsNftMarket interface, and also record the number of times the NFT has previously been listed */
 	pub resource PonsListingCertificate_v1 : PonsNftMarketContract.PonsListingCertificate {

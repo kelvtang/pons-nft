@@ -42,6 +42,22 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
         fxManagerContractAddress = _fxManagerContractAddress;
     }
 
+    /**
+        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
+     */
+    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
+        (address royaltyAddress, uint96 royaltyFraction) = FxERC721(tokenContractAddress).getRoyaltyDetails(tokenId);
+        return (
+            abi.encode(
+                FxERC721(tokenContractAddress).getTokenURI(tokenId),
+                FxERC721(tokenContractAddress).getPolygonArtistAddress(tokenId),
+                FxERC721(tokenContractAddress).getArtistId(tokenId),
+                royaltyAddress,
+                royaltyFraction
+            )
+        );
+    }
+
     function tokenExists(uint256 tokenId) public view returns (bool){
         return FxERC721(tokenContractAddress).exists(tokenId);}
     function tokenOwner(uint256 tokenId) public view returns (address){
@@ -199,7 +215,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
             if (_royaltyRecipient != address(0x0)){
                 // if the NFT has recipient detail OR recipient has registered himself with PONS
                 payable(_royaltyRecipient).transfer(_royaltyAmount);
-            }else if (FxERC721(tokenContractAddress).flowRoyaltyExist(tokenId)){
+            }else{
                 // test for flow details and store value owed to artist
                 FxERC721FxManager(fxManagerContractAddress).appendFundsDue(tokenId, (_royaltyAmount*10_000));
             }
@@ -213,7 +229,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
             if (FxERC721(tokenContractAddress).getPolygonFromFlow_memory(listingCertificateCollection[tokenId].flowListerId) != address(0)){
                 payable(FxERC721(tokenContractAddress).getPolygonFromFlow_memory(listingCertificateCollection[tokenId].flowListerId)).transfer(sendingValue);
             }else{
-                FxERC721FxManager(fxManagerContractAddress).appendFundsDue(listingCertificateCollection[tokenId].flowListerId, sendingValue);
+                FxERC721FxManager(fxManagerContractAddress).appendFundsDue(tokenId, sendingValue);
             }
         }
 

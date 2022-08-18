@@ -42,31 +42,10 @@ abstract contract ERC721RoyaltyUpgradeable is Initializable, ERC2981Upgradeable,
     }
 
 
-    struct RoyaltyInfo_flow{
-        string flowArtistId;
-        uint96 royaltyFraction;
-    }
-
-    // maps nftId to royalty information.
-    mapping(uint256 => RoyaltyInfo_flow) internal _tokenRoyaltyInfo_flow;
     mapping(string => uint256) internal _flowRoyaltyDue;
 
-    function getRoyaltyDue(string calldata _flowArtistId) public view returns (uint256){
+    function getFundsDue(string calldata _flowArtistId) public view returns (uint256){
         return _flowRoyaltyDue[_flowArtistId];
-    }
-
-    function flowRoyaltyExist(uint256 _tokenId) public view returns (bool){
-        return (_tokenRoyaltyInfo_flow[_tokenId].royaltyFraction != uint96(0));
-    }
-
-    function _setTokenRoyalty_flow(
-        uint256 tokenId,
-        string memory artistId,
-        uint96 feeNumerator
-    ) internal {
-        require(feeNumerator <= super._feeDenominator(), "ERC2981: royalty fee will exceed salePrice");
-
-        _tokenRoyaltyInfo_flow[tokenId] = RoyaltyInfo_flow(artistId, feeNumerator);
     }
 
     /**

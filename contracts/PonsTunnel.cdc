@@ -572,6 +572,10 @@ pub contract PonsTunnelContract{
 	}
 
 	pub fun recieveNftFromTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePriceFlow: PonsUtils.FlowUnits?, salePriceFUSD: PonsUtils.FusdUnits?){
+		pre{
+			((salePriceFlow == nil || salePriceFUSD == nil) && !(salePriceFlow == nil && salePriceFUSD == nil)):
+				panic ("Only either of currency can be selected (XOR selection)");
+		}
 		/**
 		Outline:
 			[x] Asumming NFT already exists in ponsHolder --> extract NFT
@@ -604,10 +608,10 @@ pub contract PonsTunnelContract{
 		
 		// figure out what to do with this listing certificate
 		let listingCertificate <- ( salePriceFlow == nil ?
-			PonsNftMarket. ponsMarket .listForSaleFusd(<-nft, salePriceFUSD, paymentCapability[1]):
-			PonsNftMarket. ponsMarket .listForSaleFlow(<-nft, salePriceFlow, paymentCapability[0])
+			PonsNftMarket .ponsMarket .listForSaleFusd(<-nft, salePriceFUSD, paymentCapability[1]):
+			PonsNftMarket .ponsMarket .listForSaleFlow(<-nft, salePriceFlow, paymentCapability[0])
 			);
-
+		destroy listingCertificate;
 	}
 
 	init(){
