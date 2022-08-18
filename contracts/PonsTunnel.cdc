@@ -571,20 +571,20 @@ pub contract PonsTunnelContract{
 
 	}
 
-	pub fun recieveNftFromTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePriceFUSD: PonsUtils.FusdUnits, ){
+	pub fun recieveNftFromTunnelUsingSerialId_Market(nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePriceFlow: PonsUtils.FlowUnits?, salePriceFUSD: PonsUtils.FusdUnits?){
 		/**
 		Outline:
 			[x] Asumming NFT already exists in ponsHolder --> extract NFT
 			[x] List NFT under Pons Account --> assumption of only using FUSD pricing.
 			Change purchase mechanism:
-				Introduce mechanism to test for nft polygonLister
-				Funds go to Pons but save value for polygonLister
+				[x] Introduce mechanism to test for nft polygonLister ==> handles on its own since payment capability is unique
+				[x] Funds go to Pons but save value for polygonLister
 				getter, and setter for polygonListerFunds dictionary
 
 				seperate emitters for polygon Flow/FUSd rpeference
 					create unique vaults for each polygon address 
-						--> each vault is resource
-						->> pay into vault
+						[x] --> each vault is resource
+						[x] ->> pay into vault
 
 						listingCertificate stored for polygon address
 
@@ -599,9 +599,14 @@ pub contract PonsTunnelContract{
 
 		// nft withdrawal will crash if nft is not held by ponsHolder. Asserting operation safety.
 		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdraw (withdrawID : nftSerialId); 
-		// figure out what to do with this listing certificate.
-		let listingCertificate <- PonsNftMarket. ponsMarket .listForSaleFusd(<-nft, salePriceFUSD, PonsTunnelContract .prepareFusdCapability(ponsAccount));
-
+		
+		let paymentCapability = PonsTunnelContract .prepareCapabilityForPolygonLister(account: ponsAccount, polygonAddress: polygonListingAddress);
+		
+		// figure out what to do with this listing certificate
+		let listingCertificate <- ( salePriceFlow == nil ?
+			PonsNftMarket. ponsMarket .listForSaleFusd(<-nft, salePriceFUSD, paymentCapability[1]):
+			PonsNftMarket. ponsMarket .listForSaleFlow(<-nft, salePriceFlow, paymentCapability[0])
+			);
 
 	}
 
