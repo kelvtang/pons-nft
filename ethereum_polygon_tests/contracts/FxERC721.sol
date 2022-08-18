@@ -142,6 +142,20 @@ contract FxERC721 is
     }
 
     /**
+        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
+     */
+    function getNftDataDetails(uint256 tokenId) public view returns (address, string memory, address, uint96){
+        (address royaltyAddress, uint96 royaltyFraction) = getRoyaltyDetails(tokenId);
+        return (
+            getPolygonArtistAddress(tokenId),
+            getArtistId(tokenId),
+            royaltyAddress,
+            royaltyFraction
+        );
+    }
+
+
+    /**
         @notice We can map Flow Artist ID to polygon account addresses.
         @dev The account must be manually verified by PONs and this function must be triggered 
             by Owner or other approved address.
@@ -154,17 +168,25 @@ contract FxERC721 is
 
     /**
     * This function can be called by the approved _fxManager
-    * It notes the amount of matic token owed to a flow Address in royalty
+    * It notes the amount of matic token owed to a flow Address
     */
-    function _appendFlowRoyaltyDue(uint256 _tokenId, uint256 value) public {
+    function _appendFundsDue(uint256 _tokenId, uint256 value) public {
         require(msg.sender == _fxManager, "Invalid sender");
         _flowRoyaltyDue[_tokenRoyaltyInfo_flow[_tokenId].flowArtistId] += value;
     }
     /**
     * This function can be called by the approved _fxManager
+    * It notes the amount of matic token owed to a flow Address
+    */
+    function _appendFundsDue(string memory _artistId, uint256 value) public {
+        require(msg.sender == _fxManager, "Invalid sender");
+        _flowRoyaltyDue[_artistId] += value;
+    }
+    /**
+    * This function can be called by the approved _fxManager
     * It clears the amount of matic token owed to a flow Address in royalty
     */
-    function _emptyFlowRoyaltyDue(string calldata _flowArtistId) public {
+    function _emptyFundsDue(string calldata _flowArtistId) public {
         require(msg.sender == _fxManager, "Invalid sender");
         delete _flowRoyaltyDue[_flowArtistId];
     }

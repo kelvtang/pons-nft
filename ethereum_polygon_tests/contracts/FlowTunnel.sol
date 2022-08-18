@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
+import "./FxERC721FxManager.sol";
 import "./Ownable.sol";
 import "./IERC721Receiver.sol";
 import "./PonsNftMarket.sol";
@@ -10,16 +11,21 @@ contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable {
 
     address private tokenContractAddress;
     address private marketContractAddress;
+    address private fxManagerContractAddress;
 
-    constructor(address _tokenContractAddress, address _marketContractAddress){
+    constructor(address _tokenContractAddress, address _marketContractAddress, address _fxManagerContractAddress){
         tokenContractAddress = _tokenContractAddress;
         marketContractAddress = _marketContractAddress;
+        fxManagerContractAddress = _fxManagerContractAddress;
     }
     function setMarketContractAddress(address _marketContractAddress) public onlyOwner{
         marketContractAddress = _marketContractAddress;
     }
     function setTokenContractAddress(address _tokenContractAddress) public onlyOwner{
         tokenContractAddress = _tokenContractAddress;
+    }
+    function setFxManager(address _fxManagerContractAddress) public onlyOwner{
+        fxManagerContractAddress = _fxManagerContractAddress;
     }
 
     event nftSentThroughTunnel(uint256 tokenId,address from,string flowAddress);
@@ -49,7 +55,7 @@ contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable {
         require(!tokenExists(tokenId), "NFT already exists"); // test if nft already exists.
         
         // New nft minted and owned by tunnel contract
-        FxERC721(tokenContractAddress).mint(address(this), tokenId, _data); 
+        FxERC721FxManager(fxManagerContractAddress).mintToken(address(this), tokenId, _data);
         
         emit newNftMinted(tokenId, address(this));
         return tokenId;
@@ -86,8 +92,9 @@ contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable {
         emit nftSentThroughTunnel(tokenId, msg.sender, flowAddress);
     }
 
-    function getFromTunnel(uint256 tokenId, address to, bytes calldata data, uint256 tokenPrice) public onlyOwner {
+    function getFromTunnel(uint256 tokenId, address to, bytes calldata data, uint256 tokenPrice, string calldata _flowListerId) public onlyOwner {
         require(to != address(0x0), "Tunnel: NFT being transfered to 0x0 address.");
+        require(to == marketContractAddress, "Tunnel: flow listerId redundant if aim is not market transfer");
         if (!tokenExists(tokenId)){
             bytes memory _data = data;
             tokenId = mintNewNft(tokenId, _data);
@@ -97,8 +104,27 @@ contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable {
         * You must list token on market place before transferring it.
         */
         if (to == marketContractAddress){
-            PonsNftMarket(marketContractAddress).listForSale(tokenId, tokenPrice); //TODO: Replace dummy price
+            PonsNftMarket(marketContractAddress).listForSale(tokenId, tokenPrice, _flowListerId); //TODO: Replace dummy price
         }
+        FxERC721(tokenContractAddress).safeTransferFrom(address(this), to, tokenId);
+        assert(tokenOwner(tokenId) == to);
+
+        /**
+        * To handle inter-blockchain purchases, we list transfered nft on polygon marketplace.
+         */
+        
+
+        emit nftReceievedFromTunnel(tokenId, msg.sender);
+    }
+
+    function getFromTunnel(uint256 tokenId, address to, bytes calldata data) public onlyOwner {
+        require(to != address(0x0), "Tunnel: NFT being transfered to 0x0 address.");
+        require(to != marketContractAddress, "Tunnel: cannot do market transfer without flow artistId");
+        if (!tokenExists(tokenId)){
+            bytes memory _data = data;
+            tokenId = mintNewNft(tokenId, _data);
+        }
+
         FxERC721(tokenContractAddress).safeTransferFrom(address(this), to, tokenId);
         assert(tokenOwner(tokenId) == to);
 
