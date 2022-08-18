@@ -49,6 +49,7 @@ contract FxERC721 is
         __ERC721Royalty_init();
         __ERC165_init();
         __ERC2981_init();
+        __ERC721ArtistID_init();
     }
 
     function updateConnectedToken(

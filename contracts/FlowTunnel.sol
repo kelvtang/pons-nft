@@ -2,19 +2,31 @@
 pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
-import "./Ownable.sol";
+import "./OwnableUpgradeable.sol";
 import "./IERC721Receiver.sol";
 import "./PonsNftMarket.sol";
+import "./Initializable.sol";
 
-contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable { 
+contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable { 
 
     address private tokenContractAddress;
     address private marketContractAddress;
+    mapping(uint256 => address) private tunnelUserAddress;
 
-    constructor(address _tokenContractAddress, address _marketContractAddress){
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
+        address _tokenContractAddress,
+        address _marketContractAddress
+    ) initializer public {
         tokenContractAddress = _tokenContractAddress;
         marketContractAddress = _marketContractAddress;
+        __Context_init();
+        __Ownable_init();
     }
+
     function setMarketContractAddress(address _marketContractAddress) public onlyOwner{
         marketContractAddress = _marketContractAddress;
     }
@@ -54,9 +66,6 @@ contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable {
         emit newNftMinted(tokenId, address(this));
         return tokenId;
     }
-
-
-    mapping(uint256 => address) private tunnelUserAddress;
     
     function setupTunnel(uint256 tokenId) public {
         require(tokenExists(tokenId), "Tunnel: NFT by this token ID doesn't exist");
@@ -77,7 +86,7 @@ contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable {
         assert(FxERC721(tokenContractAddress).getApproved(tokenId) == address(0x0));
 
         // Delist nft from marketplace.
-        if (PonsNftMarket(marketContractAddress).islisted(tokenId)){
+        if (PonsNftMarket(marketContractAddress).isListed(tokenId)){
             PonsNftMarket(marketContractAddress).unlist(tokenId);
         }
 
@@ -119,4 +128,12 @@ contract FlowTunnel is Ownable, IERC721ReceiverUpgradeable {
     ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
+
+
+    /**
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
+    uint256[47] private __gap;
 }

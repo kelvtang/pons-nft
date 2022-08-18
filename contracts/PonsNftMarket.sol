@@ -3,11 +3,12 @@ pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
 import "./FxERC721FxManager.sol";
-import "./Ownable.sol";
+import "./OwnableUpgradeable.sol";
 import "./IERC721Receiver.sol";
 import "./FlowTunnel.sol";
+import "./Initializable.sol";
 
-contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
+contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable{
 
     event newNftMinted(uint256 tokenId, address to);
     event nftPurchased(address from,address to,uint256 tokenId,uint256 amount);
@@ -30,19 +31,29 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
     address private fxManagerContractAddress;
     address private tunnelContractAddress;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
-    @notice constructor has two parameters
+    @notice initialize has two parameters
         @param _tokenContractAddress requires the contract addresses of FxERC721
         @param _fxManagerContractAddress requires the contract addresses of FxERC721FxManager
     @dev contract address of PonsNftMarket.sol should be added to FxERC721FxManager by owner.
     */
-    constructor (address _tokenContractAddress, address _fxManagerContractAddress){
+    function initialize(
+        address _tokenContractAddress,
+        address _fxManagerContractAddress
+    ) initializer public {
         tokenContractAddress = _tokenContractAddress;
         fxManagerContractAddress = _fxManagerContractAddress;
+        __Context_init();
+        __Ownable_init();
     }
 
     function tokenExists(uint256 tokenId) public view returns (bool){
         return FxERC721(tokenContractAddress).exists(tokenId);}
+
     function tokenOwner(uint256 tokenId) public view returns (address){
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         return FxERC721(tokenContractAddress).ownerOf(tokenId);}
@@ -56,6 +67,7 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
 
         emit newNftMinted(tokenId, address(this));
     }
+
     function mintGiftNft(uint256 tokenId, address to, bytes memory _data) public onlyOwner {
         require(!tokenExists(tokenId), "Market: NFT already exists");
         require(to != address(this), "Market: Should not gift NFT to self");
@@ -65,8 +77,6 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
 
         emit newNftMinted(tokenId, to);
     }
-
-
 
     /**
     @notice widthdrawFlowRoyalty takes the @param _flowArtistId and transfers the amount of matic due to the artist in royalties.
@@ -228,4 +238,11 @@ contract PonsNftMarket is Ownable, IERC721ReceiverUpgradeable{
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         return listingCertificateCollection[tokenId].listerAddress;
     }
+
+    /**
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
+    uint256[43] private __gap;
 }
