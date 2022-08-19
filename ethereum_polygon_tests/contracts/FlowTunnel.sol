@@ -35,8 +35,8 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
     }
 
     event nftSentThroughTunnel(uint256 tokenId,address from,string flowAddress);
-    event nftSentThroughTunnelForMarket_flow(uint256 tokenId, address from, string flowAddress, address polygonLister, price: uint256);
-    event nftSentThroughTunnelForMarket_fusd(uint256 tokenId, address from, string flowAddress, address polygonLister, price: uint256);
+    event nftSentThroughTunnelForMarket_flow(uint256 tokenId, address from, string flowAddress, address polygonLister, uint256 price);
+    event nftSentThroughTunnelForMarket_fusd(uint256 tokenId, address from, string flowAddress, address polygonLister, uint256 price);
     event nftReceievedFromTunnel(uint256 tokenId, address to);
     event newNftMinted(uint256 tokenId, address to);
 
