@@ -5,8 +5,8 @@ import cors from 'cors';
 import { send_transaction_ } from './utils/flow-api.mjs';
 import flow_types from '@onflow/types'
 import { known_account_ } from './utils/flow.mjs';
-import { FLOW_MARKETPLACE_ADDRESS, POLYGON_MARKETPLACE_ADDRESS, PONS_NFT_TUNNEL_ADDRESS, METAMASK_ACCOUNT_PRIVATE_KEY } from './config.mjs';
-import { BASE_TOKEN_URI, FLOW_EVENT_NAME, FLOW_EVENT_NAME_NOT_LISTED, POLYGON_EVENT_NAME, POLYGON_PROVIDER_URL } from './config.mjs';
+import { FLOW_MARKETPLACE_ADDRESS, POLYGON_MARKETPLACE_ADDRESS, FLOW_TUNNEL_PROXY_ADDRESS, METAMASK_ACCOUNT_PRIVATE_KEY } from './config.mjs';
+import { BASE_TOKEN_URI, FLOW_MARKET_TRANSFER_EVENT, FLOW_USER_TRANSFER_EVENT, POLYGON_FUSD_MARKET_TRANSFER_EVENT, POLYGON_FLOW_MARKET_TRANSFER_EVENT, POLYGON_PROVIDER_URL } from './config.mjs';
 import { flow_sdk_api } from './config.mjs';
 import fcl_api from '@onflow/fcl';
 import { fileTypeFromBuffer } from 'file-type';
@@ -21,16 +21,16 @@ app.use(express.urlencoded({ extended: true }));
 
 // TODO: Change file path based on actual file path
 // N.B Whenever any contract we need to restart server
-const childTunnelContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/FxERC721ChildTunnel.json', 'utf8'));
-const ponsNftTunnelContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/PonsNftTunnel.json', 'utf8'))
-const marketPlaceContractInformation = JSON.parse(fs.readFileSync('./ethereum_polygon_tests/build/contracts/PonsNftMarket.json', 'utf8'))
+const ponsNftTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contracts/PonsNftTunnel.json', 'utf8'))
+const marketPlaceContractInformation = JSON.parse(fs.readFileSync('./build/contracts/PonsNftMarket.json', 'utf8'))
+const flowTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contracts/FlowTunnel.json', 'utf8'))
 
 const polygonProvider = await createRPCProviders(POLYGON_PROVIDER_URL);
 const signer = await createSigner(METAMASK_ACCOUNT_PRIVATE_KEY)(polygonProvider)
-const polygonChildTunnelContractInstance = await createContractInstance(CHILD_TUNNEL_CONTRACT_ADDRESS)(childTunnelContractInformation.abi)(signer)
+const flowTunnelProxyInstance = await createContractInstance(FLOW_TUNNEL_PROXY_ADDRESS)(flowTunnelContractInformation.abi)(signer)
 const marketPlaceInstance = await createContractInstance(POLYGON_MARKETPLACE_ADDRESS)(marketPlaceContractInformation.abi)(signer)
 
-app.get("/metadata/:nftSerialId", (req, res) => {
+app.get("/metadata/:nftSerialId", async (req, res) => {
     const nftSerialId = req.params.nftSerialId
 
     // TODO: Change path accordingly
@@ -43,6 +43,7 @@ app.get("/metadata/:nftSerialId", (req, res) => {
 
 
 // Reverts a transacttion if the user rejects a purchase on polygon
+// Market to market transfer
 app.post("/market/revert", async (req, res) => {
     const tokenId = req.body["tokenId"]
 
@@ -51,24 +52,27 @@ app.post("/market/revert", async (req, res) => {
     res.send({ message: 'Transaction reverted on polygon. It will be reflected on flow once the transcation event is picked up and processed' });
 })
 
-
+// Market to market transfer
 app.post("/market/flowPurchase", (req, res) => {
     const tokenId = req.body["tokenId"]
 
-    // TODO: Fix this transaction
     send_transaction_
         (known_account_('0xPROPOSER'))
         (known_account_('0xPROPOSER'))
-        ([known_account_('0xPROPOSER')])
+        ([known_account_('0xPROPOSER'), known_account_('0xPROPOSER')])
         (`
             import PonsTunnelContract from 0xPONS
-            transaction(polygonRecepientAddress: String, nftSerialId: UInt64) {
-                prepare (ponsAccount : AuthAccount){
-                PonsTunnelContract .sendNftThroughTunnelUsingSerialId_Market(nftSerialId: nftSerialId, ponsAccount : ponsAccount, ponsHolderAccount : ponsAccount, tunnelUserAccount : ponsAccount, polygonAddress: polygonRecepientAddress);
+            import PonsUtils from 0xPONS
+        
+            transaction(
+            nftSerialId: UInt64
+            ) {
+                prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount){
+                    PonsTunnelContract .sendNftThroughTunnel_market (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount);
+                }
             }
         `)
-        ([flow_sdk_api.arg(POLYGON_MARKETPLACE_ADDRESS, flow_types.String),
-        flow_sdk_api.arg(tokenId, flow_types.UInt64)])
+        ([flow_sdk_api.arg(tokenId, flow_types.UInt64)])
         .then(_ => {
             res.status(200).send({ message: 'purchased on flow' });
         })
@@ -79,7 +83,8 @@ app.post("/market/flowPurchase", (req, res) => {
 
 app.listen(3010, () => console.log(`app running on 3010`))
 
-fcl_api.events(FLOW_EVENT_NAME).subscribe(async (event) => {
+// Market to market transfer
+fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
 
     const { nft, polygonRecipientAddress } = event
     const { nftSerialId, metadata, artistAddressFlow, artistAddressPolygon, flowToken, fusdToken, royalty } = nft
@@ -166,8 +171,8 @@ fcl_api.events(FLOW_EVENT_NAME).subscribe(async (event) => {
     await ponsNftTunnel.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, polygonPrice)
 })
 
-
-fcl_api.events(FLOW_EVENT_NAME_NOT_LISTED).subscribe(async (event) => {
+// user to user transfer
+fcl_api.events(FLOW_USER_TRANSFER_EVENT).subscribe(async (event) => {
 
     const { nft, polygonRecipientAddress } = event
     const { nftSerialId, metadata, artistAddressFlow, artistAddressPolygon, royalty } = nft
@@ -234,36 +239,73 @@ fcl_api.events(FLOW_EVENT_NAME_NOT_LISTED).subscribe(async (event) => {
     await ponsNftTunnel.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, ethers.constants.MaxUint256)
 })
 
-polygonChildTunnelContractInstance.on(POLYGON_EVENT_NAME, async (tokenId, _, flowAddress) => {
+
+// Market to market transfer using FUSD
+flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price) => {
 
     tokenId = tokenId.toString()
+    price = price.toString()
 
     if (!flowAddress) {
         flowAddress = FLOW_MARKETPLACE_ADDRESS
     }
 
-
-    // TODO: Transaction needs to change here
     await
         send_transaction_
             (known_account_('0xPROPOSER'))
             (known_account_('0xPROPOSER'))
-            ([known_account_('0xPROPOSER')])
+            ([known_account_('0xPROPOSER'), known_account_('0xPROPOSER')])
             (`
                 import PonsTunnelContract from 0xPONS
+                import PonsUtils from 0xPONS
+            
                 transaction(
-                    flowRecepientAddress: Address,
-                    nftSerialId: UInt64
-                ) 
-                {
-                    prepare (ponsAccount : AuthAccount){
-                        if flowRecepientAddress == tunnelUserAccount .Address{
-                        PonsTunnelContract .recieveNftFromTunnel_Market(nftSerialId: nftSerialId, ponsAccount : ponsAccount, ponsHolderAccount : ponsAccount, tunnelUserAccount : ponsAccount);
-                        }else {
-                            panic ("Only recipient can sign tranaction")
-                        }
+                nftSerialId: UInt64,
+                salePriceFUSD: UFix64,
+                polygonListingAddress: String
+                ) {
+                    prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount){
+                        PonsTunnelContract .recieveNftFromTunnel_market_fusd (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePriceFUSD: salePriceFUSD);
                     }
                 }
             `)
-            ([flow_sdk_api.arg(flowAddress, flow_types.Address), flow_sdk_api.arg(tokenId, flow_types.UInt64)])
+            ([flow_sdk_api.arg(tokenId, flow_types.UInt64),
+            flow_sdk_api.arg(""  + price, flow_types.UFix64),
+            flow_sdk_api.arg(polygonLister, flow_types.String),
+            ])
+})
+
+// Market to market transfer using Flow token
+flowTunnelProxyInstance.on(POLYGON_FLOW_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price) => {
+
+    tokenId = tokenId.toString()
+    price = price.toString()
+
+    if (!flowAddress) {
+        flowAddress = FLOW_MARKETPLACE_ADDRESS
+    }
+
+    await
+        send_transaction_
+            (known_account_('0xPROPOSER'))
+            (known_account_('0xPROPOSER'))
+            ([known_account_('0xPROPOSER'), known_account_('0xPROPOSER')])
+            (`
+                import PonsTunnelContract from 0xPONS
+                import PonsUtils from 0xPONS
+            
+                transaction(
+                nftSerialId: UInt64,
+                salePriceFlow: UFix64,
+                polygonListingAddress: String
+                ) {
+                    prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount){
+                        PonsTunnelContract .recieveNftFromTunnel_market_flow (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePriceFlow: salePriceFlow);
+                    }
+                }
+            `)
+            ([flow_sdk_api.arg(tokenId, flow_types.UInt64),
+            flow_sdk_api.arg(""  + price, flow_types.UFix64),
+            flow_sdk_api.arg(polygonLister, flow_types.String),
+            ])
 })
