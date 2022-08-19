@@ -49,6 +49,7 @@ abstract contract ERC721RoyaltyUpgradeable is Initializable, ERC2981Upgradeable,
         _resetTokenRoyalty(tokenId);
     }
 
+
     mapping(string => uint256) internal _flowRoyaltyDue;
 
     function getFundsDue(string calldata _flowArtistId) public view returns (uint256){

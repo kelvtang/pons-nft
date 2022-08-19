@@ -37,9 +37,6 @@ contract ERC721ArtistID is Initializable {
     function getPolygonFromFlow_calldata(string calldata _artistId) public view returns (address) {
         return flowPolygonArtistAddress[_artistId];
     }
-    function getPolygonFromFlow_memory(string memory _artistId) public view returns (address) {
-        return flowPolygonArtistAddress[_artistId];
-    }
 
     /**
     * @notice we try to return a polygon address associated with NFT.

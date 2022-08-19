@@ -93,7 +93,21 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         FxERC721FxManager(fxManagerContractAddress).emptyFundsDue(_flowArtistId);
     }
 
-    
+    /**
+        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
+     */
+    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
+        (address royaltyAddress, uint96 royaltyFraction) = FxERC721(tokenContractAddress).getRoyaltyDetails(tokenId);
+        return (
+            abi.encode(
+                FxERC721(tokenContractAddress).getTokenURI(tokenId),
+                FxERC721(tokenContractAddress).getPolygonArtistAddress(tokenId),
+                FxERC721(tokenContractAddress).getArtistId(tokenId),
+                royaltyAddress,
+                royaltyFraction
+            )
+        );
+    }
     
     function onERC721Received(
         address, /* operator */
@@ -151,7 +165,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         }
     }
 
-    function sendThroughTunnel(uint256 tokenId) public {
+    function sendThroughTunnel(uint256 tokenId, bool flowTokenFlag ) public {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tunnelContractAddress != address(0x0), "Market: Tunnel contract address not set");
         require(isListed(tokenId), "Market: Cannot send an unlisted nft");
@@ -159,8 +173,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         FlowTunnel(tunnelContractAddress).setupTunnel(tokenId);             // setup tunnel for use
         FxERC721(tokenContractAddress).safeTransferFrom(
                 address(this), tunnelContractAddress, tokenId);             // transfer nft to tunnel
-        FlowTunnel(tunnelContractAddress).sendThroughTunnel(tokenId, "");   // empty flowAddress goes to PonsNftMarket in Flow blockchain.
-                                                                            // --> Handle in relay.
+        FlowTunnel(tunnelContractAddress).sendThroughTunnel(tokenId, "", flowTokenFlag);   // empty flowAddress goes to PonsNftMarket in Flow blockchain.
     }
 
     function withdrawListing(uint256 tokenId) public {

@@ -10,8 +10,8 @@ contract FxERC721ChildTunnel is Initializable, FxBaseChildTunnelUpgradeable, IER
     // maybe DEPOSIT can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
 
-    // child proxy address
     address public childFxManagerProxy;
+
 
     constructor() {
         _disableInitializers();
@@ -26,7 +26,6 @@ contract FxERC721ChildTunnel is Initializable, FxBaseChildTunnelUpgradeable, IER
     * @param _childFxManagerProxy address representing the FxManager Proxy Contract deployed on polygon
     */
     function initialize(address _fxChild, address _childFxManagerProxy) public initializer {
-        __FxBaseChildTunnel_init(_fxChild);
 
         require(
             _isContract(_childFxManagerProxy),
@@ -39,6 +38,7 @@ contract FxERC721ChildTunnel is Initializable, FxBaseChildTunnelUpgradeable, IER
         );
 
         childFxManagerProxy = _childFxManagerProxy;
+        __FxBaseChildTunnel_init(_fxChild);
     }
 
     function onERC721Received(
@@ -55,9 +55,16 @@ contract FxERC721ChildTunnel is Initializable, FxBaseChildTunnelUpgradeable, IER
         return this.onERC721Received.selector;
     }
 
-    //To mint tokens on child chain
+    /**
+    * @dev public function that can be called to mint a token using {FxERC721FxManager.mintToken}
+    * Only succeeds if the tunnel is an approved address to use FxERC721FxManager's functions
+    * 
+    * @param tokenId uint256 representing the Id of the token the user wants to have to transferred to ethereum
+    * @param data bytes representing the extra information needed for the mint to happen
+    */
     function mintToken(uint256 tokenId, bytes memory data) public {
         FxERC721FxManager childFxManagerProxyContract = FxERC721FxManager(childFxManagerProxy);
+
         //mint token
         childFxManagerProxyContract.mintToken(msg.sender, tokenId, data);
     }
@@ -133,9 +140,9 @@ contract FxERC721ChildTunnel is Initializable, FxBaseChildTunnelUpgradeable, IER
     }
 
     /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
     uint256[48] private __gap;
 }

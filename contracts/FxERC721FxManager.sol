@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "./OwnableUpgradeable.sol";
 import "./FxERC721.sol";
 import "./IERC721Receiver.sol";
+import "./Initializable.sol";
 
-contract FxERC721FxManager is OwnableUpgradeable, IERC721ReceiverUpgradeable {
+contract FxERC721FxManager is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable {
 
     // mapping that stores tunnel addresses that can call this contract's functions
     mapping(address => bool) private _approvedProxyTunnels;
@@ -115,6 +116,7 @@ contract FxERC721FxManager is OwnableUpgradeable, IERC721ReceiverUpgradeable {
         FxERC721(fxTokenProxy)._emptyFundsDue(_flowArtistId);
     }
 
+    
     /**
     * @dev public function that can be called to mint a token using {FxERC721.mint()}
     * Only succeeds if the sender is an approved address to use this contract's functions and token proxy address is set

@@ -205,7 +205,7 @@ contract FxERC721 is
             address royaltyReceiver,
             uint96 royaltyNumerator
         ) = abi.decode(_data, (string, address, string, address, uint96));
-        
+
         setArtistId(tokenId, flowArtistId);
 
         if (polygonArtistAddress != address(0x0)){
@@ -249,7 +249,6 @@ contract FxERC721 is
         delete _flowRoyaltyDue[_flowArtistId];
     }
 
-
     /** 
     * @dev See {ERC721-_burn}. This override additionally clears the royalty information for the token.
     * The override also checks to see if a
@@ -280,9 +279,9 @@ contract FxERC721 is
     }
 
     /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
     uint256[48] private __gap;
 }
