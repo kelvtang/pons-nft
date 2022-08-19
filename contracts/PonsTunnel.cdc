@@ -228,7 +228,7 @@ pub contract PonsTunnelContract{
 
 
 
-   /* Creates Flow Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send Flow tokens to the account */
+	/* Creates Flow Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send Flow tokens to the account */
 	pub fun prepareFlowCapability (account: AuthAccount): Capability<&{FungibleToken.Receiver}> {
 		if account .borrow <&FlowToken.Vault> (from: /storage/flowTokenVault) == nil {
 			account .save (<- FlowToken .createEmptyVault (), to: /storage/flowTokenVault) }
@@ -404,11 +404,7 @@ pub contract PonsTunnelContract{
 	
 	
 	pub fun sendNftThroughTunnel (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, tunnelUserAccount: AuthAccount, polygonAddress: String){
-		pre {
-			/* ponsHolderAccount.toString() == "": 
-				panic("Can only go through tunnel by burning using Pons Burner") */
-		}
-
+		
 		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: tunnelUserAccount) .getNftId (serialId: nftSerialId)!
 		let nftRef: &PonsNftContractInterface.NFT = PonsTunnelContract .borrowOwnPonsCollection (collector: tunnelUserAccount) .borrowNft (nftId: nftId)
 		
