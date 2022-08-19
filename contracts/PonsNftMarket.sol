@@ -93,21 +93,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         FxERC721FxManager(fxManagerContractAddress).emptyFundsDue(_flowArtistId);
     }
 
-    /**
-        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
-     */
-    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
-        (address royaltyAddress, uint96 royaltyFraction) = FxERC721(tokenContractAddress).getRoyaltyDetails(tokenId);
-        return (
-            abi.encode(
-                FxERC721(tokenContractAddress).getTokenURI(tokenId),
-                FxERC721(tokenContractAddress).getPolygonArtistAddress(tokenId),
-                FxERC721(tokenContractAddress).getArtistId(tokenId),
-                royaltyAddress,
-                royaltyFraction
-            )
-        );
-    }
+    
     
     function onERC721Received(
         address, /* operator */
