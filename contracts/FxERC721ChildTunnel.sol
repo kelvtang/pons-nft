@@ -4,14 +4,9 @@ pragma solidity ^0.8.0;
 import "./FxBaseChildTunnel.sol";
 import "./IERC721Receiver.sol";
 import "./Initializable.sol";
-import "./TransparentUpgradeableProxy.sol";
 import "./FxERC721FxManager.sol";
 
-contract FxERC721ChildTunnel is
-    Initializable,
-    FxBaseChildTunnelUpgradeable,
-    IERC721ReceiverUpgradeable
-{
+contract FxERC721ChildTunnel is Initializable, FxBaseChildTunnelUpgradeable, IERC721ReceiverUpgradeable {
     // maybe DEPOSIT can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
     
@@ -22,6 +17,14 @@ contract FxERC721ChildTunnel is
         _disableInitializers();
     }
 
+    /** 
+    * @dev public function that is called when the proxy contract managing this contract is deployed through the {_data} variable
+    * This function can only be called once and cannot be called again later on, even when the contract is upgraded.
+    * See {ERC1967Proxy-constructor}.
+    * 
+    * @param _fxChild address representing the already deployed and verified fxChild contract
+    * @param _childFxManagerProxy address representing the FxManager Proxy Contract deployed on polygon
+    */
     function initialize(address _fxChild, address _childFxManagerProxy) public initializer {
 
         require(
@@ -43,23 +46,30 @@ contract FxERC721ChildTunnel is
         address, /* from */
         uint256, /* tokenId */
         bytes calldata /* data */
-    ) external pure override returns (bytes4) {
+    ) 
+        external 
+        pure 
+        override 
+        returns (bytes4) 
+    {
         return this.onERC721Received.selector;
     }
 
-    function withdraw(
-        uint256 tokenId,
-        string memory tokenUri, 
-        address royaltyReceiver,
-        uint96 royaltyNumerator
-    ) public {
+    /**
+    * @dev public function that the user calls to transfer a token from polygon to his account address on ethereum
+    * Need to wait for token to be checkpointed before generating a burn proof
+    * When token gets checkpointed, user needs to generate a burn proof using the withdraw transaction hash
+    * The user then feeds the burn proof to {RootTunnelProxy.receiveMessage(proof)} to claim the token on ethereum
+    *
+    * @param tokenId uint256 representing the Id of the token the user wants to have to transferred to ethereum
+    */
+    function withdraw(uint256 tokenId) public {
         FxERC721FxManager childFxManagerProxyContract = FxERC721FxManager(childFxManagerProxy);
 
+        bytes memory syncData = childFxManagerProxyContract.getNftDetails(tokenId);
         // withdraw tokens
         childFxManagerProxyContract.burnToken(msg.sender, tokenId);
 
-
-        bytes memory syncData = abi.encode(tokenUri, royaltyReceiver, royaltyNumerator);
         // send message to root regarding token burn
         _sendMessageToRoot(
             abi.encode(msg.sender, tokenId, syncData)
@@ -74,7 +84,11 @@ contract FxERC721ChildTunnel is
         uint256, /* stateId */
         address sender,
         bytes memory data
-    ) internal override validateSender(sender) {
+    ) 
+        internal 
+        override 
+        validateSender(sender) 
+    {
         // decode incoming data
         (bytes32 syncType, bytes memory syncData) = abi.decode(
             data,

@@ -7,7 +7,11 @@ library Merkle {
         uint256 index,
         bytes32 rootHash,
         bytes memory proof
-    ) internal pure returns (bool) {
+    ) 
+        internal 
+        pure 
+        returns (bool) 
+    {
         require(proof.length % 32 == 0, "Invalid proof length");
         uint256 proofHeight = proof.length / 32;
         // Proof of size n means, height of the tree is n+1.

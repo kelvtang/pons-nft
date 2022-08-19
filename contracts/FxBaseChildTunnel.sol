@@ -6,16 +6,12 @@ import "./Initializable.sol";
 
 // IFxMessageProcessor represents interface to process message
 interface IFxMessageProcessorUpgradeable {
-    function processMessageFromRoot(
-        uint256 stateId,
-        address rootMessageSender,
-        bytes calldata data
-    ) external;
+    function processMessageFromRoot(uint256 stateId, address rootMessageSender, bytes calldata data) external;
 }
 
 /**
- * @notice Mock child tunnel contract to receive and send message from L2
- */
+* @notice Mock child tunnel contract to receive and send message from L2
+*/
 abstract contract FxBaseChildTunnelUpgradeable is Initializable, IFxMessageProcessorUpgradeable {
 
 
@@ -48,47 +44,39 @@ abstract contract FxBaseChildTunnelUpgradeable is Initializable, IFxMessageProce
         fxRootTunnel = _fxRootTunnel;
     }
 
-    function processMessageFromRoot(
-        uint256 stateId,
-        address rootMessageSender,
-        bytes calldata data
-    ) external override {
+    function processMessageFromRoot(uint256 stateId, address rootMessageSender, bytes calldata data) external override {
         require(msg.sender == fxChild, "FxBaseChildTunnel: INVALID_SENDER");
         _processMessageFromRoot(stateId, rootMessageSender, data);
     }
 
     /**
-     * @notice Emit message that can be received on Root Tunnel
-     * @dev Call the internal function when need to emit message
-     * @param message bytes message that will be sent to Root Tunnel
-     * some message examples -
-     *   abi.encode(tokenId);
-     *   abi.encode(tokenId, tokenMetadata);
-     *   abi.encode(messageType, messageData);
-     */
+    * @notice Emit message that can be received on Root Tunnel
+    * @dev Call the internal function when need to emit message
+    * @param message bytes message that will be sent to Root Tunnel
+    * some message examples -
+    *   abi.encode(tokenId);
+    *   abi.encode(tokenId, tokenMetadata);
+    *   abi.encode(messageType, messageData);
+    */
     function _sendMessageToRoot(bytes memory message) internal {
         emit MessageSent(message);
     }
 
     /**
-     * @notice Process message received from Root Tunnel
-     * @dev function needs to be implemented to handle message as per requirement
-     * This is called by onStateReceive function.
-     * Since it is called via a system call, any event will not be emitted during its execution.
-     * @param stateId unique state id
-     * @param sender root message sender
-     * @param message bytes message that was sent from Root Tunnel
-     */
-    function _processMessageFromRoot(
-        uint256 stateId,
-        address sender,
-        bytes memory message
-    ) internal virtual;
+    * @notice Process message received from Root Tunnel
+    * @dev function needs to be implemented to handle message as per requirement
+    * This is called by onStateReceive function.
+    * Since it is called via a system call, any event will not be emitted during its execution.
+    * @param stateId unique state id
+    * @param sender root message sender
+    * @param message bytes message that was sent from Root Tunnel
+    */
+    function _processMessageFromRoot(uint256 stateId, address sender, bytes memory message) internal virtual;
 
     /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
     uint256[48] private __gap;
 }

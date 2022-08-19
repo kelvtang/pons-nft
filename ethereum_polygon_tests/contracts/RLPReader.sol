@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 /*
- * @author Hamdi Allam hamdi.allam97@gmail.com
- * Please reach out with any questions or concerns
- */
+* @author Hamdi Allam hamdi.allam97@gmail.com
+* Please reach out with any questions or concerns
+*/
 pragma solidity ^0.8.0;
 
 library RLPReader {
@@ -23,10 +23,10 @@ library RLPReader {
     }
 
     /*
-     * @dev Returns the next element in the iteration. Reverts if it has not next element.
-     * @param self The iterator.
-     * @return The next element in the iteration.
-     */
+    * @dev Returns the next element in the iteration. Reverts if it has not next element.
+    * @param self The iterator.
+    * @return The next element in the iteration.
+    */
     function next(Iterator memory self) internal pure returns (RLPItem memory) {
         require(hasNext(self));
 
@@ -38,18 +38,18 @@ library RLPReader {
     }
 
     /*
-     * @dev Returns true if the iteration has more elements.
-     * @param self The iterator.
-     * @return true if the iteration has more elements.
-     */
+    * @dev Returns true if the iteration has more elements.
+    * @param self The iterator.
+    * @return true if the iteration has more elements.
+    */
     function hasNext(Iterator memory self) internal pure returns (bool) {
         RLPItem memory item = self.item;
         return self.nextPtr < item.memPtr + item.len;
     }
 
     /*
-     * @param item RLP encoded bytes
-     */
+    * @param item RLP encoded bytes
+    */
     function toRlpItem(bytes memory item) internal pure returns (RLPItem memory) {
         uint256 memPtr;
         assembly {
@@ -60,10 +60,10 @@ library RLPReader {
     }
 
     /*
-     * @dev Create an iterator. Reverts if item is not a list.
-     * @param self The RLP item.
-     * @return An 'Iterator' over the item.
-     */
+    * @dev Create an iterator. Reverts if item is not a list.
+    * @param self The RLP item.
+    * @return An 'Iterator' over the item.
+    */
     function iterator(RLPItem memory self) internal pure returns (Iterator memory) {
         require(isList(self));
 
@@ -72,22 +72,22 @@ library RLPReader {
     }
 
     /*
-     * @param item RLP encoded bytes
-     */
+    * @param item RLP encoded bytes
+    */
     function rlpLen(RLPItem memory item) internal pure returns (uint256) {
         return item.len;
     }
 
     /*
-     * @param item RLP encoded bytes
-     */
+    * @param item RLP encoded bytes
+    */
     function payloadLen(RLPItem memory item) internal pure returns (uint256) {
         return item.len - _payloadOffset(item.memPtr);
     }
 
     /*
-     * @param item RLP encoded list in bytes
-     */
+    * @param item RLP encoded list in bytes
+    */
     function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
         require(isList(item));
 
@@ -120,9 +120,9 @@ library RLPReader {
     }
 
     /*
-     * @dev A cheaper version of keccak256(toRlpBytes(item)) that avoids copying memory.
-     * @return keccak256 hash of RLP encoded bytes.
-     */
+    * @dev A cheaper version of keccak256(toRlpBytes(item)) that avoids copying memory.
+    * @return keccak256 hash of RLP encoded bytes.
+    */
     function rlpBytesKeccak256(RLPItem memory item) internal pure returns (bytes32) {
         uint256 ptr = item.memPtr;
         uint256 len = item.len;
@@ -141,9 +141,9 @@ library RLPReader {
     }
 
     /*
-     * @dev A cheaper version of keccak256(toBytes(item)) that avoids copying memory.
-     * @return keccak256 hash of the item payload.
-     */
+    * @dev A cheaper version of keccak256(toBytes(item)) that avoids copying memory.
+    * @return keccak256 hash of the item payload.
+    */
     function payloadKeccak256(RLPItem memory item) internal pure returns (bytes32) {
         (uint256 memPtr, uint256 len) = payloadLocation(item);
         bytes32 result;
@@ -239,8 +239,8 @@ library RLPReader {
     }
 
     /*
-     * Private Helpers
-     */
+    * Private Helpers
+    */
 
     // @return number of payload items inside an encoded list.
     function numItems(RLPItem memory item) private pure returns (uint256) {
@@ -306,15 +306,18 @@ library RLPReader {
     }
 
     /*
-     * @param src Pointer to source
-     * @param dest Pointer to destination
-     * @param len Amount of memory to copy from the source
-     */
+    * @param src Pointer to source
+    * @param dest Pointer to destination
+    * @param len Amount of memory to copy from the source
+    */
     function copy(
         uint256 src,
         uint256 dest,
         uint256 len
-    ) private pure {
+    ) 
+        private 
+        pure 
+    {
         if (len == 0) return;
 
         // copy as many word sizes as possible
