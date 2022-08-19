@@ -51,6 +51,10 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         __Ownable_init();
     }
 
+    function getListerAddress(uint256 _tokenId) public view returns (address){
+        return listingCertificateCollection[_tokenId].listerAddress;
+    }
+
     function tokenExists(uint256 tokenId) public view returns (bool){
         return FxERC721(tokenContractAddress).exists(tokenId);}
 

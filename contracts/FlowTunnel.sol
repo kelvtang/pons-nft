@@ -35,6 +35,7 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
     }
 
     event nftSentThroughTunnel(uint256 tokenId,address from,string flowAddress);
+    event nftSentThroughTunnelForMarket(uint256 tokenId, address from, string flowAddress, address polygonLister);
     event nftReceievedFromTunnel(uint256 tokenId, address to);
     event newNftMinted(uint256 tokenId, address to);
 
@@ -87,12 +88,12 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
 
         // Delist nft from marketplace.
         if (PonsNftMarket(marketContractAddress).isListed(tokenId)){
+            emit nftSentThroughTunnelForMarket(tokenId, msg.sender, flowAddress, PonsNftMarket(marketContractAddress).getListerAddress(tokenId));
             PonsNftMarket(marketContractAddress).unlist(tokenId);
+        }else{
+            emit nftSentThroughTunnel(tokenId, msg.sender, flowAddress);
         }
-
         delete tunnelUserAddress[tokenId];
-
-        emit nftSentThroughTunnel(tokenId, msg.sender, flowAddress);
     }
 
     function getFromTunnel(uint256 tokenId, address to, bytes calldata data, uint256 tokenPrice) public onlyOwner {
