@@ -49,6 +49,7 @@ contract FxERC721 is
         __ERC721Royalty_init();
         __ERC165_init();
         __ERC2981_init();
+        __ERC721ArtistID_init();
     }
 
     function updateConnectedToken(
@@ -140,9 +141,6 @@ contract FxERC721 is
         _setTokenURI(tokenId, tokenUri);
     }
 
-    
-
-
     /**
         @notice We can map Flow Artist ID to polygon account addresses.
         @dev The account must be manually verified by PONs and this function must be triggered 
@@ -156,9 +154,9 @@ contract FxERC721 is
 
     /**
     * This function can be called by the approved _fxManager
-    * It notes the amount of matic token owed to a flow Address
+    * It notes the amount of matic token owed to a flow Address in royalty
     */
-    function _appendFundsDue(uint256 _tokenId, uint256 value) public {
+    function _appendFlowRoyaltyDue(uint256 _tokenId, uint256 value) public {
         require(msg.sender == _fxManager, "Invalid sender");
         _flowRoyaltyDue[getArtistId(_tokenId)] += value;
     }
@@ -170,6 +168,10 @@ contract FxERC721 is
         require(msg.sender == _fxManager, "Invalid sender");
         delete _flowRoyaltyDue[_flowArtistId];
     }
+
+
+
+
 
     function _burn(uint256 tokenId)
         internal

@@ -41,11 +41,6 @@ abstract contract ERC721URIStorageUpgradeable is Initializable, ERC721Upgradeabl
         return super.tokenURI(tokenId);
     }
 
-    function getTokenURI(uint256 tokenId) public view returns (string memory){
-        require(_exists(tokenId), "ERC721URIStorage: URI set of nonexistent token");
-        return _tokenURIs[tokenId];
-    }
-
     /**
      * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
      *
@@ -56,6 +51,11 @@ abstract contract ERC721URIStorageUpgradeable is Initializable, ERC721Upgradeabl
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
         require(_exists(tokenId), "ERC721URIStorage: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
+    }
+
+    function getTokenURI(uint256 _tokenId) public view returns (string memory){
+        require(_exists(_tokenId), "ERC721URIStorage: Nonexistent token");
+        return _tokenURIs[_tokenId];
     }
 
     /**
