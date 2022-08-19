@@ -135,7 +135,6 @@ contract FxERC721 is
         }else{
             // We may set royalty recpient to be anyone (manually set to PonsNftMarket address), since we donot have Polygon Address for Artist.
             _setTokenRoyalty(tokenId, royaltyReceiver, royaltyNumerator);
-            _setTokenRoyalty_flow(tokenId, flowArtistId, royaltyNumerator);
         }
         
         _safeMint(user, tokenId);
@@ -159,13 +158,13 @@ contract FxERC721 is
     */
     function _appendFlowRoyaltyDue(uint256 _tokenId, uint256 value) public {
         require(msg.sender == _fxManager, "Invalid sender");
-        _flowRoyaltyDue[_tokenRoyaltyInfo_flow[_tokenId].flowArtistId] += value;
+        _flowRoyaltyDue[getArtistId(_tokenId)] += value;
     }
     /**
     * This function can be called by the approved _fxManager
     * It clears the amount of matic token owed to a flow Address in royalty
     */
-    function _emptyFlowRoyaltyDue(string calldata _flowArtistId) public {
+    function _emptyFundsDue(string calldata _flowArtistId) public {
         require(msg.sender == _fxManager, "Invalid sender");
         delete _flowRoyaltyDue[_flowArtistId];
     }

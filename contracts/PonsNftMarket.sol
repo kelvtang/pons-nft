@@ -79,14 +79,30 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
     }
 
     /**
-    @notice widthdrawFlowRoyalty takes the @param _flowArtistId and transfers the amount of matic due to the artist in royalties.
+    @notice withdrawFunds takes the @param _flowArtistId and transfers the amount of matic due to the artist in royalties, and funds.
     @dev This is only allowed when the artist has registered his flowArtist account with Pons. and the Pons account calls the function setFlowIdToPolygonId in ./contracts/ERC721ArtistID.sol
      */
-    function widthdrawFlowRoyalty(string calldata _flowArtistId) public {
+    function withdrawFunds(string calldata _flowArtistId) public {
         require(FxERC721(tokenContractAddress).getPolygonFromFlow_calldata(_flowArtistId) == msg.sender, "Market: Only Registered Artists may widthdraw their royalty. Please register your Flow Artist ID with Pons");
-        require(FxERC721(tokenContractAddress).getRoyaltyDue(_flowArtistId) > 0, "Market: There are no funds due to this Artist ID");
-        payable(msg.sender).transfer(FxERC721(tokenContractAddress).getRoyaltyDue(_flowArtistId)/10_000);
-        FxERC721FxManager(fxManagerContractAddress).emptyFlowRoyaltyDue(_flowArtistId);
+        require(FxERC721(tokenContractAddress).getFundsDue(_flowArtistId) > 0, "Market: There are no funds due to this Artist ID");
+        payable(msg.sender).transfer(FxERC721(tokenContractAddress).getFundsDue(_flowArtistId)/10_000);
+        FxERC721FxManager(fxManagerContractAddress).emptyFundsDue(_flowArtistId);
+    }
+
+    /**
+        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
+     */
+    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
+        (address royaltyAddress, uint96 royaltyFraction) = FxERC721(tokenContractAddress).getRoyaltyDetails(tokenId);
+        return (
+            abi.encode(
+                FxERC721(tokenContractAddress).getTokenURI(tokenId),
+                FxERC721(tokenContractAddress).getPolygonArtistAddress(tokenId),
+                FxERC721(tokenContractAddress).getArtistId(tokenId),
+                royaltyAddress,
+                royaltyFraction
+            )
+        );
     }
     
     function onERC721Received(
@@ -182,7 +198,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
             if (_royaltyRecipient != address(0x0)){
                 // if the NFT has recipient detail OR recipient has registered himself with PONS
                 payable(_royaltyRecipient).transfer(_royaltyAmount);
-            }else if (FxERC721(tokenContractAddress).flowRoyaltyExist(tokenId)){
+            }else{
                 // test for flow details and store value owed to artist
                 FxERC721FxManager(fxManagerContractAddress).appendFlowRoyaltyDue(tokenId, (_royaltyAmount*10_000));
             }

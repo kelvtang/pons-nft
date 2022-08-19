@@ -36,16 +36,15 @@ abstract contract ERC2981Upgradeable is Initializable, IERC2981Upgradeable, ERC1
     RoyaltyInfo private _defaultRoyaltyInfo;
     mapping(uint256 => RoyaltyInfo) private _tokenRoyaltyInfo;
 
+    function getRoyaltyDetails(uint256 _tokenId) public view returns (address, uint96){
+        return (_tokenRoyaltyInfo[_tokenId].receiver, _tokenRoyaltyInfo[_tokenId].royaltyFraction);
+    }
+
     /**
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
         return interfaceId == type(IERC2981Upgradeable).interfaceId || super.supportsInterface(interfaceId);
-    }
-
-    function getRoyaltyDetails(uint256 tokenId) public view returns(address, uint96){
-        require (_tokenRoyaltyInfo[tokenId].receiver != address(0), "ERC2981: Royalty details for this token ID does not exit");
-        return (_tokenRoyaltyInfo[tokenId].receiver, _tokenRoyaltyInfo[tokenId].royaltyFraction);
     }
 
     /**
