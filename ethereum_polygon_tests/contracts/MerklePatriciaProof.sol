@@ -5,19 +5,23 @@ import "./RLPReader.sol";
 
 library MerklePatriciaProof {
     /*
-     * @dev Verifies a merkle patricia proof.
-     * @param value The terminating value in the trie.
-     * @param encodedPath The path in the trie leading to value.
-     * @param rlpParentNodes The rlp encoded stack of nodes.
-     * @param root The root hash of the trie.
-     * @return The boolean validity of the proof.
-     */
+    * @dev Verifies a merkle patricia proof.
+    * @param value The terminating value in the trie.
+    * @param encodedPath The path in the trie leading to value.
+    * @param rlpParentNodes The rlp encoded stack of nodes.
+    * @param root The root hash of the trie.
+    * @return The boolean validity of the proof.
+    */
     function verify(
         bytes memory value,
         bytes memory encodedPath,
         bytes memory rlpParentNodes,
         bytes32 root
-    ) internal pure returns (bool) {
+    ) 
+        internal 
+        pure 
+        returns (bool) 
+    {
         RLPReader.RLPItem memory item = RLPReader.toRlpItem(rlpParentNodes);
         RLPReader.RLPItem[] memory parentNodes = RLPReader.toList(item);
 
@@ -86,7 +90,11 @@ library MerklePatriciaProof {
         bytes memory encodedPartialPath,
         bytes memory path,
         uint256 pathPtr
-    ) private pure returns (uint256) {
+    ) 
+        private 
+        pure 
+        returns (uint256) 
+    {
         uint256 len = 0;
         // encodedPartialPath has elements that are each two hex characters (1 byte), but partialPath
         // and slicedPath have elements that are each one hex character (1 nibble)

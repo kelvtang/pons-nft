@@ -5,40 +5,46 @@ import "./FxBaseRootTunnel.sol";
 import "./FxERC721.sol";
 import "./IERC721Receiver.sol";
 import "./OwnableUpgradeable.sol";
-import "./TransparentUpgradeableProxy.sol";
 
 /**
- * @title FxERC721RootTunnel
- */
+* @title FxERC721RootTunnel
+*/
 contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgradeable, OwnableUpgradeable {
     // maybe DEPOSIT can be reduced to bytes4
     bytes32 public constant DEPOSIT = keccak256("DEPOSIT");
 
     address public rootFxTokenProxy;
-    
+
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(
-        address _checkpointManager,
-        address _fxRoot
-    ) initializer public {
+    /** 
+    * @dev public function that is called when the proxy contract managing this contract is deployed through the {_data} variable
+    * This function can only be called once and cannot be called again later on, even when the contract is upgraded.
+    * See {ERC1967Proxy-constructor}.
+    * 
+    * @param _checkpointManager address representing the already deployed verified checkpointManager contract
+    * @param _fxRoot address representing the already deployed and verified fxRoot contract
+    */
+    function initialize(address _checkpointManager, address _fxRoot) public initializer {
         __Context_init();
         __Ownable_init();
         __FxBaseRootTunnel_init(_checkpointManager, _fxRoot);
     }
 
-    function setTokenProxy(
-        address _rootProxy
-    ) public onlyOwner {
-        
-        require(
-            _isContract(_rootProxy),
-            "Root proxy address is not contract"
-        );
+    /**
+    * @dev public function that can be only called by the deployer of the contract when {rootFxTokenProxy} is not set
+    *
+    * @param _rootProxy address representing the FxERC721 contract proxy deployed
+    */
+    function setTokenProxy(address _rootProxy) public onlyOwner {
+        require(_isContract(_rootProxy), "Root proxy address is not contract");
 
-        require(rootFxTokenProxy == address(0x0), "FxERC721RootTunnel: Root Proxy address already set");
+        require(
+            rootFxTokenProxy == address(0x0),
+            "FxERC721RootTunnel: Root Proxy address already set"
+        );
 
         rootFxTokenProxy = _rootProxy;
     }
@@ -52,36 +58,51 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
         return this.onERC721Received.selector;
     }
 
-
-    // before calling, need to prompt user to accept adding us as approved owner from js 
-    function deposit(
-        address user,
-        uint256 tokenId,
-        string memory tokenUri, 
-        address royaltyReceiver,
-        uint96 royaltyNumerator
-    ) public {
+    /**
+    * @dev public function that the user calls to transfer a token from ethereum to polygon
+    * The user has to be prompted first to approve this contract as an approved address  
+    * This can be done through the {FxERC721Proxy.approve(tunnelProxyAddress, tokenId)}
+    * Approval is needed to allow the contract to transfer the token from the user's account to the contract's address
+    *
+    * @param user address representing the polygon address the token should be deposited to
+    * @param tokenId uint256 representing the Id of the token the user wants to have to transferred to polygon
+    */
+    function deposit(address user, uint256 tokenId) public {
         FxERC721 fxTokenProxyContract = FxERC721(rootFxTokenProxy);
-        
+
         address _connectedFxChildProxy = fxTokenProxyContract.connectedToken();
 
         // validate root and child token mapping
         require(
-                rootFxTokenProxy != address(0x0) && _connectedFxChildProxy != address(0x0),
+            rootFxTokenProxy != address(0x0) && _connectedFxChildProxy != address(0x0),
             "FxERC721RootTunnel: NO_MAPPED_TOKEN"
         );
 
-        bytes memory data = abi.encode(tokenUri, royaltyReceiver, royaltyNumerator);
+        // bytes memory data = fxTokenProxyContract.getNftDataDetails(tokenId);
+        (address royaltyAddress, uint96 royaltyFraction) = fxTokenProxyContract.getRoyaltyDetails(tokenId);
+        
+        bytes memory data = abi.encode(
+            fxTokenProxyContract.getTokenURI(tokenId),
+            fxTokenProxyContract.getPolygonArtistAddress(tokenId),
+            fxTokenProxyContract.getArtistId(tokenId),
+            royaltyAddress,
+            royaltyFraction
+        );
+
         // transfer from depositor to this contract
         fxTokenProxyContract.safeTransferFrom(
             msg.sender, // depositor
-            address(this), // manager contract
+            address(this),
             tokenId,
             data
         );
-        
+
         // DEPOSIT, encode(rootToken, depositor, user, tokenId, extra data)
-        bytes memory message = abi.encode(DEPOSIT, abi.encode(user, tokenId, data));
+        bytes memory message = abi.encode(
+            DEPOSIT,
+            abi.encode(user, tokenId, data)
+        );
+
         _sendMessageToChild(message);
     }
 
@@ -94,17 +115,15 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
 
         // validate root and child token mapping
         require(
-                rootFxTokenProxy != address(0x0),
+            rootFxTokenProxy != address(0x0),
             "FxERC721RootTunnel: NO_MAPPED_TOKEN"
         );
 
         FxERC721 fxTokenProxyContract = FxERC721(rootFxTokenProxy);
 
-        //approve token transfer
         if (!fxTokenProxyContract.exists(tokenId)) {
             fxTokenProxyContract.mint(to, tokenId, syncData);
         } else {
-            // transfer from tokens
             fxTokenProxyContract.safeTransferFrom(
                 address(this),
                 to,

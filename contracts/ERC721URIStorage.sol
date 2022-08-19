@@ -7,8 +7,8 @@ import "./ERC721.sol";
 import "./Initializable.sol";
 
 /**
- * @dev ERC721 token with storage based token URI management.
- */
+* @dev ERC721 token with storage based token URI management.
+*/
 abstract contract ERC721URIStorageUpgradeable is Initializable, ERC721Upgradeable {
     function __ERC721URIStorage_init() internal onlyInitializing {
     }
@@ -21,8 +21,8 @@ abstract contract ERC721URIStorageUpgradeable is Initializable, ERC721Upgradeabl
     mapping(uint256 => string) private _tokenURIs;
 
     /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
+    * @dev See {IERC721Metadata-tokenURI}.
+    */
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
 
@@ -41,13 +41,18 @@ abstract contract ERC721URIStorageUpgradeable is Initializable, ERC721Upgradeabl
         return super.tokenURI(tokenId);
     }
 
+    function getTokenURI(uint256 tokenId) public view returns (string memory){
+        require(_exists(tokenId), "ERC721URIStorage: URI set of nonexistent token");
+        return _tokenURIs[tokenId];
+    }
+
     /**
-     * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     */
+    * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
+    *
+    * Requirements:
+    *
+    * - `tokenId` must exist.
+    */
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
         require(_exists(tokenId), "ERC721URIStorage: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
@@ -59,10 +64,10 @@ abstract contract ERC721URIStorageUpgradeable is Initializable, ERC721Upgradeabl
     }
 
     /**
-     * @dev See {ERC721-_burn}. This override additionally checks to see if a
-     * token-specific URI was set for the token, and if so, it deletes the token URI from
-     * the storage mapping.
-     */
+    * @dev See {ERC721-_burn}. This override additionally checks to see if a
+    * token-specific URI was set for the token, and if so, it deletes the token URI from
+    * the storage mapping.
+    */
     function _burn(uint256 tokenId) internal virtual override {
 
         if (bytes(_tokenURIs[tokenId]).length != 0) {
@@ -71,9 +76,9 @@ abstract contract ERC721URIStorageUpgradeable is Initializable, ERC721Upgradeabl
     }
 
     /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
     uint256[49] private __gap;
 }

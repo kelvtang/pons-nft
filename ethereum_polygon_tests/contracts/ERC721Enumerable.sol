@@ -8,10 +8,10 @@ import "./IERC721Enumerable.sol";
 import "./Initializable.sol";
 
 /**
- * @dev This implements an optional extension of {ERC721} defined in the EIP that adds
- * enumerability of all the token ids in the contract as well as all token ids owned by each
- * account.
- */
+* @dev This implements an optional extension of {ERC721} defined in the EIP that adds
+* enumerability of all the token ids in the contract as well as all token ids owned by each
+* account.
+*/
 abstract contract ERC721EnumerableUpgradeable is Initializable, ERC721Upgradeable, IERC721EnumerableUpgradeable {
     function __ERC721Enumerable_init() internal onlyInitializing {
     }
@@ -31,55 +31,59 @@ abstract contract ERC721EnumerableUpgradeable is Initializable, ERC721Upgradeabl
     mapping(uint256 => uint256) private _allTokensIndex;
 
     /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC721Upgradeable) returns (bool) {
+    * @dev See {IERC165-supportsInterface}.
+    */
+    function supportsInterface(
+        bytes4 interfaceId
+    ) 
+        public 
+        view 
+        virtual 
+        override(IERC165Upgradeable, ERC721Upgradeable) 
+        returns (bool) 
+    {
         return interfaceId == type(IERC721EnumerableUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /**
-     * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
-     */
+    * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
+    */
     function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual override returns (uint256) {
         require(index < ERC721Upgradeable.balanceOf(owner), "ERC721Enumerable: owner index out of bounds");
         return _ownedTokens[owner][index];
     }
 
     /**
-     * @dev See {IERC721Enumerable-totalSupply}.
-     */
+    * @dev See {IERC721Enumerable-totalSupply}.
+    */
     function totalSupply() public view virtual override returns (uint256) {
         return _allTokens.length;
     }
 
     /**
-     * @dev See {IERC721Enumerable-tokenByIndex}.
-     */
+    * @dev See {IERC721Enumerable-tokenByIndex}.
+    */
     function tokenByIndex(uint256 index) public view virtual override returns (uint256) {
         require(index < ERC721EnumerableUpgradeable.totalSupply(), "ERC721Enumerable: global index out of bounds");
         return _allTokens[index];
     }
 
     /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual override {
+    * @dev Hook that is called before any token transfer. This includes minting
+    * and burning.
+    *
+    * Calling conditions:
+    *
+    * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
+    * transferred to `to`.
+    * - When `from` is zero, `tokenId` will be minted for `to`.
+    * - When `to` is zero, ``from``'s `tokenId` will be burned.
+    * - `from` cannot be the zero address.
+    * - `to` cannot be the zero address.
+    *
+    * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+    */
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
         super._beforeTokenTransfer(from, to, tokenId);
 
         if (from == address(0)) {
@@ -95,10 +99,10 @@ abstract contract ERC721EnumerableUpgradeable is Initializable, ERC721Upgradeabl
     }
 
     /**
-     * @dev Private function to add a token to this extension's ownership-tracking data structures.
-     * @param to address representing the new owner of the given token ID
-     * @param tokenId uint256 ID of the token to be added to the tokens list of the given address
-     */
+    * @dev Private function to add a token to this extension's ownership-tracking data structures.
+    * @param to address representing the new owner of the given token ID
+    * @param tokenId uint256 ID of the token to be added to the tokens list of the given address
+    */
     function _addTokenToOwnerEnumeration(address to, uint256 tokenId) private {
         uint256 length = ERC721Upgradeable.balanceOf(to);
         _ownedTokens[to][length] = tokenId;
@@ -106,22 +110,22 @@ abstract contract ERC721EnumerableUpgradeable is Initializable, ERC721Upgradeabl
     }
 
     /**
-     * @dev Private function to add a token to this extension's token tracking data structures.
-     * @param tokenId uint256 ID of the token to be added to the tokens list
-     */
+    * @dev Private function to add a token to this extension's token tracking data structures.
+    * @param tokenId uint256 ID of the token to be added to the tokens list
+    */
     function _addTokenToAllTokensEnumeration(uint256 tokenId) private {
         _allTokensIndex[tokenId] = _allTokens.length;
         _allTokens.push(tokenId);
     }
 
     /**
-     * @dev Private function to remove a token from this extension's ownership-tracking data structures. Note that
-     * while the token is not assigned a new owner, the `_ownedTokensIndex` mapping is _not_ updated: this allows for
-     * gas optimizations e.g. when performing a transfer operation (avoiding double writes).
-     * This has O(1) time complexity, but alters the order of the _ownedTokens array.
-     * @param from address representing the previous owner of the given token ID
-     * @param tokenId uint256 ID of the token to be removed from the tokens list of the given address
-     */
+    * @dev Private function to remove a token from this extension's ownership-tracking data structures. Note that
+    * while the token is not assigned a new owner, the `_ownedTokensIndex` mapping is _not_ updated: this allows for
+    * gas optimizations e.g. when performing a transfer operation (avoiding double writes).
+    * This has O(1) time complexity, but alters the order of the _ownedTokens array.
+    * @param from address representing the previous owner of the given token ID
+    * @param tokenId uint256 ID of the token to be removed from the tokens list of the given address
+    */
     function _removeTokenFromOwnerEnumeration(address from, uint256 tokenId) private {
         // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
         // then delete the last slot (swap and pop).
@@ -143,10 +147,10 @@ abstract contract ERC721EnumerableUpgradeable is Initializable, ERC721Upgradeabl
     }
 
     /**
-     * @dev Private function to remove a token from this extension's token tracking data structures.
-     * This has O(1) time complexity, but alters the order of the _allTokens array.
-     * @param tokenId uint256 ID of the token to be removed from the tokens list
-     */
+    * @dev Private function to remove a token from this extension's token tracking data structures.
+    * This has O(1) time complexity, but alters the order of the _allTokens array.
+    * @param tokenId uint256 ID of the token to be removed from the tokens list
+    */
     function _removeTokenFromAllTokensEnumeration(uint256 tokenId) private {
         // To prevent a gap in the tokens array, we store the last token in the index of the token to delete, and
         // then delete the last slot (swap and pop).
@@ -168,9 +172,9 @@ abstract contract ERC721EnumerableUpgradeable is Initializable, ERC721Upgradeabl
     }
 
     /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
+    * @dev This empty reserved space is put in place to allow future versions to add new
+    * variables without shifting down storage in the inheritance chain.
+    * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    */
     uint256[46] private __gap;
 }

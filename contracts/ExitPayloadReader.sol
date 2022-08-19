@@ -29,11 +29,7 @@ library ExitPayloadReader {
     }
 
     // copy paste of private copy() from RLPReader to avoid changing of existing contracts
-    function copy(
-        uint256 src,
-        uint256 dest,
-        uint256 len
-    ) private pure {
+    function copy(uint256 src, uint256 dest, uint256 len) private pure {
         if (len == 0) return;
 
         // copy as many word sizes as possible

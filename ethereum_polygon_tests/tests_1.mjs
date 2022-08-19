@@ -4,8 +4,7 @@ import {
     deployContract, createSigner, createRPCProviders, createContractInstance, encodeToBytes, createAndEncodeFunctionInterface
 } from '../ethereum-api.mjs';
 import {
-    CHILD_TUNNEL_PROXY_ADDRESS, ROOT_TUNNEL_PROXY_ADDRESS, CHILD_FX_TOKEN_PROXY_ADDRESS, ROOT_FX_TOKEN_PROXY_ADDRESS, CHILD_PROXY_ADMIN_ADDRESS,
-    ROOT_PROXY_ADMIN_ADDRESS, FX_MANAGER_PROXY_ADDRESS
+    CHILD_TUNNEL_PROXY_ADDRESS, ROOT_TUNNEL_PROXY_ADDRESS, CHILD_FX_TOKEN_PROXY_ADDRESS, ROOT_FX_TOKEN_PROXY_ADDRESS, CHILD_PROXY_ADMIN_ADDRESS
 } from '../config.mjs';
 import {
     ACCOUNT_ADDRESSES, PRIVATE_KEYS, GANACHE_PROVIDER_CHILD, GANACHE_PROVIDER_ROOT
@@ -121,16 +120,6 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
         const rootTunnelProxyInstance = await createContractInstance(rootTunnelProxy.contractAddress)(rootTunnelContractInformation.abi)(rootSigner)
         const rootFxErc721TokenProxyInstance = await createContractInstance(rootFxErc721TokenProxy.contractAddress)(fxErc721ContractInformation.abi)(rootSigner)
 
-        _test.pass(JSON.stringify({
-            childTokenProxyAddress: childFxErc721TokenProxy.contractAddress,
-            rootTokenProxyAddress: rootFxErc721TokenProxy.contractAddress,
-            childTunnelProxyAddress: childTunnelProxy.contractAddress,
-            rootTunnelProxyAddress: rootTunnelProxy.contractAddress,
-            childAdminProxy: childProxyAdmin.contractAddress,
-            rootAdminProxy: rootProxyAdmin.contractAddress,
-            FxManagerProxy: childFxManagerProxy.contractAddress
-        }, null, 2))
-
         _test.test("Owner adding Approval for the child tunnel proxy", async _test => {
             try {
                 await childFxManagerProxyInstance.addApproval(childTunnelProxy.contractAddress)
@@ -151,6 +140,8 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
             }
         })
 
+        await rootTunnelProxyInstance.setFxChildTunnel(childTunnelProxy.contractAddress)
+
         _test.test("Non-owner adding Approval for the child tunnel proxy", async _test => {
             try {
                 const nonOwnerSigner = await createSigner(PRIVATE_KEYS[2])(childProvider);
@@ -162,7 +153,7 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
             }
         })
 
-        await rootTunnelProxyInstance.setFxChildTunnel(childTunnelProxy.contractAddress)
+        await childTunnelProxyInstance.setFxRootTunnel(rootTunnelProxyInstance.address)
 
         _test.test("cannot reset FxChildTunnel address after it is set", async _test => {
             try {
@@ -172,8 +163,6 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
                 _test.pass("Child tunnel address did not change")
             }
         })
-
-        await childTunnelProxyInstance.setFxRootTunnel(rootTunnelProxyInstance.address)
 
         _test.test("cannot reset FxRootTunnel address after it is set", async _test => {
             try {
@@ -288,7 +277,16 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
                         await childFxManagerProxyInstance.setTokenProxy(childFxErc721TokenProxy.contractAddress)
                         _test.fail("Token proxy address should have changed")
                     } catch (e) {
-                        _test.pass("Token proxy address did not change")
+                        _test.comment("Token proxy address did not change")
+                        _test.pass(JSON.stringify({
+                            childTokenProxyAddress: childFxErc721TokenProxy.contractAddress,
+                            rootTokenProxyAddress: rootFxErc721TokenProxy.contractAddress,
+                            childTunnelProxyAddress: childTunnelProxy.contractAddress,
+                            rootTunnelProxyAddress: rootTunnelProxy.contractAddress,
+                            childAdminProxy: childProxyAdmin.contractAddress,
+                            rootAdminProxy: rootProxyAdmin.contractAddress,
+                            FxManagerProxy: childFxManagerProxy.contractAddress
+                        }, null, 2))
                     }
                 })
             } catch (e) {
@@ -299,8 +297,8 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
 }
 
 // After running this function, two new tokens with Ids tokenId and tokenId + 1 will exist
-const mint_on_polygon_ = (tokenId) => (tokenUri) => (royaltyReceiver) => async (royaltyNumerator) => {
-    const mintingData = await encodeToBytes(["string", "address", "uint96"])([tokenUri, royaltyReceiver, royaltyNumerator])
+const mint_on_polygon_ = (tokenId) => (tokenUri) => (polygonArtistAddress) => (flowArtistId) => (royaltyReceiver) => async (royaltyNumerator) => {
+    const mintingData = await encodeToBytes(["string", "address", "string", "address", "uint96"])([tokenUri, polygonArtistAddress, flowArtistId, royaltyReceiver, royaltyNumerator])
     const childProvider = await createRPCProviders(GANACHE_PROVIDER_CHILD);
     let childSigner = await createSigner(PRIVATE_KEYS[1])(childProvider);
     let childTunnelProxyInstance = await createContractInstance(CHILD_TUNNEL_PROXY_ADDRESS)(childTunnelContractInformation.abi)(childSigner);
@@ -375,7 +373,7 @@ const mint_on_polygon_ = (tokenId) => (tokenUri) => (royaltyReceiver) => async (
         _test.test("Upgrade child proxy implementation", async _test => {
             try {
                 await childTokenProxyInstance.pause()
-                const childAdminProxy = await createContractInstance(CHILD_ADMIN_PROXY)(proxyAdminContractInformation.abi)(childSigner);
+                const childAdminProxy = await createContractInstance(CHILD_PROXY_ADMIN_ADDRESS)(proxyAdminContractInformation.abi)(childSigner);
 
                 let FxERC721Child = await deployContract(childSigner)(fxErc721ContractInformation.abi)(fxErc721ContractInformation.bytecode)([])
                 await childAdminProxy.upgrade(CHILD_FX_TOKEN_PROXY_ADDRESS, FxERC721Child.contractAddress)
@@ -426,15 +424,14 @@ const mint_on_polygon_ = (tokenId) => (tokenUri) => (royaltyReceiver) => async (
     })
 }
 
-const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => (royaltyReceiver) => async (royaltyNumerator) => {
+const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => (polygonArtistAddress) => (flowArtistId) => (royaltyReceiver) => async (royaltyNumerator) => {
     const childProvider = await createRPCProviders(GANACHE_PROVIDER_CHILD);
     const rootProvider = await createRPCProviders(GANACHE_PROVIDER_ROOT)
 
     let childSigner = await createSigner(PRIVATE_KEYS[1])(childProvider);
     let rootSigner = await createSigner(PRIVATE_KEYS[0])(rootProvider);
 
-    const mintingData = await encodeToBytes(["string", "address", "uint96"])([tokenUri, royaltyReceiver, royaltyNumerator])
-
+    const mintingData = await encodeToBytes(["string", "address", "string", "address", "uint96"])([tokenUri, polygonArtistAddress, flowArtistId, royaltyReceiver, royaltyNumerator])
     let childTunnelProxyInstance = await createContractInstance(CHILD_TUNNEL_PROXY_ADDRESS)(childTunnelContractInformation.abi)(childSigner);
     let rootTunnelProxyInstance = await createContractInstance(ROOT_TUNNEL_PROXY_ADDRESS)(rootTunnelContractInformation.abi)(rootSigner);
 
@@ -452,7 +449,7 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
 
     test("Burning on child chain a token that does not exist", async _test => {
         try {
-            await childTunnelProxyInstance.withdraw(1000000000000000, tokenUri, royaltyReceiver, royaltyNumerator)
+            await childTunnelProxyInstance.withdraw(1000000000000000)
             _test.fail("Burning should not happen as caller is not FxManager")
         } catch (e) {
             _test.pass("Burning did not happen as caller is not the child tunnel proxy contract")
@@ -473,7 +470,7 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
                     await childTunnelProxyInstance.mintToken(tokenId, mintingData)
                     _test.comment("Token minted")
                 }
-                await childTunnelProxyInstance.withdraw(tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+                await childTunnelProxyInstance.withdraw(tokenId)
                 _test.comment("Token got burned")
                 _test.pass("Burning was not paused as sender is not owner")
             }
@@ -487,7 +484,7 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
                     _test.comment("Token minted")
                 }
                 await childTokenProxyInstance.pause()
-                await childTunnelProxyInstance.withdraw(tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+                await childTunnelProxyInstance.withdraw(tokenId)
                 _test.fail("Token should not have been burned")
             } catch (e) {
                 await childTokenProxyInstance.unpause()
@@ -501,7 +498,7 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
         _test.test("Upgrade child proxy implementation", async _test => {
             try {
                 await childTokenProxyInstance.pause()
-                const childAdminProxy = await createContractInstance(CHILD_ADMIN_PROXY)(proxyAdminContractInformation.abi)(childSigner);
+                const childAdminProxy = await createContractInstance(CHILD_PROXY_ADMIN_ADDRESS)(proxyAdminContractInformation.abi)(childSigner);
 
                 let FxERC721Child = await deployContract(childSigner)(fxErc721ContractInformation.abi)(fxErc721ContractInformation.bytecode)([])
                 await childAdminProxy.upgrade(CHILD_FX_TOKEN_PROXY_ADDRESS, FxERC721Child.contractAddress)
@@ -522,7 +519,7 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
                     await childTunnelProxyInstance.mintToken(tokenId, mintingData)
                     _test.comment("Token minted")
                 }
-                await childTunnelProxyInstance.withdraw(tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+                await childTunnelProxyInstance.withdraw(tokenId)
                 _test.fail("Token burning should not happen as contract is paused")
             } catch (e) {
                 _test.pass("Token was not burned as contract is paused")
@@ -547,7 +544,7 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
                 await childTunnelProxyInstance.mintToken(tokenId, mintingData)
                 _test.comment("Token minted")
             }
-            await childTunnelProxyInstance.withdraw(tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+            await childTunnelProxyInstance.withdraw(tokenId)
             _test.pass("Token minted successfully after unpausing")
         })
 
@@ -567,14 +564,14 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
             const contractWithWrongSigner = childTunnelProxyInstance.connect(nonOwnerSigner)
             _test.test("Non-owner of a token trying to burn the token", async _test => {
                 try {
-                    await contractWithWrongSigner.withdraw(tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+                    await contractWithWrongSigner.withdraw(tokenId)
                     _test.fail("Non-owner should not be able to burn the token")
                 } catch (e) {
                     _test.pass("Token not burned as caller is not owner")
                 }
             })
 
-            const tx = await childTunnelProxyInstance.withdraw(tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+            const tx = await childTunnelProxyInstance.withdraw(tokenId)
             _test.comment("Token burned and withdrawn")
             const logs = await tx.wait()
             const nftData = logs.events.filter(event => event.event === 'MessageSent')
@@ -586,7 +583,7 @@ const burning_on_polygon_and_transfer_to_ethereum_ = (tokenId) => (tokenUri) => 
     })
 }
 
-const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) => (royaltyReceiver) => async (royaltyNumerator) => {
+const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) => (polygonArtistAddress) => (flowArtistId) => (royaltyReceiver) => async (royaltyNumerator) => {
 
     const childProvider = await createRPCProviders(GANACHE_PROVIDER_CHILD);
     const rootProvider = await createRPCProviders(GANACHE_PROVIDER_ROOT)
@@ -602,7 +599,7 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
     test("Transfer of an exisitng token from ethereum to polygon without owner's approval", async _test => {
         try {
 
-            const transactionReceipt = await rootTunnelProxyInstance.deposit(userAddress, tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+            const transactionReceipt = await rootTunnelProxyInstance.deposit(userAddress, tokenId)
             const logs = await transactionReceipt.wait()
 
             const nftData = logs.events.filter(event => event.event === 'rootToChild')
@@ -617,7 +614,7 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
     test("Attempt to transfer a non-existent token from ethereum to polygon", async _test => {
         try {
 
-            const transactionReceipt = await rootTunnelProxyInstance.deposit(userAddress, 1000000000000000, tokenUri, royaltyReceiver, royaltyNumerator)
+            const transactionReceipt = await rootTunnelProxyInstance.deposit(userAddress, 1000000000000000)
             const logs = await transactionReceipt.wait()
 
             const nftData = logs.events.filter(event => event.event === 'rootToChild')
@@ -641,7 +638,7 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
                     const rootTokenProxyOwnerSigner = rootTokenProxyInstance.connect(rootTokenProxySigner)
                     try {
                         await rootTokenProxyOwnerSigner.pause()
-                        await rootTunnelProxyInstance.deposit(userAddress, tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+                        await rootTunnelProxyInstance.deposit(userAddress, tokenId)
                         _test.fail("Deposit should not happen as contract is paused")
                     } catch (e) {
                         await rootTokenProxyOwnerSigner.unpause()
@@ -651,7 +648,7 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
                 })
 
                 _test.test("transfer of token with owner's approval while contract is unpaused", async _test => {
-                    const transactionReceipt = await rootTunnelProxyInstance.deposit(userAddress, tokenId, tokenUri, royaltyReceiver, royaltyNumerator)
+                    const transactionReceipt = await rootTunnelProxyInstance.deposit(userAddress, tokenId)
                     const logs = await transactionReceipt.wait()
 
                     const nftData = logs.events.filter(event => event.event === 'rootToChild')
@@ -675,8 +672,9 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
 
 
 // deploy_contracts_("test200")("tt1")
-// mint_on_polygon_(5)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
-// burning_on_polygon_and_transfer_to_ethereum_(7)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
-// ethereum_to_polygon_transfer_(ACCOUNT_ADDRESSES[1])(7)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
-// burning_on_polygon_and_transfer_to_ethereum_(7)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
-// ethereum_to_polygon_transfer_(ACCOUNT_ADDRESSES[1])(7)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])(500)
+// mint_on_polygon_(0)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])("0x0")(ACCOUNT_ADDRESSES[1])(500)
+// burning_on_polygon_and_transfer_to_ethereum_(2)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])("0x0")(ACCOUNT_ADDRESSES[1])(500)
+// ethereum_to_polygon_transfer_(ACCOUNT_ADDRESSES[1])(2)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])("0x0")(ACCOUNT_ADDRESSES[1])(500)
+// burning_on_polygon_and_transfer_to_ethereum_(2)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])("0x0")(ACCOUNT_ADDRESSES[1])(500)
+// ethereum_to_polygon_transfer_(ACCOUNT_ADDRESSES[1])(2)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])("0x0")(ACCOUNT_ADDRESSES[1])(500)
+
