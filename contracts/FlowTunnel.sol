@@ -35,7 +35,8 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
     }
 
     event nftSentThroughTunnel(uint256 tokenId,address from,string flowAddress);
-    event nftSentThroughTunnelForMarket(uint256 tokenId, address from, string flowAddress, address polygonLister);
+    event nftSentThroughTunnelForMarket_flow(uint256 tokenId, address from, string flowAddress, address polygonLister, price: uint256);
+    event nftSentThroughTunnelForMarket_fusd(uint256 tokenId, address from, string flowAddress, address polygonLister, price: uint256);
     event nftReceievedFromTunnel(uint256 tokenId, address to);
     event newNftMinted(uint256 tokenId, address to);
 
@@ -75,7 +76,7 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         tunnelUserAddress[tokenId] = msg.sender;
     }
 
-    function sendThroughTunnel(uint256 tokenId, string calldata flowAddress) public {
+    function sendThroughTunnel(uint256 tokenId, string calldata flowAddress, bool flowTokenFlag) public {
         require(tokenExists(tokenId), "Tunnel: NFT by this token ID doesn't exist"); 
         require (tunnelUserAddress[tokenId] == msg.sender, "Tunnel: NFT can only be sent by original owner.");
         require (tokenOwner(tokenId) == address(this), "Tunnel: NFT not held by contract. Send nft to contract.");
@@ -88,7 +89,11 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
 
         // Delist nft from marketplace.
         if (PonsNftMarket(marketContractAddress).isListed(tokenId)){
-            emit nftSentThroughTunnelForMarket(tokenId, msg.sender, flowAddress, PonsNftMarket(marketContractAddress).getListerAddress(tokenId));
+            if (flowTokenFlag){
+                emit nftSentThroughTunnelForMarket_flow(tokenId, msg.sender, flowAddress, PonsNftMarket(marketContractAddress).getListerAddress(tokenId), PonsNftMarket(marketContractAddress).getPrice(tokenId));
+            }else{
+                emit nftSentThroughTunnelForMarket_fusd(tokenId, msg.sender, flowAddress, PonsNftMarket(marketContractAddress).getListerAddress(tokenId), PonsNftMarket(marketContractAddress).getPrice(tokenId));
+            }
             PonsNftMarket(marketContractAddress).unlist(tokenId);
         }else{
             emit nftSentThroughTunnel(tokenId, msg.sender, flowAddress);
