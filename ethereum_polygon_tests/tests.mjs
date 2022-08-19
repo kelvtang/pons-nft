@@ -153,6 +153,8 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
             }
         })
 
+        await childTunnelProxyInstance.setFxRootTunnel(rootTunnelProxyInstance.address)
+
         _test.test("cannot reset FxChildTunnel address after it is set", async _test => {
             try {
                 await rootTunnelProxyInstance.setFxChildTunnel(childTunnelProxyInstance.address)
@@ -161,8 +163,6 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
                 _test.pass("Child tunnel address did not change")
             }
         })
-
-        await childTunnelProxyInstance.setFxRootTunnel(rootTunnelProxyInstance.address)
 
         _test.test("cannot reset FxRootTunnel address after it is set", async _test => {
             try {

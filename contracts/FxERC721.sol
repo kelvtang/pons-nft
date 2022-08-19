@@ -223,23 +223,6 @@ contract FxERC721 is
     }
 
     /**
-    * @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
-    */
-    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
-        (address royaltyAddress, uint96 royaltyFraction) = getRoyaltyDetails(tokenId);
-        return (
-            abi.encode(
-                getTokenURI(tokenId),
-                getPolygonArtistAddress(tokenId),
-                getArtistId(tokenId),
-                royaltyAddress,
-                royaltyFraction
-            )
-        );
-    }
-
-
-    /**
     * @notice We can map Flow Artist ID to polygon account addresses.
     * @dev The account must be manually verified by PONs and this function must be triggered 
     * by Owner or other approved address.

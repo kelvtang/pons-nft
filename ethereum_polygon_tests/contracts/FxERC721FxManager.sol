@@ -144,16 +144,26 @@ contract FxERC721FxManager is Initializable, OwnableUpgradeable, IERC721Receiver
     }
 
     /**
-    * @dev public function that can be called to retrieve a token details using {FxERC721.getNftDataDetails()}
+    * @dev public function that can be called to retrieve a token details needed for minting
     *
     * @param tokenId uint256 representing the Id of the token to retrieve details for
     * @return bytes representing the details of the nft needed for a mint
     */
-    function getNftDetails(uint256 tokenId) public view returns (bytes memory){
+    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
         FxERC721 TokenProxyContract = FxERC721(fxTokenProxy);
-        return TokenProxyContract.getNftDataDetails(tokenId);
-    }
 
+        (address royaltyAddress, uint96 royaltyFraction) = TokenProxyContract.getRoyaltyDetails(tokenId);
+        return (
+            abi.encode(
+                TokenProxyContract.getTokenURI(tokenId),
+                TokenProxyContract.getPolygonArtistAddress(tokenId),
+                TokenProxyContract.getArtistId(tokenId),
+                royaltyAddress,
+                royaltyFraction
+            )
+        );
+    }
+    
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.

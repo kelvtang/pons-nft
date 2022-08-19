@@ -80,7 +80,8 @@ contract FxERC721ChildTunnel is Initializable, FxBaseChildTunnelUpgradeable, IER
     function withdraw(uint256 tokenId) public {
         FxERC721FxManager childFxManagerProxyContract = FxERC721FxManager(childFxManagerProxy);
 
-        bytes memory syncData = childFxManagerProxyContract.getNftDetails(tokenId);
+        bytes memory syncData = childFxManagerProxyContract.getNftDataDetails(tokenId);
+        
         // withdraw tokens
         childFxManagerProxyContract.burnToken(msg.sender, tokenId);
 
