@@ -36,10 +36,6 @@ abstract contract ERC2981Upgradeable is Initializable, IERC2981Upgradeable, ERC1
     RoyaltyInfo private _defaultRoyaltyInfo;
     mapping(uint256 => RoyaltyInfo) private _tokenRoyaltyInfo;
 
-    function getRoyaltyDetails(uint256 _tokenId) public view returns (address, uint96){
-        return (_tokenRoyaltyInfo[_tokenId].receiver, _tokenRoyaltyInfo[_tokenId].royaltyFraction);
-    }
-
     /**
     * @dev See {IERC165-supportsInterface}.
     */
