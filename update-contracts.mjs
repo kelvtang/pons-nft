@@ -15,8 +15,6 @@ var update_known_contract_ = update_known_contract_from_ (__dirname + '/contract
 ;await update_known_contract_ ('PonsNftMarketAdmin_v1') 
 ;await update_known_contract_ ('PonsEscrow')
 
-// update_known_contract_ = update_known_contract_from_ (__dirname + '/FlowPolygonBridge/contracts/')
-;await update_known_contract_ ('PonsEscrowTunnel')  
 ;await update_known_contract_ ('PonsTunnel')  
 
 update_known_contract_ = update_known_contract_from_ (__dirname + '/testing-contracts/')
