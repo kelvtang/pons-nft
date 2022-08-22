@@ -30,6 +30,7 @@ const signer = await createSigner(METAMASK_ACCOUNT_PRIVATE_KEY)(polygonProvider)
 const flowTunnelProxyInstance = await createContractInstance(FLOW_TUNNEL_PROXY_ADDRESS)(flowTunnelContractInformation.abi)(signer)
 const marketPlaceInstance = await createContractInstance(POLYGON_MARKETPLACE_ADDRESS)(marketPlaceContractInformation.abi)(signer)
 
+// Returns token metadata information stored in the JSON file
 app.get("/metadata/:nftSerialId", async (req, res) => {
     const nftSerialId = req.params.nftSerialId
 
@@ -42,17 +43,28 @@ app.get("/metadata/:nftSerialId", async (req, res) => {
 })
 
 
-// Reverts a transacttion if the user rejects a purchase on polygon
-// Market to market transfer
+/*
+* For flow to polygon market transfer
+* If a user agrees to to buy a token on polygon from flow but when prompted to buy on polygon, they reject or the transaction fails
+* A request will be made to this path to send back the token from polygon to flow
+* After the transaction succeeds, an event will be emitted which the server is actively listening for 
+* when the server picks up the event, it will revert the transaction on flow as well
+*/
 app.post("/market/revert", async (req, res) => {
     const tokenId = req.body["tokenId"]
 
-    // Event will be picked up by event listener and revert transaction on flow
     await marketPlaceInstance.sendThroughTunnel(tokenId, FLOW_MARKETPLACE_ADDRESS)
     res.send({ message: 'Transaction reverted on polygon. It will be reflected on flow once the transcation event is picked up and processed' });
 })
 
-// Market to market transfer
+/*
+* For Flow to polygon market transfer
+* When the user clicks the buy on polygon button in flow, a request will be sent to this path
+* A transaction is sent on the flow side to transfer a token from flow to polygon
+* The transaction emits an event which the server is actively listening for
+* When the event is picked up, the server send a request to polygon to transfer the token
+* The user should then be prompted to buy the token on polygon through metamask
+*/
 app.post("/market/flowPurchase", (req, res) => {
     const tokenId = req.body["tokenId"]
 
@@ -83,7 +95,16 @@ app.post("/market/flowPurchase", (req, res) => {
 
 app.listen(3010, () => console.log(`app running on 3010`))
 
-// Market to market transfer
+/*
+* For flow to polygon market transfer
+* Listens to see if an event associated with tunnel market transfer is emitted
+* Checks if an associated json file with the token exists
+* If it does not exist, a new one is created with the token's metadata
+* Otherwise, the exisiting file is used
+* The relevant token price on polygon is then calculated by converting flow to hkd then to matic
+* If the artist does not have an address on polygon, we assign it to address(0x0)
+* The token is then received on the polygon side
+*/
 fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
 
     const { nft, polygonRecipientAddress } = event
@@ -171,7 +192,15 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
     await ponsNftTunnel.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, polygonPrice)
 })
 
-// user to user transfer
+/*
+* For flow to polygon user transfer
+* Listens to see if an event associated with tunnel user transfer is emitted
+* Checks if an associated json file with the token exists
+* If it does not exist, a new one is created with the token's metadata
+* Otherwise, the exisiting file is used
+* If the artist does not have an address on polygon, we assign it to address(0x0)
+* The token is then received on the polygon side if a polygonRecipientAddress is passed
+*/
 fcl_api.events(FLOW_USER_TRANSFER_EVENT).subscribe(async (event) => {
 
     const { nft, polygonRecipientAddress } = event
@@ -232,15 +261,21 @@ fcl_api.events(FLOW_USER_TRANSFER_EVENT).subscribe(async (event) => {
 
     const ponsNftTunnel = new ethers.Contract(PONS_NFT_TUNNEL_ADDRESS, ponsNftTunnelContractInformation.abi, signer)
 
-    if (!polygonRecipientAddress) {
-        polygonRecipientAddress = POLYGON_MARKETPLACE_ADDRESS
+    if (polygonRecipientAddress) {
+        await ponsNftTunnel.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, ethers.constants.MaxUint256)
+    } else {
+        // TODO: Add transaction to send back token to flow if no recipient address on polygon
     }
-
-    await ponsNftTunnel.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, ethers.constants.MaxUint256)
 })
 
 
-// Market to market transfer using FUSD
+/*
+* For polygon to flow market transfer and listing in FUSD
+* Actively listens to check if an event associated with the cross bridge market trasnfer is emitted
+* When an event is picked up, both the tokenId and price are converted from bigNumber to strings
+* flowAddress should be the flowMarketplace address
+* A transaction is then sent to the flow side receive the nft and list it FUSD
+*/
 flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price) => {
 
     tokenId = tokenId.toString()
@@ -275,7 +310,13 @@ flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, s
             ])
 })
 
-// Market to market transfer using Flow token
+/*
+* For polygon to flow market transfer and listing in flow tokens
+* Actively listens to check if an event associated with the cross bridge market trasnfer is emitted
+* When an event is picked up, both the tokenId and price are converted from bigNumber to strings
+* flowAddress should be the flowMarketplace address
+* A transaction is then sent to the flow side receive the nft and list it flow tokens
+*/
 flowTunnelProxyInstance.on(POLYGON_FLOW_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price) => {
 
     tokenId = tokenId.toString()
