@@ -6,7 +6,7 @@ import { send_transaction_ } from './utils/flow-api.mjs';
 import flow_types from '@onflow/types'
 import { known_account_ } from './utils/flow.mjs';
 import { FLOW_MARKETPLACE_ADDRESS, POLYGON_MARKETPLACE_ADDRESS, FLOW_TUNNEL_PROXY_ADDRESS, METAMASK_ACCOUNT_PRIVATE_KEY } from './config.mjs';
-import { BASE_TOKEN_URI, FLOW_MARKET_TRANSFER_EVENT, FLOW_USER_TRANSFER_EVENT, POLYGON_FUSD_MARKET_TRANSFER_EVENT, POLYGON_FLOW_MARKET_TRANSFER_EVENT, POLYGON_PROVIDER_URL } from './config.mjs';
+import { BASE_TOKEN_URI, FLOW_MARKET_TRANSFER_EVENT, FLOW_USER_TRANSFER_EVENT, POLYGON_FUSD_MARKET_TRANSFER_EVENT, POLYGON_FLOW_MARKET_TRANSFER_EVENT, POLYGON_PROVIDER_URL, POLYGON_FLOW_USER_TRANSFER_EVENT } from './config.mjs';
 import { flow_sdk_api } from './config.mjs';
 import fcl_api from '@onflow/fcl';
 import { fileTypeFromBuffer } from 'file-type';
@@ -305,7 +305,7 @@ flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, s
                 }
             `)
             ([flow_sdk_api.arg(tokenId, flow_types.UInt64),
-            flow_sdk_api.arg(""  + price, flow_types.UFix64),
+            flow_sdk_api.arg("" + price, flow_types.UFix64),
             flow_sdk_api.arg(polygonLister, flow_types.String),
             ])
 })
@@ -346,7 +346,45 @@ flowTunnelProxyInstance.on(POLYGON_FLOW_MARKET_TRANSFER_EVENT, async (tokenId, s
                 }
             `)
             ([flow_sdk_api.arg(tokenId, flow_types.UInt64),
-            flow_sdk_api.arg(""  + price, flow_types.UFix64),
+            flow_sdk_api.arg("" + price, flow_types.UFix64),
             flow_sdk_api.arg(polygonLister, flow_types.String),
             ])
 })
+
+
+/*
+* For polygon to flow user transfer
+* Actively listens to check if an event associated with the cross bridge market trasnfer is emitted
+* When an event is picked up, the tokenId is converted from BigNumber to string
+* flowAddress should be the recepient's address on flow
+* A transaction is then sent to the flow side to send the token to the PONSHOLDER account till the user redeems it
+*/
+flowTunnelProxyInstance.on(POLYGON_FLOW_USER_TRANSFER_EVENT, async (tokenId, sender, flowAddress) => {
+
+    tokenId = tokenId.toString()
+
+    if (flowAddress) {
+        await
+            send_transaction_
+                (known_account_('0xPROPOSER'))
+                (known_account_('0xPROPOSER'))
+                ([known_account_('0xPROPOSER'), known_account_('0xPROPOSER')])
+                (`
+                import PonsTunnelContract from 0xPONS
+                            
+                transaction(
+                nftSerialId: UInt64,
+                userAddress: Address,
+                ) {
+                    prepare (ponsHolderAccount : AuthAccount){
+                        PonsTunnelContract .recieveNftFromTunnel (nftSerialId: nftSerialId, ponsHolderAccount: ponsHolderAccount, userAddress: userAddress);
+                    }
+                }
+                `)
+                ([flow_sdk_api.arg(tokenId, flow_types.UInt64),
+                flow_sdk_api.arg(flowAddress, flow_types.Address)
+                ])
+    } else {
+        // TODO: Add transaction to send back token to polygon flow address is not given
+    }
+}) 
