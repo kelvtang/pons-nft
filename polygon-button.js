@@ -112,7 +112,8 @@ function App() {
     } else if (!window.ethereum && isMobile()) {
       return (
         <page>
-          <button onClick={() => window.location.assign('https://metamask.app.link/dapp/858a-61-244-192-118.ap.ngrok.io')} disabled={pollInfo.poll}>
+          // TODO: Add correct dapp URL
+          <button onClick={() => window.location.assign(`https://metamask.app.link/dapp/{DAPP_URL}`)} disabled={pollInfo.poll}>
             Buy on Polygon
           </button>
         </page>
