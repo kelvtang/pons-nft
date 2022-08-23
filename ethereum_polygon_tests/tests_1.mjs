@@ -19,35 +19,35 @@ const transparentProxyContractInformation = JSON.parse(fs.readFileSync('./build/
 const FxERC721ManagerInformation = JSON.parse(fs.readFileSync('./build/contracts/FxERC721FxManager.json', 'utf8'));
 
 /*
- * Child chain refers to polygon while root chain refers to ethereum 
- * For local testing do the following:
- * Mnemonic phrase is `radar blur cabbage chef fix engine embark joy scheme fiction master release`
- * Run `truffle compile` to compile contracts and have the json files in the build folder
- * Run `truffle network --clean` to remove previously deployed contracts on the network if u want to delete previous contracts deployed
- * Run `ganache-cli -m <mnemonic phrase>` in one terminal to run the parent node i.e. ethereum. runs on port 8545
- * Run `ganache-cli -p 7545 -m <mnemonic phrase>` in another terminal to run the child node i.e. polygon
+* Child chain refers to polygon while root chain refers to ethereum 
+* For local testing do the following:
+* Mnemonic phrase is `radar blur cabbage chef fix engine embark joy scheme fiction master release`
+* Run `truffle compile` to compile contracts and have the json files in the build folder
+* Run `truffle network --clean` to remove previously deployed contracts on the network if u want to delete previous contracts deployed
+* Run `ganache-cli -m <mnemonic phrase>` in one terminal to run the parent node i.e. ethereum. runs on port 8545
+* Run `ganache-cli -p 7545 -m <mnemonic phrase>` in another terminal to run the child node i.e. polygon
 */
 
 /* 
- * Deployment process is as follows:
- * Deploy ProxyAdmin on both ethereum and polygon
- * Deploy FxERC721 tokens on both Ethereum and polygon
- * Deploy root tunnel on Ethereum
- * Deploy child tunnel on polygon
- * Deploy Fx Manager on polygon
- * Deploy Fx Manager Proxy on polygon with data variable containing the initialize function encoded 
-   with required arguments
- * Deploy FxERC721 token proxy on polygon with data variable containing the initialize function encoded with required arguments 
-   and connected_token address to 0x0
- * Deploy child tunnel proxy on polygon with data variable containing the initialize function encoded with required arguments
- * Deploy root tunnel proxy on ethereum with data variable containing the initialize function encoded with required arguments
- * Deploy FxERC721 token proxy on Etheruem with data variable containing the initialize function encoded with required arguments 
-   and connected_token address to 0x0
- * Add approval for the child tunnel proxy in the Fx Manager contract
- * setFxChildTunnel and setFxRootTunnel with the tunnel proxy addresses on ethereum and polygon for the tunnel proxy contracts
- * Set the connected token with the opposite chain token proxy address on ethereum and polygon for the token proxy contract
- * setTokenProxy with the token proxy address on ethereum for the tunnel proxy contract
- * setTokenProxy with token proxy address on polygon for the Fx Manager proxy contract
+* Deployment process is as follows:
+* Deploy ProxyAdmin on both ethereum and polygon
+* Deploy FxERC721 tokens on both Ethereum and polygon
+* Deploy root tunnel on Ethereum
+* Deploy child tunnel on polygon
+* Deploy Fx Manager on polygon
+* Deploy Fx Manager Proxy on polygon with data variable containing the initialize function encoded 
+with required arguments
+* Deploy FxERC721 token proxy on polygon with data variable containing the initialize function encoded with required arguments 
+and connected_token address to 0x0
+* Deploy child tunnel proxy on polygon with data variable containing the initialize function encoded with required arguments
+* Deploy root tunnel proxy on ethereum with data variable containing the initialize function encoded with required arguments
+* Deploy FxERC721 token proxy on Etheruem with data variable containing the initialize function encoded with required arguments 
+and connected_token address to 0x0
+* Add approval for the child tunnel proxy in the Fx Manager contract
+* setFxChildTunnel and setFxRootTunnel with the tunnel proxy addresses on ethereum and polygon for the tunnel proxy contracts
+* Set the connected token with the opposite chain token proxy address on ethereum and polygon for the token proxy contract
+* setTokenProxy with the token proxy address on ethereum for the tunnel proxy contract
+* setTokenProxy with token proxy address on polygon for the Fx Manager proxy contract
 */
 
 // NB: After deploying, change the contract addresses in the config file
