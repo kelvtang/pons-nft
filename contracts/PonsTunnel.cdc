@@ -395,12 +395,9 @@ pub contract PonsTunnelContract{
 	// -------------------------------------------------------------------
 	
 	pub fun sendNftThroughTunnel_market (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
-		post{
-			PonsNftMarketContract .borrowNft (nftId: nftId) == nil:
-				"NFT withdrawal from marketPlace not successful";
-		}
+		
 		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsAccount) .getNftId (serialId: nftSerialId)!
-		if PonsNftMarketContract .borrowNft (nftId: nftId) != nil{
+		if PonsNftMarketContract .borrowNft (nftId: nftId) == nil{
 			panic("Pons NFT with this nftId is not available on the market");
 		}
 				
@@ -411,6 +408,7 @@ pub contract PonsTunnelContract{
 		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, polygonRecipientAddress: PonsTunnelContract .polygonMarketAddress);
 		emit nftSubmittedThroughTunnel_Market (data: tunnelData)
 
+		PonsNftMarketContract .ponsMarket .unlist()
 	}
 
 	pub fun recieveNftFromTunnel_market_flow (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePrice: UFix64){
