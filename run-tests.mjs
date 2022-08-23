@@ -427,9 +427,48 @@ let send_transaction_ = send_known_transaction_ (__dirname + '/transactions/')
 	, flow_sdk_api .arg ('0.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 
+
+
+var randomNftId = v4();
+// Create nft and list it in market to test tunnel
+;await run_known_test_
+	( 'integration-tests/marketplace/mint' )
+	( [ '0xPONS', '0xARTIST_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
+	, flow_sdk_api .arg ([randomNftId], flow_types .Array (flow_types .String))
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-4'
+			, title: 'NFT title 4'
+			, description: 'NFT description 4' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+	, flow_sdk_api .arg ('1', flow_types .Int)
+	, flow_sdk_api .arg ('500.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('10.0', flow_types .UFix64)
+	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+;await run_known_test_
+	( 'integration-tests/tunnel/market_send' )
+	( [ '0xPONS', '0xRANDOM_1' ] )
+	(
+	[
+		flow_sdk_api .arg(randomNftId, flow_types .String)
+	] )
+;await run_known_test_
+	( 'integration-tests/tunnel/market_get' )
+	( [ '0xPONS', '0xRANDOM_1' ] )
+	(
+	[
+		flow_sdk_api .arg(randomNftId, flow_types .String),
+		flow_sdk_api .arg("0x65856454", flow_types.String),
+		flow_sdk_api .arg("25.0", flow_types.UFix64),
+	] )
+
+
+
 // ;await run_known_test_
 // 	( 'integration-tests/escrow/bridge' )
-// 	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )
+// 	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )`
 // 	(
 // 	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
 // 	, flow_sdk_api .arg ([ v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
