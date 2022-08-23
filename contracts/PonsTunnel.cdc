@@ -332,10 +332,17 @@ pub contract PonsTunnelContract{
 		let tunnelEmitData = PonsTunnelContract .generateSentTunnelEmitData_User(nftRef: nftRef, artistAddressPolygon:"", polygonRecipientAddress: polygonAddress);
 		emit nftSubmittedThroughTunnel_User(data: tunnelEmitData);
 	}
+
+	/* 
+		Nft withdrawal from tunnel is a two step process, 
+			1. First the server calls "recieveNftFromTunnel" using transaction "FlowPolygonBridge/transactions/gettingUserTransfer_server.cdc"
+				* This allows the server to withdraw nft from pons holder account and store it in escrow.
+			2. User then signs transaction "FlowPolygonBridge/transactions/gettingUserTransfer_user.cdc" and calls it to withdraw his nft from escrow via the function "withdrawFromTunnel".
+	*/
 	/* 
 	Called by ponsHolderAccount to store nft in esrcow
 	 */
-	pub fun recieveNftFromTunnel (nftSerialId: UInt64, ponsHolderAccount: AuthAccount, userAddress: Address){
+	pub fun recieveNftFromTunnel (nftSerialId: UInt64, ponsHolderAccount: AuthAccount, userAddress: Address):Void{
 		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdrawNft (nftId : PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .getNftId(serialId: nftSerialId)!);
 		let nftRef = & nft as &PonsNftContractInterface.NFT
 		

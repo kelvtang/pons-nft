@@ -8,7 +8,7 @@
      polygonRecepientAddress: String,
      nftSerialId: UInt64
  ) {
-     prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount, tunnelUserAccount : AuthAccount){
-        PonsTunnelContract .sendNftThroughTunnel (nftSerialId: UInt64, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, tunnelUserAccount: tunnelUserAccount, polygonAddress: polygonRecepientAddress);
+     prepare (ponsHolderAccount : AuthAccount, userAccount : AuthAccount){
+        PonsTunnelContract .sendNftThroughTunnel (nftSerialId: UInt64, ponsHolderAccount: ponsHolderAccount, userAccount: tunnelUserAccount, polygonAddress: polygonRecepientAddress);
      }
  }
