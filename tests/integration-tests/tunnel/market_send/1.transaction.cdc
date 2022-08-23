@@ -13,7 +13,7 @@ transaction(
     nftID: String
 ){
     prepare(ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
-        let nftSerialID:UInt64 = PonsTunnelContract .getNftSerialId (nftId: nftID, collector: ponsAccount);
+        var nftSerialID:UInt64 = PonsTunnelContract .getNftSerialId (nftId: nftID, collector: ponsAccount);
         PonsTunnelContract .sendNftThroughTunnel_market(nftSerialId: nftSerialID, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount);
 
         if PonsNftMarketContract .getForSaleIds() .contains(nftID){

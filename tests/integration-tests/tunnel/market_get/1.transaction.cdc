@@ -15,7 +15,7 @@ transaction(
     salePrice: UFix64
 ){
     prepare(ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
-        let nftSerialId = PonsTunnelContract .getNftSerialId (nftId: nftId, collector: ponsHolderAccount);
+        var nftSerialId = PonsTunnelContract .getNftSerialId (nftId: nftId, collector: ponsHolderAccount);
 
         PonsTunnelContract .recieveNftFromTunnel_market_flow (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePrice: salePrice);
 
