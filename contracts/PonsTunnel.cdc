@@ -397,15 +397,16 @@ pub contract PonsTunnelContract{
 	pub fun sendNftThroughTunnel_market (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount){
 		
 		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsAccount) .getNftId (serialId: nftSerialId)!
-		if PonsNftMarketContract .borrowNft (nftId: nftId) == nil{
+		let nftRef = PonsNftMarketContract .borrowNft (nftId: nftId);
+		if nftRef == nil{
 			panic("Pons NFT with this nftId is not available on the market");
 		}
-				
+		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef!, artistAddressPolygon: nil, polygonRecipientAddress: PonsTunnelContract .polygonMarketAddress);
+		
 		let nft <- PonsNftMarketContract .ponsMarket .unlist_onlyParameters(nftId: nftId);
-		let nftRef = & nft as &PonsNftContractInterface.NFT;
+		
 		PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .depositNft (<- nft);
 
-		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, polygonRecipientAddress: PonsTunnelContract .polygonMarketAddress);
 		emit nftSubmittedThroughTunnel_Market (data: tunnelData)
 	}
 

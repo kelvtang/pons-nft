@@ -5,12 +5,11 @@
 */
 pub fun main 
 ( minterStoragePath : StoragePath
-, mintIds : [String]
-, metadata : {String: String}
-, quantity: Int
-, basePriceAmount : UFix64
-, incrementalPriceAmount : UFix64
+, mintId : String
+, ponsArtistId : String
 , royaltyRatioAmount : UFix64
+, editionLabel : String
+, metadata : {String: String}
 , transactionSuccess : Bool
 , transactionErrorMessage : String?
 , transactionEvents : [{String: String}]

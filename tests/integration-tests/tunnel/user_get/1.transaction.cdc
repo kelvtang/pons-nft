@@ -11,7 +11,7 @@ import PonsUsage from 0xPONS
 
 
 transaction (
-    nftId: String, 
+    nftId: String
 ){
     prepare(ponsHolderAccount: AuthAccount, userAccount: AuthAccount){
         let nftSerialId = PonsTunnelContract .getNftSerialId (nftId: nftId, collector: userAccount);
@@ -22,5 +22,6 @@ transaction (
         if nft == nil{
             panic("Nft Extraction Failed")
         }
+        destroy nft;
     }
 }

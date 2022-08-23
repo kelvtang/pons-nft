@@ -5,7 +5,6 @@
 */
 pub fun main 
 ( nftId: String
-, polygonAddress: String
 , transactionSuccess : Bool
 , transactionErrorMessage : String?
 , transactionEvents : [{String: String}]
