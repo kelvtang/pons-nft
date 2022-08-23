@@ -407,8 +407,6 @@ pub contract PonsTunnelContract{
 
 		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef, artistAddressPolygon: nil, polygonRecipientAddress: PonsTunnelContract .polygonMarketAddress);
 		emit nftSubmittedThroughTunnel_Market (data: tunnelData)
-
-		PonsNftMarketContract .ponsMarket .unlist()
 	}
 
 	pub fun recieveNftFromTunnel_market_flow (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePrice: UFix64){

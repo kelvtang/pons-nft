@@ -448,11 +448,20 @@ let send_transaction_ = send_known_transaction_ (__dirname + '/transactions/')
 	, flow_sdk_api .arg ('10.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 ;await run_known_test_
-	( 'integration-tests/tunnel/market' )
+	( 'integration-tests/tunnel/market_send' )
 	( [ '0xPONS', '0xRANDOM_1' ] )
 	(
 	[
 		flow_sdk_api .arg(randomNftId, flow_types.String)
+	] )
+;await run_known_test_
+	( 'integration-tests/tunnel/market_get' )
+	( [ '0xPONS', '0xRANDOM_1' ] )
+	(
+	[
+		flow_sdk_api .arg(randomNftId, flow_types.String),
+		flow_sdk_api .arg("0x65856454", flow_types.String),
+		flow_sdk_api .arg("25.0", flow_types.UFix64),
 	] )
 
 
