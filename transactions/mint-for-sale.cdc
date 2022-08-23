@@ -14,47 +14,6 @@ transaction
 , _ royaltyRatio : PonsUtils.Ratio
 ) {
 	prepare (minter : AuthAccount) {
-		/* Mint new NFTs for sale for Pons artists */
-		let mintForSale =
-			fun
-			( minter : AuthAccount
-			, metadata : {String: String}
-			, quantity : Int
-			, basePrice : PonsUtils.FlowUnits
-			, incrementalPrice : PonsUtils.FlowUnits
-			, _ royaltyRatio : PonsUtils.Ratio
-			) : [String] {
-				// Obtain the minter's Capability to receive Flow tokens
-				var receivePaymentCap = prepareFlowCapability (account: minter)
-
-				// Obtain an artist certificate of the minter
-				var artistCertificate <- makePonsArtistCertificateDirectly (artist: minter)
-				// Mint and list the specified NFT on the active Pons market, producing some listing certificates
-				var listingCertificates <-
-					PonsNftMarketContract .ponsMarket .mintForSale (
-						& artistCertificate as &PonsNftContract.PonsArtistCertificate,
-						metadata: metadata,
-						quantity: quantity,
-						basePrice: basePrice,
-						incrementalPrice: incrementalPrice,
-						royaltyRatio,
-						receivePaymentCap )
-
-				// Iterate over the obtained listing certificates to produce the nftIds of the newly minted NFTs
-				let nftIds : [String] = []
-				var nftIndex = 0
-				while nftIndex < listingCertificates .length {
-					nftIds .append (listingCertificates [nftIndex] .nftId)
-					nftIndex = nftIndex + 1 }
-
-				// Dispose of the artist certificate
-				destroy artistCertificate
-				// Deposit the listing certificates in the minter's storage
-				depositListingCertificates (minter, <- listingCertificates)
-
-				// Return list of minted nftIds
-				return nftIds }
-
 		/* Creates Flow Vaults and Capabilities in the standard locations if they do not exist, and returns a capability to send Flow tokens to the account */
 		let prepareFlowCapability =
 			fun (account : AuthAccount) : Capability<&{FungibleToken.Receiver}> {
@@ -99,7 +58,48 @@ transaction
 				acquirePonsCollection (collector: collector)
 
 				return collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) ! }
+		/* Mint new NFTs for sale for Pons artists */
+		let mintForSale =
+			fun
+			( minter : AuthAccount
+			, metadata : {String: String}
+			, quantity : Int
+			, basePrice : PonsUtils.FlowUnits
+			, incrementalPrice : PonsUtils.FlowUnits
+			, _ royaltyRatio : PonsUtils.Ratio
+			) : [String] {
+				// Obtain the minter's Capability to receive Flow tokens
+				var receivePaymentCap = prepareFlowCapability (account: minter)
 
+				// Obtain an artist certificate of the minter
+				var artistCertificate <- makePonsArtistCertificateDirectly (artist: minter)
+				// Mint and list the specified NFT on the active Pons market, producing some listing certificates
+				var listingCertificates <-
+					PonsNftMarketContract .ponsMarket .mintForSale (
+						& artistCertificate as &PonsNftContract.PonsArtistCertificate,
+						metadata: metadata,
+						quantity: quantity,
+						basePrice: basePrice,
+						incrementalPrice: incrementalPrice,
+						royaltyRatio,
+						receivePaymentCap )
+
+				// Iterate over the obtained listing certificates to produce the nftIds of the newly minted NFTs
+				let nftIds : [String] = []
+				var nftIndex = 0
+				while nftIndex < listingCertificates .length {
+					nftIds .append (listingCertificates [nftIndex] .nftId)
+					nftIndex = nftIndex + 1 }
+
+				// Dispose of the artist certificate
+				destroy artistCertificate
+				// Deposit the listing certificates in the minter's storage
+				depositListingCertificates (minter, <- listingCertificates)
+
+				// Return list of minted nftIds
+				return nftIds }
+
+		
 		mintForSale (
 			minter: minter,
 			metadata: metadata,

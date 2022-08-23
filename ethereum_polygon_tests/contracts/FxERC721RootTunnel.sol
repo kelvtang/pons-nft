@@ -78,7 +78,6 @@ contract FxERC721RootTunnel is FxBaseRootTunnelUpgradeable, IERC721ReceiverUpgra
             "FxERC721RootTunnel: NO_MAPPED_TOKEN"
         );
 
-        // bytes memory data = fxTokenProxyContract.getNftDataDetails(tokenId);
         (address royaltyAddress, uint96 royaltyFraction) = fxTokenProxyContract.getRoyaltyDetails(tokenId);
         
         bytes memory data = abi.encode(

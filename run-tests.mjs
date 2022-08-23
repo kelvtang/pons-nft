@@ -175,6 +175,22 @@ let send_transaction_ = send_known_transaction_ (__dirname + '/transactions/')
 			, description: 'NFT description 3' } )
 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) ) ] )
 
+;await run_known_test_
+	( 'integration-tests/minter/mint-nft' )
+	( [ '0xPONS', '0xARTIST_1' ] )
+	(
+	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
+	, flow_sdk_api .arg (v4 (), flow_types .String)
+	, flow_sdk_api .arg (pons_artist_id_of_names ['0xARTIST_1'], flow_types .String)
+	, flow_sdk_api .arg ('0.10', flow_types .UFix64)
+	, flow_sdk_api .arg ('Only edition', flow_types .String)
+	, flow_sdk_api .arg
+		( cadencify_object_ (
+			{ url: 'pons://nft-link-3'
+			, title: 'NFT title 3'
+			, description: 'NFT description 3' } )
+		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) ) ] )
+
 
 ;await run_known_test_
 	( 'integration-tests/marketplace/mint' )
@@ -411,18 +427,22 @@ let send_transaction_ = send_known_transaction_ (__dirname + '/transactions/')
 	, flow_sdk_api .arg ('0.0', flow_types .UFix64)
 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
 
-;await run_known_test_
-	( 'integration-tests/escrow/bridge' )
-	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )
-	(
-	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
-	, flow_sdk_api .arg ([ v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
-	, flow_sdk_api .arg
-		( cadencify_object_ (
-			{ url: 'pons://nft-link-10'
-			, title: 'NFT title 10'
-			, description: 'NFT description 10' } )
-		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
-	, flow_sdk_api .arg ('5.0', flow_types .UFix64)
-	, flow_sdk_api .arg ('0.0', flow_types .UFix64)
-	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+// ;await run_known_test_
+// 	( 'integration-tests/escrow/bridge' )
+// 	( [ '0xPONS', '0xARTIST_1', '0xRANDOM_1' ] )
+// 	(
+// 	[ flow_sdk_api .arg ({ domain: 'storage', identifier: 'ponsMinter' }, flow_types .Path)
+// 	, flow_sdk_api .arg ([ v4 (), v4 (), v4 () ], flow_types .Array (flow_types .String))
+// 	, flow_sdk_api .arg
+// 		( cadencify_object_ (
+// 			{ url: 'pons://nft-link-10'
+// 			, title: 'NFT title 10'
+// 			, description: 'NFT description 10' } )
+// 		, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) )
+// 	, flow_sdk_api .arg ('5.0', flow_types .UFix64)
+// 	, flow_sdk_api .arg ('0.0', flow_types .UFix64)
+// 	, flow_sdk_api .arg ('0.05', flow_types .UFix64) ] )
+
+
+
+

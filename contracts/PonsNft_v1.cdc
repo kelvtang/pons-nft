@@ -247,6 +247,11 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			return nil;
 		}
 
+		/* Get NFT serialNumber from its NftId */
+		pub fun getNftSerialId (nftId: String) : UInt64?{
+			return PonsNftContract_v1 .ponsNftSerialNumbers[nftId];
+		}
+
 		/* Borrow a reference to a NFT in the PonsCollection, given its serialNumber */
 		pub fun borrowNFT (id : UInt64) : &NonFungibleToken.NFT {
 			pre {
