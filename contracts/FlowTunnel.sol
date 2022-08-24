@@ -90,9 +90,9 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
 
         // Delist nft from marketplace.
         if (PonsNftMarket(marketContractAddress).isListed(tokenId)){
-            if (flowTokenFlag == Currency.FlowToken){
+            if (flowTokenFlag == uint256(Currency.FlowToken)){
                 emit nftSentThroughTunnelForMarket_flow(tokenId, msg.sender, flowAddress, PonsNftMarket(marketContractAddress).getListerAddress(tokenId), PonsNftMarket(marketContractAddress).getPrice(tokenId));
-            }else if(flowTokenFlag == Currency.FUSD){
+            }else if(flowTokenFlag == uint256(Currency.FUSD)){
                 emit nftSentThroughTunnelForMarket_fusd(tokenId, msg.sender, flowAddress, PonsNftMarket(marketContractAddress).getListerAddress(tokenId), PonsNftMarket(marketContractAddress).getPrice(tokenId));
             }
             PonsNftMarket(marketContractAddress).unlist(tokenId);

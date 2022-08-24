@@ -7,7 +7,6 @@ import "./OwnableUpgradeable.sol";
 import "./IERC721Receiver.sol";
 import "./FlowTunnel.sol";
 import "./Initializable.sol";
-import "./PonsCurrency.sol";
 
 contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable{
 
