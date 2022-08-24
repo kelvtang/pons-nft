@@ -9,8 +9,6 @@ import "./Initializable.sol";
 import "./PonsCurrency.sol";
 
 contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable { 
-
-    PonsCurrency public Currency;
     
     address private tokenContractAddress;
     address private marketContractAddress;
@@ -79,7 +77,7 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         tunnelUserAddress[tokenId] = msg.sender;
     }
 
-    function sendThroughTunnel(uint256 tokenId, string calldata flowAddress, Currency flowTokenFlag) public {
+    function sendThroughTunnel(uint256 tokenId, string calldata flowAddress, uint256 flowTokenFlag) public {
         require(tokenExists(tokenId), "Tunnel: NFT by this token ID doesn't exist"); 
         require (tunnelUserAddress[tokenId] == msg.sender, "Tunnel: NFT can only be sent by original owner.");
         require (tokenOwner(tokenId) == address(this), "Tunnel: NFT not held by contract. Send nft to contract.");
