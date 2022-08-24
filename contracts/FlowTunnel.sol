@@ -6,10 +6,12 @@ import "./OwnableUpgradeable.sol";
 import "./IERC721Receiver.sol";
 import "./PonsNftMarket.sol";
 import "./Initializable.sol";
+import "./PonsCurrency.sol";
 
 contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable { 
-    enum Currency {FlowToken, FUSD} //Choice of currency
 
+    PonsCurrency public Currency;
+    
     address private tokenContractAddress;
     address private marketContractAddress;
     mapping(uint256 => address) private tunnelUserAddress;
