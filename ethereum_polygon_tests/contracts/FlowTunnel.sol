@@ -25,11 +25,12 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         address _marketContractAddress,
         address _fxManagerAddress
     ) initializer public {
-        __Context_init();
-        __Ownable_init();
         tokenContractAddress = _tokenContractAddress;
         marketContractAddress = _marketContractAddress;
         fxManagerAddress = _fxManagerAddress;
+        __Context_init();
+        __Ownable_init();
+        
     }
 
     function setMarketContractAddress(address _marketContractAddress) public onlyOwner{
@@ -117,15 +118,10 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         * You must list token on market place before transferring it.
         */
         if (to == marketContractAddress){
-            PonsNftMarket(marketContractAddress).listForSale(tokenId, tokenPrice); //TODO: Replace dummy price
+            PonsNftMarket(marketContractAddress).listForSale(tokenId, tokenPrice); 
         }
         FxERC721(tokenContractAddress).safeTransferFrom(address(this), to, tokenId);
         assert(tokenOwner(tokenId) == to);
-
-        /**
-        * To handle inter-blockchain purchases, we list transfered nft on polygon marketplace.
-         */
-        
 
         emit nftReceievedFromTunnel(tokenId, msg.sender);
     }
