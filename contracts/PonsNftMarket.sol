@@ -7,10 +7,11 @@ import "./OwnableUpgradeable.sol";
 import "./IERC721Receiver.sol";
 import "./FlowTunnel.sol";
 import "./Initializable.sol";
+import "./PonsCurrency.sol";
 
 contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable{
 
-    enum Currency {FlowToken, FUSD} //Choice of currency
+    PonsCurrency public Currency;
 
     event newNftMinted(uint256 tokenId, address to);
     event nftPurchased(address from,address to,uint256 tokenId,uint256 amount);
