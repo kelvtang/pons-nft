@@ -27,11 +27,10 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
     ) initializer public {
         tokenContractAddress = _tokenContractAddress;
         marketContractAddress = _marketContractAddress;
+        fxManagerAddress = _fxManagerAddress;
         __Context_init();
         __Ownable_init();
-        tokenContractAddress = _tokenContractAddress;
-        marketContractAddress = _marketContractAddress;
-        fxManagerAddress = _fxManagerAddress;
+        
     }
 
     function setMarketContractAddress(address _marketContractAddress) public onlyOwner{
@@ -70,7 +69,7 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         require(!tokenExists(tokenId), "NFT already exists"); // test if nft already exists.
         
         // New nft minted and owned by tunnel contract
-        FxERC721FxManager(_fxManagerAddress).mintToken(address(this), tokenId, _data); 
+        FxERC721FxManager(fxManagerAddress).mintToken(address(this), tokenId, _data); 
         
         emit newNftMinted(tokenId, address(this));
         return tokenId;
