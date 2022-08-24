@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
-import "./FxERC721FxManager.sol";
 import "./OwnableUpgradeable.sol";
 import "./IERC721Receiver.sol";
 import "./PonsNftMarket.sol";
@@ -13,7 +12,6 @@ import "./FxERC721FxManager.sol";
 contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable { 
     
     address private tokenContractAddress;
-    address private fxManagerContractAddress;
     address private marketContractAddress;
     address private fxManagerAddress;
     mapping(uint256 => address) private tunnelUserAddress;
@@ -25,11 +23,10 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
     function initialize(
         address _tokenContractAddress,
         address _marketContractAddress,
-        address _fxManagerContractAddress
+        address _fxManagerAddress
     ) initializer public {
         tokenContractAddress = _tokenContractAddress;
         marketContractAddress = _marketContractAddress;
-        fxManagerContractAddress = _fxManagerContractAddress;
         __Context_init();
         __Ownable_init();
         tokenContractAddress = _tokenContractAddress;
@@ -73,7 +70,7 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         require(!tokenExists(tokenId), "NFT already exists"); // test if nft already exists.
         
         // New nft minted and owned by tunnel contract
-        FxERC721FxManager(fxManagerContractAddress).mintToken(address(this), tokenId, _data); 
+        FxERC721FxManager(_fxManagerAddress).mintToken(address(this), tokenId, _data); 
         
         emit newNftMinted(tokenId, address(this));
         return tokenId;
