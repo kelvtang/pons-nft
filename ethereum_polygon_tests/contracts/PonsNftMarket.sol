@@ -92,22 +92,6 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         payable(msg.sender).transfer(FxERC721(tokenContractAddress).getFundsDue(_flowArtistId)/10_000);
         FxERC721FxManager(fxManagerContractAddress).emptyFundsDue(_flowArtistId);
     }
-
-    /**
-        @notice returns the metadata details associated with nft minted by using @param tokenId of Nft.
-     */
-    function getNftDataDetails(uint256 tokenId) public view returns (bytes memory){
-        (address royaltyAddress, uint96 royaltyFraction) = FxERC721(tokenContractAddress).getRoyaltyDetails(tokenId);
-        return (
-            abi.encode(
-                FxERC721(tokenContractAddress).getTokenURI(tokenId),
-                FxERC721(tokenContractAddress).getPolygonArtistAddress(tokenId),
-                FxERC721(tokenContractAddress).getArtistId(tokenId),
-                royaltyAddress,
-                royaltyFraction
-            )
-        );
-    }
     
     function onERC721Received(
         address, /* operator */
@@ -165,7 +149,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         }
     }
 
-    function sendThroughTunnel(uint256 tokenId, bool flowTokenFlag ) public {
+    function sendThroughTunnel(uint256 tokenId, uint256 flowTokenFlag ) public {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tunnelContractAddress != address(0x0), "Market: Tunnel contract address not set");
         require(isListed(tokenId), "Market: Cannot send an unlisted nft");

@@ -16,7 +16,9 @@ const rootTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contra
 const childTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contracts/FxERC721ChildTunnel.json', 'utf8'));
 const proxyAdminContractInformation = JSON.parse(fs.readFileSync('./build/contracts/ProxyAdmin.json', 'utf8'));
 const transparentProxyContractInformation = JSON.parse(fs.readFileSync('./build/contracts/TransparentUpgradeableProxy.json', 'utf8'));
-const FxERC721ManagerInformation = JSON.parse(fs.readFileSync('./build/contracts/FxERC721FxManager.json', 'utf8'));
+const fxERC721ManagerContractInformation = JSON.parse(fs.readFileSync('./build/contracts/FxERC721FxManager.json', 'utf8'));
+const ponsNftMarketContractInformation = JSON.parse(fs.readFileSync('./build/contracts/PonsNftMarket.json', 'utf8'));
+const flowTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contracts/FlowTunnel.json', 'utf8'));
 
 /*
 * Child chain refers to polygon while root chain refers to ethereum 
@@ -73,7 +75,7 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
         const childTunnel = await deployContract(childSigner)(childTunnelContractInformation.abi)(childTunnelContractInformation.bytecode)([])
 
         // Deploy FxManager contract to allow multiple contracts to send a request to the same fx token
-        const childFxManager = await deployContract(childSigner)(FxERC721ManagerInformation.abi)(FxERC721ManagerInformation.bytecode)([])
+        const childFxManager = await deployContract(childSigner)(fxERC721ManagerContractInformation.abi)(fxERC721ManagerContractInformation.bytecode)([])
 
         // Deploy Fx Manager Proxy contract
         const fxManagerinitializerEncoded = await createAndEncodeFunctionInterface('function initialize()')('initialize')([])
@@ -113,12 +115,45 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
             (transparentProxyContractInformation.bytecode)
             ([rootFxErc721Token.contractAddress, rootProxyAdmin.contractAddress, rootFxErc721InitializerEncoded])
 
+        // Deploy market contract on polygon
+        const ponsNftMarket = await deployContract(childSigner)(ponsNftMarketContractInformation.abi)(ponsNftMarketContractInformation.bytecode)([])
+
+        // Deploy market proxy contract on polygon
+        const ponsNftMarketInitializedEncoded = await createAndEncodeFunctionInterface
+            ('function initialize(address _tokenContractAddress, address _fxManagerContractAddress)')
+            ('initialize')([childFxErc721TokenProxy.contractAddress, childFxManagerProxy.contractAddress])
+        const ponsNftMarketProxy = await deployContract(childSigner)(transparentProxyContractInformation.abi)
+            (transparentProxyContractInformation.bytecode)
+            ([ponsNftMarket.contractAddress, childProxyAdmin.contractAddress, ponsNftMarketInitializedEncoded])
+
+        // Deploy flow tunnel contract on polygon
+        const flowTunnel = await deployContract(childSigner)(flowTunnelContractInformation.abi)(flowTunnelContractInformation.bytecode)([])
+
+        // Deploy flow tunnel proxy contract on polygon
+        const flowTunnelInitializedEncoded = await createAndEncodeFunctionInterface
+            ('function initialize(address _tokenContractAddress, address _marketContractAddress, address _fxManagerAddress)')
+            ('initialize')([childFxErc721TokenProxy.contractAddress, ponsNftMarketProxy.contractAddress, childFxManagerProxy.contractAddress])
+        const flowTunnelProxy = await deployContract(childSigner)(transparentProxyContractInformation.abi)
+            (transparentProxyContractInformation.bytecode)
+            ([flowTunnel.contractAddress, childProxyAdmin.contractAddress, flowTunnelInitializedEncoded])
+
         // Create contract instances to call needed setup functions
-        const childFxManagerProxyInstance = await createContractInstance(childFxManagerProxy.contractAddress)(FxERC721ManagerInformation.abi)(childSigner)
-        const childTunnelProxyInstance = await createContractInstance(childTunnelProxy.contractAddress)(childTunnelContractInformation.abi)(childSigner)
-        const childFxErc721TokenProxyInstance = await createContractInstance(childFxErc721TokenProxy.contractAddress)(fxErc721ContractInformation.abi)(childSigner)
-        const rootTunnelProxyInstance = await createContractInstance(rootTunnelProxy.contractAddress)(rootTunnelContractInformation.abi)(rootSigner)
-        const rootFxErc721TokenProxyInstance = await createContractInstance(rootFxErc721TokenProxy.contractAddress)(fxErc721ContractInformation.abi)(rootSigner)
+        const childFxManagerProxyInstance = await createContractInstance(childFxManagerProxy.contractAddress)(fxERC721ManagerContractInformation.abi)
+            (childSigner)
+        const childTunnelProxyInstance = await createContractInstance(childTunnelProxy.contractAddress)(childTunnelContractInformation.abi)
+            (childSigner)
+        const childFxErc721TokenProxyInstance = await createContractInstance(childFxErc721TokenProxy.contractAddress)(fxErc721ContractInformation.abi)
+            (childSigner)
+        const rootTunnelProxyInstance = await createContractInstance(rootTunnelProxy.contractAddress)(rootTunnelContractInformation.abi)
+            (rootSigner)
+        const rootFxErc721TokenProxyInstance = await createContractInstance(rootFxErc721TokenProxy.contractAddress)(fxErc721ContractInformation.abi)
+            (rootSigner)
+        const ponsNftMarketplaceProxyInstance = await createContractInstance(ponsNftMarketProxy.contractAddress)(ponsNftMarketContractInformation.abi)
+            (childSigner)
+
+        // TODO: add tests for flow tunnel and marketplace contracts
+        await ponsNftMarketplaceProxyInstance.setTunnelContractAddress(flowTunnelProxy.contractAddress)
+        await childFxManagerProxyInstance.addApproval(flowTunnelProxy.contractAddress)
 
         _test.test("Owner adding Approval for the child tunnel proxy", async _test => {
             try {
@@ -283,9 +318,11 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
                             rootTokenProxyAddress: rootFxErc721TokenProxy.contractAddress,
                             childTunnelProxyAddress: childTunnelProxy.contractAddress,
                             rootTunnelProxyAddress: rootTunnelProxy.contractAddress,
-                            childAdminProxy: childProxyAdmin.contractAddress,
-                            rootAdminProxy: rootProxyAdmin.contractAddress,
-                            FxManagerProxy: childFxManagerProxy.contractAddress
+                            childProxyAdmin: childProxyAdmin.contractAddress,
+                            rootProxyAdmin: rootProxyAdmin.contractAddress,
+                            fxManagerProxy: childFxManagerProxy.contractAddress,
+                            polygonMarketplaceProxy: ponsNftMarketProxy.contractAddress,
+                            flowTunnelProxy: flowTunnelProxy.contractAddress
                         }, null, 2))
                     }
                 })
@@ -671,7 +708,7 @@ const ethereum_to_polygon_transfer_ = (userAddress) => (tokenId) => (tokenUri) =
 }
 
 
-// deploy_contracts_("test200")("tt1")
+deploy_contracts_("test200")("tt1")
 // mint_on_polygon_(0)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])("0x0")(ACCOUNT_ADDRESSES[1])(500)
 // burning_on_polygon_and_transfer_to_ethereum_(2)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])("0x0")(ACCOUNT_ADDRESSES[1])(500)
 // ethereum_to_polygon_transfer_(ACCOUNT_ADDRESSES[1])(2)("QmcRXwGFhEBGsV6DMioaHPKXAxnTcStDfdP1zV86z5sXCz")(ACCOUNT_ADDRESSES[1])("0x0")(ACCOUNT_ADDRESSES[1])(500)
