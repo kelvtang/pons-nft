@@ -10,6 +10,8 @@ import "./Initializable.sol";
 
 contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable{
 
+    enum Currency {FlowToken, FUSD} //Choice of currency
+
     event newNftMinted(uint256 tokenId, address to);
     event nftPurchased(address from,address to,uint256 tokenId,uint256 amount);
     event nftListed(address by, uint256 tokenId, uint256 amount);
@@ -165,7 +167,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         }
     }
 
-    function sendThroughTunnel(uint256 tokenId, bool flowTokenFlag ) public {
+    function sendThroughTunnel(uint256 tokenId, Currency flowTokenFlag ) public {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
         require(tunnelContractAddress != address(0x0), "Market: Tunnel contract address not set");
         require(isListed(tokenId), "Market: Cannot send an unlisted nft");
