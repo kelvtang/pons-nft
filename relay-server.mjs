@@ -2,9 +2,8 @@ import express from 'express';
 import { ethers } from 'ethers';
 import * as fs from 'fs';
 import cors from 'cors';
-import { send_transaction_ } from './utils/flow-api.mjs';
 import flow_types from '@onflow/types'
-import { known_account_ } from './utils/flow.mjs';
+import { send_proposed_transaction_ } from './utils/flow.mjs';
 import { FLOW_MARKETPLACE_ADDRESS, POLYGON_MARKETPLACE_ADDRESS, FLOW_TUNNEL_PROXY_ADDRESS, METAMASK_ACCOUNT_PRIVATE_KEY } from './config.mjs';
 import { BASE_TOKEN_URI, FLOW_MARKET_TRANSFER_EVENT, FLOW_USER_TRANSFER_EVENT, POLYGON_FUSD_MARKET_TRANSFER_EVENT, POLYGON_FLOW_MARKET_TRANSFER_EVENT, POLYGON_PROVIDER_URL, POLYGON_FLOW_USER_TRANSFER_EVENT } from './config.mjs';
 import { flow_sdk_api } from './config.mjs';
@@ -15,13 +14,10 @@ import { encodeToBytes, createSigner, createContractInstance, createRPCProviders
 
 const app = express();
 app.use(cors())
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+app.use(express.json())
 
 // TODO: Change file path based on actual file path
 // N.B Whenever any contract we need to restart server
-const ponsNftTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contracts/PonsNftTunnel.json', 'utf8'))
 const marketPlaceContractInformation = JSON.parse(fs.readFileSync('./build/contracts/PonsNftMarket.json', 'utf8'))
 const flowTunnelContractInformation = JSON.parse(fs.readFileSync('./build/contracts/FlowTunnel.json', 'utf8'))
 
@@ -29,6 +25,13 @@ const polygonProvider = await createRPCProviders(POLYGON_PROVIDER_URL);
 const signer = await createSigner(METAMASK_ACCOUNT_PRIVATE_KEY)(polygonProvider)
 const flowTunnelProxyInstance = await createContractInstance(FLOW_TUNNEL_PROXY_ADDRESS)(flowTunnelContractInformation.abi)(signer)
 const marketPlaceInstance = await createContractInstance(POLYGON_MARKETPLACE_ADDRESS)(marketPlaceContractInformation.abi)(signer)
+
+const transactionLedger = {}
+
+const currency = {
+    flowToken: 0,
+    FUSD: 1
+}
 
 // Returns token metadata information stored in the JSON file
 app.get("/metadata/:nftSerialId", async (req, res) => {
@@ -53,7 +56,8 @@ app.get("/metadata/:nftSerialId", async (req, res) => {
 app.post("/market/revert", async (req, res) => {
     const tokenId = req.body["tokenId"]
 
-    await marketPlaceInstance.sendThroughTunnel(tokenId, FLOW_MARKETPLACE_ADDRESS)
+    // TODO: Get it from file logs
+    await marketPlaceInstance.sendThroughTunnel(tokenId, FLOW_MARKETPLACE_ADDRESS, currency[((transactionLedger[tokenId]).at(-1))["tokenType"]])
     res.send({ message: 'Transaction reverted on polygon. It will be reflected on flow once the transcation event is picked up and processed' });
 })
 
@@ -68,10 +72,8 @@ app.post("/market/revert", async (req, res) => {
 app.post("/market/flowPurchase", (req, res) => {
     const tokenId = req.body["tokenId"]
 
-    send_transaction_
-        (known_account_('0xPROPOSER'))
-        (known_account_('0xPROPOSER'))
-        ([known_account_('0xPROPOSER'), known_account_('0xPROPOSER')])
+    send_proposed_transaction_
+        (['0xPONS'])
         (`
             import PonsTunnelContract from 0xPONS
             import PonsUtils from 0xPONS
@@ -79,8 +81,8 @@ app.post("/market/flowPurchase", (req, res) => {
             transaction(
             nftSerialId: UInt64
             ) {
-                prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount){
-                    PonsTunnelContract .sendNftThroughTunnel_market (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount);
+                prepare (ponsAccount : AuthAccount){
+                    PonsTunnelContract .sendNftThroughTunnel_market (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsAccount);
                 }
             }
         `)
@@ -106,9 +108,27 @@ app.listen(3010, () => console.log(`app running on 3010`))
 * The token is then received on the polygon side
 */
 fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
+    console.log("----------------------------------------------- Event listener -------------------------------------------------")
+    console.log(event)
+    let { nft, polygonRecipientAddress } = event.data
+    let { nftSerialId, metadata, artistAddressFlow, artistAddressPolygon, flowToken, fusdToken, royalty } = nft
 
-    const { nft, polygonRecipientAddress } = event
-    const { nftSerialId, metadata, artistAddressFlow, artistAddressPolygon, flowToken, fusdToken, royalty } = nft
+    flowToken = flowToken.flowAmount
+
+    const ledgerEntry = {
+        origin: 'flow',
+        price: flowToken ? flowToken : fusdToken,
+        tokenType: flowToken ? "flowToken" : "FUSD"
+    }
+
+    // const prevLogs = JSON.parse(fs.readFileSync('./logs/transfers.log', 'utf8'))
+    // fs.writeFileSync("./logs/tempFile.log", JSON.stringify(ledgerEntry))
+    // // save to back up file then merge to big file
+    // if (transactionLedger[nftSerialId]){
+    //     transactionLedger[nftSerialId].push(ledgerEntry)
+    // } else {
+    //     transactionLedger[nftSerialId] = [ledgerEntry]
+    // }
 
     // TODO: Change based on actual directory/folder name
     const path = `./token-metadata/${nftSerialId}`
@@ -136,16 +156,19 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
         royalty = Math.ceil(royalty * 10000)
 
         let NftMetadata
+        // TODO: Edit this based on how urls are actually stored plus where we want to point it to
         if (url.startsWith('ipfs')) {
             url = "https://" + url
-            const response = await fetch(url)
-            const urlContent = await response.arrayBuffer()
-            const ext = (await fileTypeFromBuffer(urlContent))?.ext;
-            if (ext === 'mp4') {
-                NftMetadata['animation_url'] = url
-            } else {
-                NftMetadata['image'] = url
-            }
+        } else {
+            url = "https://ipfs.io/" + url
+        }
+        const response = await fetch(url)
+        const urlContent = await response.arrayBuffer()
+        const ext = (await fileTypeFromBuffer(urlContent))?.ext;
+        if (ext === 'mp4') {
+            NftMetadata['animation_url'] = url
+        } else {
+            NftMetadata['image'] = url
         }
 
         NftMetadata = {
@@ -153,6 +176,7 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
             name: title,
             description: description,
             attributes: tags,
+            image: url,
         }
 
         fs.writeFileSync(`${path}.json`, JSON.stringify(NftMetadata, null, 2))
@@ -174,7 +198,7 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
     localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`)
 
     const polygonMarketInfo = await polygonInfoResp.json()
-    const polygonPrice = Number((HkdFlowPrice / polygonMarketInfo.market_data.current_price.hkd).toFixed(3))
+    const polygonPrice = Math.ceil(Number((HkdFlowPrice / polygonMarketInfo.market_data.current_price.hkd)) * 10000)
 
     if (!artistAddressPolygon) {
         artistAddressPolygon = ethers.constants.AddressZero
@@ -183,13 +207,13 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
     const depositData = await encodeToBytes(["string", "address", "string", "address", "uint96"])
         ([`${BASE_TOKEN_URI}${nftSerialId}`, artistAddressPolygon, artistAddressFlow, POLYGON_MARKETPLACE_ADDRESS, royalty])
 
-    const ponsNftTunnel = new ethers.Contract(PONS_NFT_TUNNEL_ADDRESS, ponsNftTunnelContractInformation.abi, signer)
+    const ponsNftTunnelProxy = new ethers.Contract(FLOW_TUNNEL_PROXY_ADDRESS, flowTunnelContractInformation.abi, signer)
 
     if (!polygonRecipientAddress) {
         polygonRecipientAddress = POLYGON_MARKETPLACE_ADDRESS
     }
 
-    await ponsNftTunnel.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, polygonPrice)
+    await ponsNftTunnelProxy.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, polygonPrice)
 })
 
 /*
@@ -203,8 +227,8 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
 */
 fcl_api.events(FLOW_USER_TRANSFER_EVENT).subscribe(async (event) => {
 
-    const { nft, polygonRecipientAddress } = event
-    const { nftSerialId, metadata, artistAddressFlow, artistAddressPolygon, royalty } = nft
+    let { nft, polygonRecipientAddress } = event
+    let { nftSerialId, metadata, artistAddressFlow, artistAddressPolygon, royalty } = nft
 
     // TODO: Change based on actual directory/folder name
     const path = `./token-metadata/${nftSerialId}`
@@ -259,7 +283,7 @@ fcl_api.events(FLOW_USER_TRANSFER_EVENT).subscribe(async (event) => {
     const depositData = await encodeToBytes(["string", "address", "string", "address", "uint96"])
         ([`${BASE_TOKEN_URI}${nftSerialId}`, artistAddressPolygon, artistAddressFlow, POLYGON_MARKETPLACE_ADDRESS, royalty])
 
-    const ponsNftTunnel = new ethers.Contract(PONS_NFT_TUNNEL_ADDRESS, ponsNftTunnelContractInformation.abi, signer)
+    const ponsNftTunnel = new ethers.Contract(PONS_NFT_TUNNEL_ADDRESS, flowTunnelContractInformation.abi, signer)
 
     if (polygonRecipientAddress) {
         await ponsNftTunnel.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, ethers.constants.MaxUint256)

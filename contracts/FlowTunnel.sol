@@ -8,12 +8,14 @@ import "./IERC721Receiver.sol";
 import "./PonsNftMarket.sol";
 import "./Initializable.sol";
 import "./PonsCurrency.sol";
+import "./FxERC721FxManager.sol";
 
 contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable { 
     
     address private tokenContractAddress;
     address private fxManagerContractAddress;
     address private marketContractAddress;
+    address private fxManagerAddress;
     mapping(uint256 => address) private tunnelUserAddress;
 
     constructor() {
@@ -30,6 +32,9 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         fxManagerContractAddress = _fxManagerContractAddress;
         __Context_init();
         __Ownable_init();
+        tokenContractAddress = _tokenContractAddress;
+        marketContractAddress = _marketContractAddress;
+        fxManagerAddress = _fxManagerAddress;
     }
 
     function setMarketContractAddress(address _marketContractAddress) public onlyOwner{
