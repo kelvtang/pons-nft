@@ -8,6 +8,7 @@ import "./PonsNftMarket.sol";
 import "./Initializable.sol";
 
 contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable { 
+    enum Currency {FlowToken, FUSD} //Choice of currency
 
     address private tokenContractAddress;
     address private marketContractAddress;
@@ -76,7 +77,7 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         tunnelUserAddress[tokenId] = msg.sender;
     }
 
-    function sendThroughTunnel(uint256 tokenId, string calldata flowAddress, bool flowTokenFlag) public {
+    function sendThroughTunnel(uint256 tokenId, string calldata flowAddress, Currency flowTokenFlag) public {
         require(tokenExists(tokenId), "Tunnel: NFT by this token ID doesn't exist"); 
         require (tunnelUserAddress[tokenId] == msg.sender, "Tunnel: NFT can only be sent by original owner.");
         require (tokenOwner(tokenId) == address(this), "Tunnel: NFT not held by contract. Send nft to contract.");
@@ -89,9 +90,9 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
 
         // Delist nft from marketplace.
         if (PonsNftMarket(marketContractAddress).isListed(tokenId)){
-            if (flowTokenFlag){
+            if (flowTokenFlag == Currency.FlowToken){
                 emit nftSentThroughTunnelForMarket_flow(tokenId, msg.sender, flowAddress, PonsNftMarket(marketContractAddress).getListerAddress(tokenId), PonsNftMarket(marketContractAddress).getPrice(tokenId));
-            }else{
+            }else if(flowTokenFlag == Currency.FUSD){
                 emit nftSentThroughTunnelForMarket_fusd(tokenId, msg.sender, flowAddress, PonsNftMarket(marketContractAddress).getListerAddress(tokenId), PonsNftMarket(marketContractAddress).getPrice(tokenId));
             }
             PonsNftMarket(marketContractAddress).unlist(tokenId);
