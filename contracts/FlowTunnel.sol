@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./FxERC721.sol";
+import "./FxERC721FxManager.sol";
 import "./OwnableUpgradeable.sol";
 import "./IERC721Receiver.sol";
 import "./PonsNftMarket.sol";
@@ -11,6 +12,7 @@ import "./PonsCurrency.sol";
 contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeable { 
     
     address private tokenContractAddress;
+    address private fxManagerContractAddress;
     address private marketContractAddress;
     mapping(uint256 => address) private tunnelUserAddress;
 
@@ -20,10 +22,12 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
 
     function initialize(
         address _tokenContractAddress,
-        address _marketContractAddress
+        address _marketContractAddress,
+        address _fxManagerContractAddress
     ) initializer public {
         tokenContractAddress = _tokenContractAddress;
         marketContractAddress = _marketContractAddress;
+        fxManagerContractAddress = _fxManagerContractAddress;
         __Context_init();
         __Ownable_init();
     }
@@ -64,7 +68,7 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         require(!tokenExists(tokenId), "NFT already exists"); // test if nft already exists.
         
         // New nft minted and owned by tunnel contract
-        FxERC721(tokenContractAddress).mint(address(this), tokenId, _data); 
+        FxERC721FxManager(fxManagerContractAddress).mintToken(address(this), tokenId, _data); 
         
         emit newNftMinted(tokenId, address(this));
         return tokenId;
@@ -113,15 +117,10 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         * You must list token on market place before transferring it.
         */
         if (to == marketContractAddress){
-            PonsNftMarket(marketContractAddress).listForSale(tokenId, tokenPrice); //TODO: Replace dummy price
+            PonsNftMarket(marketContractAddress).listForSale(tokenId, tokenPrice); 
         }
         FxERC721(tokenContractAddress).safeTransferFrom(address(this), to, tokenId);
         assert(tokenOwner(tokenId) == to);
-
-        /**
-        * To handle inter-blockchain purchases, we list transfered nft on polygon marketplace.
-         */
-        
 
         emit nftReceievedFromTunnel(tokenId, msg.sender);
     }

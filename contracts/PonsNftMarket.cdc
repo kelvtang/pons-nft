@@ -289,7 +289,54 @@ pub contract PonsNftMarketContract {
 //			index = index + 1 }
 //		return true }
 
+	/* API to List Nft for sale */
+	pub fun listForSaleFlow(_ nft: @PonsNftContractInterface.NFT, _ salePrice: PonsUtils.FlowUnits, _ receivePaymentCap: Capability<&{FungibleToken.Receiver}>) : @{PonsNftMarketContract.PonsListingCertificate}{
+		return <- PonsNftMarketContract .ponsMarket .listForSaleFlow(<-nft, salePrice, receivePaymentCap);
+	}
+	pub fun listForSaleFusd(_ nft: @PonsNftContractInterface.NFT, _ salePrice: PonsUtils.FusdUnits, _ receivePaymentCap: Capability<&{FungibleToken.Receiver}>) : @{PonsNftMarketContract.PonsListingCertificate}{
+		return <- PonsNftMarketContract .ponsMarket .listForSaleFusd(<-nft, salePrice, receivePaymentCap);
+	}
 
+	/* Public API to allow for minting nft */
+	pub fun mintForSaleFlow
+		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
+		, metadata : {String: String}
+		, quantity : Int
+		, basePrice : PonsUtils.FlowUnits
+		, incrementalPrice : PonsUtils.FlowUnits
+		, _ royaltyRatio : PonsUtils.Ratio
+		, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>
+		) : @[{PonsListingCertificate}] {
+			return <- PonsNftMarketContract .ponsMarket .mintForSaleFlow(
+				artistCertificate,
+				metadata: metadata,
+				quantity: quantity,
+				basePrice: basePrice,
+				incrementalPrice: incrementalPrice,
+				royaltyRatio,
+				receivePaymentCap
+			);
+		}
+	/* Public API to allow for minting nft */
+	pub fun mintForSaleFusd
+		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
+		, metadata : {String: String}
+		, quantity : Int
+		, basePrice : PonsUtils.FusdUnits
+		, incrementalPrice : PonsUtils.FusdUnits
+		, _ royaltyRatio : PonsUtils.Ratio
+		, _ receivePaymentCap : Capability<&{FungibleToken.Receiver}>
+		) : @[{PonsListingCertificate}] {
+			return <- PonsNftMarketContract .ponsMarket .mintForSaleFusd(
+				artistCertificate,
+				metadata: metadata,
+				quantity: quantity,
+				basePrice: basePrice,
+				incrementalPrice: incrementalPrice,
+				royaltyRatio,
+				receivePaymentCap
+			);
+		}
 
 	/* API to get the nftIds on the market for sale */
 	pub fun getForSaleIds () : [String] {
