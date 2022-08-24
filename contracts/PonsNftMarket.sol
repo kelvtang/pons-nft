@@ -65,7 +65,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
     function mintNewNft(uint256 tokenId, uint256 salesPrice, bytes memory _data) public onlyOwner {
         require(!tokenExists(tokenId), "Market: NFT already exists");
         
-        FxERC721(tokenContractAddress).mint(address(this), tokenId, _data);
+        FxERC721FxManager(fxManagerContractAddress).mintToken(address(this), tokenId, _data);
 
         listForSale(tokenId, salesPrice);
 
@@ -77,7 +77,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         require(to != address(this), "Market: Should not gift NFT to self");
         require(to != address(0x0), "Market: Should not gift NFT to empty address");
         
-        FxERC721(tokenContractAddress).mint(to, tokenId, _data);
+        FxERC721FxManager(fxManagerContractAddress).mintToken(to, tokenId, _data);
 
         emit newNftMinted(tokenId, to);
     }
