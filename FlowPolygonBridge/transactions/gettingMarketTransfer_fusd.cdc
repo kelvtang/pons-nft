@@ -7,10 +7,10 @@
 
  transaction(
     nftSerialId: UInt64,
-    salePriceFUSD: PonsUtils.FusdUnits,
+    salePrice: UFix64,
     polygonListingAddress: String
  ) {
      prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount){
-         PonsTunnelContract .recieveNftFromTunnel_market_fusd (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePriceFUSD: salePriceFUSD);
+         PonsTunnelContract .recieveNftFromTunnel_market_fusd (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePrice: salePrice);
      }
  }

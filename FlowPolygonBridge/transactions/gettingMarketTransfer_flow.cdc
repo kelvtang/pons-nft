@@ -7,10 +7,10 @@
 
  transaction(
     nftSerialId: UInt64,
-    salePriceFlow: PonsUtils.FlowUnits,
+    salePrice: UFix64,
     polygonListingAddress: String
  ) {
      prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount){
-         PonsTunnelContract .recieveNftFromTunnel_market_flow (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePriceFlow: salePriceFlow);
+         PonsTunnelContract .recieveNftFromTunnel_market_flow (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePrice: salePrice);
      }
  }
