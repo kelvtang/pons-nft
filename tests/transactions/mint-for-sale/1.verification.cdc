@@ -1,5 +1,10 @@
 pub fun main 
-( transactionSuccess : Bool
+( metadata : {String: String}
+, quantity : Int
+, _basePrice : UFix64
+, _incrementalPrice : UFix64
+, _ _royaltyRatio : UFix64
+, transactionSuccess : Bool
 , transactionErrorMessage : String?
 , transactionEvents : [{String: String}]
 ) : {String: AnyStruct} {

@@ -17,6 +17,7 @@ let address_of_names =
 	{ '0xFUNGIBLETOKEN': '0xee82856bf20e2aa6'
 	, '0xFLOWTOKEN': '0x0ae53cb6e3f42a79' 
 	, '0xNONFUNGIBLETOKEN': '0xf8d6e0586b0a20c7'
+	, '0xMETADATAVIEWS':'0xf8d6e0586b0a20c7'
 	, '0xFUSD':'0xf8d6e0586b0a20c7' 
 	, '0xPONS': '0xf8d6e0586b0a20c7'
 	, '0xPROPOSER': '0xf8d6e0586b0a20c7' }
@@ -30,7 +31,8 @@ let private_keys_of_names =
 //         { '0xFUNGIBLETOKEN': '0x9a0766d93b6608b7'
 //         , '0xFLOWTOKEN': '0x7e60df042a9c0868'
 //         , '0xNONFUNGIBLETOKEN': '0x631e88ae7f1d7c20'
-// 		   , '0xFUSD':'0xe223d8a629e49c68'
+// 		, '0xMETADATAVIEWS':'0x631e88ae7f1d7c20' /* See https://developers.flow.com/flow/core-contracts/nft-metadata for mainnet address */
+// 		, '0xFUSD':'0xe223d8a629e49c68'
 //         , '0xPONS': '0x9c41d8ea4c088c6d'
 //         , '0xPROPOSER': '0x9c41d8ea4c088c6d'}
 // let private_keys_of_names =

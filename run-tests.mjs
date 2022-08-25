@@ -521,35 +521,21 @@ randomNftId = v4();
 		flow_sdk_api .arg("15.0", flow_types.UFix64)
 	])
 
-randomNftId = v4();
-;await run_known_test_
-	( 'transactions/mint-for-sale' )
-	( [ '0xARTIST_1' ] )
-	(
-	[ 
-		flow_sdk_api .arg
-			( cadencify_object_ (
-				{ url: 'pons://nft-link-3'
-				, title: 'NFT title 3'
-				, description: 'NFT description 3' } )
-			, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) ),
-		flow_sdk_api .arg("1", flow_types.Int),
-		flow_sdk_api .arg("12.0", flow_types.UFix64),
-		flow_sdk_api .arg("10.0", flow_types.UFix64),
-		flow_sdk_api .arg("3.0", flow_types.UFix64)
-	])
-// ;console.log(
-// 	JSON.stringify(
-// 		await send_known_transaction_
-// 			("./transactions")
-// 			("list-for-sale")
-// 			(['0xARTIST_1'])
-// 			([
-// 				flow_sdk_api. arg(randomNftId, flow_types .String),
-// 				flow_sdk_api. arg("Flow", flow_types .String),
-// 				flow_sdk_api. arg("2.4", flow_types .UFix64)
-// 			])
-// 		, null, 4))
-
-
+// randomNftId = v4();
+// ;await run_known_test_
+// 	( 'transactions/mint-for-sale' )
+// 	( [ '0xARTIST_1' ] )
+// 	(
+// 	[ 
+// 		flow_sdk_api .arg
+// 			( cadencify_object_ (
+// 				{ url: 'pons://nft-link-3'
+// 				, title: 'NFT title 3'
+// 				, description: 'NFT description 3' } )
+// 			, flow_types .Dictionary ({ key: flow_types .String, value: flow_types .String }) ),
+// 		flow_sdk_api .arg("1", flow_types.Int),
+// 		flow_sdk_api .arg("12.0", flow_types.UFix64),
+// 		flow_sdk_api .arg("10.0", flow_types.UFix64),
+// 		flow_sdk_api .arg("0.3", flow_types.UFix64)
+// 	])
 
