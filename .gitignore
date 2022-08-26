@@ -3,10 +3,9 @@ secret
 node_modules/
 deployment-contracts
 # ad-hoc.mjs
-#nkeys.json
-
-solc_binaries/
-ethereum_polygon_tests/.secret
-truffle-config.js
+./nkeys.json
+./contracts/ExampleNFT.cdc
+./ethereum_polygon_tests/.secret
+./truffle-config.js
 .secret
-build/
+./build/
