@@ -1,6 +1,5 @@
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsCertificationContract from 0xPONS
-import MetadataViews from 0xMETADATAVIEWS
 
 
 /*
@@ -77,7 +76,7 @@ pub contract interface PonsNftContractInterface {
 
 
 	/* All implementing contracts must implement the NFT resource, fulfilling requirements of PonsNft and the requirements from the NonFungibleToken contract */
-	pub resource NFT: PonsNft, NonFungibleToken.INFT, MetadataViews.Resolver {}
+	pub resource NFT: PonsNft, NonFungibleToken.INFT {}
 
 	/* All implementing contracts must implement the Collection resource, fulfilling requirements of PonsCollection and the requirements from the NonFungibleToken contract */
-	pub resource Collection: PonsCollection, PonsNftReceiver, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection {} }
+	pub resource Collection: PonsCollection, PonsNftReceiver, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {} }

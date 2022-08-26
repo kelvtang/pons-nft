@@ -6,7 +6,7 @@ var __dirname = new URL ('.', import .meta .url) .pathname
 //var deploy_known_contract_ = deploy_known_contract_from_ (__dirname + '/contracts/')
 var update_known_contract_ = update_known_contract_from_ (__dirname + '/contracts/')
 ;await update_known_contract_ ('PonsUtils') 
-;await update_known_contract_ ('PonsCertification')
+;await update_known_contract_ ('PonsCertification') 
 ;await update_known_contract_ ('PonsNftInterface') 
 ;await update_known_contract_ ('PonsNft') 
 ;await update_known_contract_ ('PonsNftMarket') 
