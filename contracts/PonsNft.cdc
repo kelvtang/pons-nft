@@ -16,31 +16,31 @@ import PonsUtils from 0xPONS
 pub contract PonsNftContract {
 
 	/* Standardised storage path for PonsCollection */
-	pub let CollectionStoragePath : StoragePath
+	pub let CollectionStoragePath: StoragePath
 
 	/* Storage path for PonsArtistAuthority */
-	access(account) let ArtistAuthorityStoragePath : StoragePath
+	access(account) let ArtistAuthorityStoragePath: StoragePath
 
 	/* Total Pons NFTs minted */
-	pub var mintedCount : UInt64
+	pub var mintedCount: UInt64
 
 	/* Stores the resource instance to all PonsArtists */
-	access(account) var ponsArtists : @{String: PonsArtist}
+	access(account) var ponsArtists: @{String: PonsArtist}
 
 	/* Stores the ponsArtistId corresponding to each Address */
-	access(account) var ponsArtistIds : {Address: String}
+	access(account) var ponsArtistIds: {Address: String}
 
 	/* Stores the Address corresponding to each ponsArtistId */
-	access(account) var addresses : {String: Address}
+	access(account) var addresses: {String: Address}
 	
 	/* Stores the metadata of each PonsArtist */
-	access(account) var metadatas : {String: {String: String}}
+	access(account) var metadatas: {String: {String: String}}
 
 	/* Stores the Capability to receive Flow tokens for each artist */
-	access(account) var receivePaymentCapsFlow : {String: Capability<&{FungibleToken.Receiver}>}
+	access(account) var receivePaymentCapsFlow: {String: Capability<&{FungibleToken.Receiver}>}
 
 	/* Stores the Capability to receive FUSD tokens for each artist */
-	access(account) var receivePaymentCapsFusd : {String: Capability<&{FungibleToken.Receiver}>}
+	access(account) var receivePaymentCapsFusd: {String: Capability<&{FungibleToken.Receiver}>}
 
 
 
@@ -48,24 +48,24 @@ pub contract PonsNftContract {
 	pub event PonsNftContractInit ()
 
 	/* PonsNftMinted is emitted on minting of new Pons NFTs */
-	pub event PonsNftMinted (nftId : String, serialNumber : UInt64, artistId : String, royalty : PonsUtils.Ratio, editionLabel : String, metadata : {String: String})
+	pub event PonsNftMinted (nftId: String, serialNumber: UInt64, artistId: String, royalty: PonsUtils.Ratio, editionLabel: String, metadata: {String: String})
 
 	/* PonsNftWithdrawFromCollection is emitted on withdrawal of Pons NFTs from its colllection */
-	pub event PonsNftWithdrawFromCollection (nftId : String, serialNumber : UInt64, from : Address?)
+	pub event PonsNftWithdrawFromCollection (nftId: String, serialNumber: UInt64, from: Address?)
 	/* PonsNftWithdrawFromCollection is emitted on depositing of Pons NFTs to a colllection */
-	pub event PonsNftDepositToCollection (nftId : String, serialNumber : UInt64, to : Address?)
+	pub event PonsNftDepositToCollection (nftId: String, serialNumber: UInt64, to: Address?)
 
 	/* PonsArtistRecognised is emitted on the recognition an artist by Pons on the blockchain */
-	pub event PonsArtistRecognised (ponsArtistId : String, metadata : {String: String}, addressOptional : Address?)
+	pub event PonsArtistRecognised (ponsArtistId: String, metadata: {String: String}, addressOptional: Address?)
 
 
 	/* Allow the PonsNft events to be emitted by implementations of Pons NFTs from the Pons account */
-	access(account) fun emitPonsNftMinted (nftId : String, serialNumber : UInt64, artistId : String, royalty : PonsUtils.Ratio, editionLabel : String, metadata : {String: String}) : Void {
+	access(account) fun emitPonsNftMinted (nftId: String, serialNumber: UInt64, artistId: String, royalty: PonsUtils.Ratio, editionLabel: String, metadata: {String: String}): Void {
 		emit PonsNftMinted (nftId: nftId, serialNumber: serialNumber, artistId: artistId, royalty: royalty, editionLabel: editionLabel, metadata: metadata) }
 
-	access(account) fun emitPonsNftWithdrawFromCollection (nftId : String, serialNumber : UInt64, from : Address?) : Void {
+	access(account) fun emitPonsNftWithdrawFromCollection (nftId: String, serialNumber: UInt64, from: Address?): Void {
 		emit PonsNftWithdrawFromCollection (nftId: nftId, serialNumber: serialNumber, from: from) }
-	access(account) fun emitPonsNftDepositToCollection (nftId : String, serialNumber : UInt64, to : Address?) : Void {
+	access(account) fun emitPonsNftDepositToCollection (nftId: String, serialNumber: UInt64, to: Address?): Void {
 		emit PonsNftDepositToCollection (nftId: nftId, serialNumber: serialNumber, to: to) }
 
 
@@ -75,7 +75,7 @@ pub contract PonsNftContract {
 
 
 	/* Takes the next unused UInt64 as the NonFungibleToken.INFT id; which we call serialNumber */
-	access(account) fun takeSerialNumber () : UInt64 {
+	access(account) fun takeSerialNumber (): UInt64 {
 		self .mintedCount = self .mintedCount + UInt64 (1)
 
 		return self .mintedCount }
@@ -85,41 +85,41 @@ pub contract PonsNftContract {
 
 
 	/* Gets the nftId of a Pons NFT */
-	pub fun getNftId (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
+	pub fun getNftId (_ ponsNftRef: &PonsNftContractInterface.NFT): String {
 		return ponsNftRef .nftId }
 	
 	/* Gets the serialNumber of a Pons NFT */
-	pub fun getSerialNumber (_ ponsNftRef : &PonsNftContractInterface.NFT) : UInt64 {
+	pub fun getSerialNumber (_ ponsNftRef: &PonsNftContractInterface.NFT): UInt64 {
 		return ponsNftRef .id }
 
 
 
 	/* Borrows the PonsArtist of a Pons NFT */
-	pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsArtist {
+	pub fun borrowArtist (_ ponsNftRef: &PonsNftContractInterface.NFT): &PonsArtist {
 		return PonsNftContract .implementation .borrowArtist (ponsNftRef) }
 
 	/* Gets the royalty Ratio of a Pons NFT (i.e. how much percentage of resales are royalties to the artist) */
-	pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
+	pub fun getRoyalty (_ ponsNftRef: &PonsNftContractInterface.NFT): PonsUtils.Ratio {
 		return PonsNftContract .implementation .getRoyalty (ponsNftRef) }
 
 	/* Gets the edition label a Pons NFT to differentiate between distinct limited editions */
-	pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
+	pub fun getEditionLabel (_ ponsNftRef: &PonsNftContractInterface.NFT): String {
 		return PonsNftContract .implementation .getEditionLabel (ponsNftRef) }
 
 	/* Gets any other metadata of a Pons NFT (e.g. IPFS media url) */
-	pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} {
+	pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String: String} {
 		return PonsNftContract .implementation .getMetadata (ponsNftRef) }
 
 
 	/* API for creating new PonsCollection */
-	pub fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection {
+	pub fun createEmptyPonsCollection (): @PonsNftContractInterface.Collection {
 		return <- PonsNftContract .implementation .createEmptyPonsCollection () }
 
 
 
 
 	/* API to produce an updated Pons NFT from any Pons NFT, so that the Pons contracts can perform any contract updates in a controlled, future-proof manner */
-	pub fun updatePonsNft (_ ponsNft : @PonsNftContractInterface.NFT) : @PonsNftContractInterface.NFT {
+	pub fun updatePonsNft (_ ponsNft: @PonsNftContractInterface.NFT): @PonsNftContractInterface.NFT {
 		return <- PonsNftContract .implementation .updatePonsNft (<- ponsNft) }
 
 
@@ -131,24 +131,24 @@ pub contract PonsNftContract {
 	This interface defines the concrete functionality that the PonsNft contract delegates.
 */
 	pub resource interface PonsNftContractImplementation {
-		pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsArtist 
-		pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio 
-		pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String 
-		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} 
+		pub fun borrowArtist (_ ponsNftRef: &PonsNftContractInterface.NFT): &PonsArtist 
+		pub fun getRoyalty (_ ponsNftRef: &PonsNftContractInterface.NFT): PonsUtils.Ratio 
+		pub fun getEditionLabel (_ ponsNftRef: &PonsNftContractInterface.NFT): String 
+		pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String: String} 
 
-		pub fun getArtistIdFromId (_ nftId: String) : String
+		pub fun getArtistIdFromId (_ nftId: String): String
 
-		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection
+		access(account) fun createEmptyPonsCollection (): @PonsNftContractInterface.Collection
 
-		pub fun updatePonsNft (_ ponsNft : @PonsNftContractInterface.NFT) : @PonsNftContractInterface.NFT }
+		pub fun updatePonsNft (_ ponsNft: @PonsNftContractInterface.NFT): @PonsNftContractInterface.NFT }
 
 	/* A list recording all previously active instances of PonsNftContractImplementation */
-	access(account) var historicalImplementations : @[{PonsNftContractImplementation}]
+	access(account) var historicalImplementations: @[{PonsNftContractImplementation}]
 	/* The currently active instance of PonsNftContractImplementation */
-	access(account) var implementation : @{PonsNftContractImplementation}
+	access(account) var implementation: @{PonsNftContractImplementation}
 
 	/* Updates the currently active PonsNftContractImplementation */
-	access(account) fun update (_ newImplementation : @{PonsNftContractImplementation}) : Void {
+	access(account) fun update (_ newImplementation: @{PonsNftContractImplementation}): Void {
 		var implementation <- newImplementation
 		implementation <-> PonsNftContract .implementation
 		PonsNftContract .historicalImplementations .append (<- implementation) }
@@ -159,24 +159,24 @@ pub contract PonsNftContract {
 
 
 	/* A trivial instance of PonsNftContractImplementation which panics on all calls, used on initialization of the PonsNft contract. */
-	pub resource InvalidPonsNftContractImplementation : PonsNftContractImplementation {
-		pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsArtist {
+	pub resource InvalidPonsNftContractImplementation: PonsNftContractImplementation {
+		pub fun borrowArtist (_ ponsNftRef: &PonsNftContractInterface.NFT): &PonsArtist {
 			panic ("not implemented") }
-		pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
+		pub fun getRoyalty (_ ponsNftRef: &PonsNftContractInterface.NFT): PonsUtils.Ratio {
 			panic ("not implemented") }
-		pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
+		pub fun getEditionLabel (_ ponsNftRef: &PonsNftContractInterface.NFT): String {
 			panic ("not implemented") }
-		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} {
+		pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String: String} {
 			panic ("not implemented") }
 
-		pub fun getArtistIdFromId (_ nftId: String) : String{
+		pub fun getArtistIdFromId (_ nftId: String): String{
 			panic ("not implemented") }
 		
 
-		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection {
+		access(account) fun createEmptyPonsCollection (): @PonsNftContractInterface.Collection {
 			panic ("not implemented") }
 
-		pub fun updatePonsNft (_ ponsNft : @PonsNftContractInterface.NFT) : @PonsNftContractInterface.NFT {
+		pub fun updatePonsNft (_ ponsNft: @PonsNftContractInterface.NFT): @PonsNftContractInterface.NFT {
 			panic ("not implemented") } }
 
 
@@ -189,9 +189,9 @@ pub contract PonsNftContract {
 	All PonsArtist resources are kept in the Pons account.
 */
 	pub resource PonsArtist {
-		pub let ponsArtistId : String
+		pub let ponsArtistId: String
 
-		init (ponsArtistId : String) {
+		init (ponsArtistId: String) {
 			self .ponsArtistId = ponsArtistId } }
 
 /*
@@ -201,9 +201,9 @@ pub contract PonsNftContract {
 	This can be created by the artist himself, or by the Pons account on behalf of the artist.
 */
 	pub resource PonsArtistCertificate {
-		pub let ponsArtistId : String
+		pub let ponsArtistId: String
 
-		init (ponsArtistId : String) {
+		init (ponsArtistId: String) {
 			pre {
 				PonsNftContract .ponsArtists .containsKey (ponsArtistId):
 					"Not recognised Pons Artist" }
@@ -212,7 +212,7 @@ pub contract PonsNftContract {
 
 
 	/* Borrow any PonsArtist, given his ponsArtistId, to browse further information about the artist */
-	pub fun borrowArtistById (ponsArtistId : String) : &PonsArtist {
+	pub fun borrowArtistById (ponsArtistId: String): &PonsArtist {
 		var ponsArtist <- PonsNftContract .ponsArtists .remove (key: ponsArtistId) !
 		let ponsArtistRef = & ponsArtist as &PonsArtist
 		var replacedArtistOptional <- PonsNftContract .ponsArtists .insert (key: ponsArtistId, <- ponsArtist) 
@@ -221,26 +221,26 @@ pub contract PonsNftContract {
 
 
 	/* Get the metadata of a PonsArtist */
-	pub fun getArtistMetadata (_ ponsArtist : &PonsArtist) : {String: String} {
+	pub fun getArtistMetadata (_ ponsArtist: &PonsArtist): {String: String} {
 		return PonsNftContract .metadatas [ponsArtist .ponsArtistId] ! }
 
 	/* Get the Flow address of a PonsArtist if available */
-	pub fun getArtistAddress (_ ponsArtist : &PonsArtist) : Address? {
+	pub fun getArtistAddress (_ ponsArtist: &PonsArtist): Address? {
 		return PonsNftContract .addresses [ponsArtist .ponsArtistId] }
 
 	/* Get the Capability to receive Flow tokens of a PonsArtist */
-	pub fun getArtistReceivePaymentCapFlow (_ ponsArtist : &PonsArtist) : Capability<&{FungibleToken.Receiver}>? {
+	pub fun getArtistReceivePaymentCapFlow (_ ponsArtist: &PonsArtist): Capability<&{FungibleToken.Receiver}>? {
 		return PonsNftContract .receivePaymentCapsFlow [ponsArtist .ponsArtistId] }
 	
 	/* Get the Capability to receive FUSD tokens of a PonsArtist */
-	pub fun getArtistReceivePaymentCapFusd (_ ponsArtist : &PonsArtist) : Capability<&{FungibleToken.Receiver}>? {
+	pub fun getArtistReceivePaymentCapFusd (_ ponsArtist: &PonsArtist): Capability<&{FungibleToken.Receiver}>? {
 		return PonsNftContract .receivePaymentCapsFusd [ponsArtist .ponsArtistId] }
 
 
 
 
 	/* Create a PonsArtistCertificate authorisation resource, given his Pons Collection as proof of his identity */
-	pub fun makePonsArtistCertificate (_ artistPonsCollectionRef : &PonsNftContractInterface.Collection) : @PonsArtistCertificate {
+	pub fun makePonsArtistCertificate (_ artistPonsCollectionRef: &PonsNftContractInterface.Collection): @PonsArtistCertificate {
 		pre {
 			artistPonsCollectionRef .owner != nil:
 				"Please provide a reference to your Pons Collection in your account storage, to prove your identity as a Pons artist"
@@ -260,54 +260,54 @@ pub contract PonsNftContract {
 */
 	pub resource PonsArtistAuthority {
 		/* Borrow the dictionary which stores all PonsArtist instances */
-		pub fun borrowPonsArtists () : &{String: PonsArtist} {
+		pub fun borrowPonsArtists (): &{String: PonsArtist} {
 			return & PonsNftContract .ponsArtists as &{String: PonsArtist} }
 
 		/* Get the dictionary mapping Address to ponsArtistId */
-		pub fun getPonsArtistIds () : {Address: String} {
+		pub fun getPonsArtistIds (): {Address: String} {
 			return PonsNftContract .ponsArtistIds }
 		/* Update the dictionary mapping Address to ponsArtistId */
-		pub fun setPonsArtistIds (_ ponsArtistIds :  {Address: String}) : Void {
+		pub fun setPonsArtistIds (_ ponsArtistIds: {Address: String}): Void {
 			PonsNftContract .ponsArtistIds = ponsArtistIds }
 
 		/* Get the dictionary mapping ponsArtistId to Address */
-		pub fun getAddresses () : {String: Address} {
+		pub fun getAddresses (): {String: Address} {
 			return PonsNftContract .addresses }
 		/* Update the dictionary mapping ponsArtistId to Address */
-		pub fun setAddresses (_ addresses : {String: Address}) : Void {
+		pub fun setAddresses (_ addresses: {String: Address}): Void {
 			PonsNftContract .addresses = addresses }
 
 		/* Get the dictionary mapping ponsArtistId to metadata */
-		pub fun getMetadatas () : {String: {String: String}} {
+		pub fun getMetadatas (): {String: {String: String}} {
 			return PonsNftContract .metadatas }
 		/* Update the dictionary mapping ponsArtistId to metadata */
-		pub fun setMetadatas (_ metadatas : {String: {String: String}}) : Void {
+		pub fun setMetadatas (_ metadatas: {String: {String: String}}): Void {
 			PonsNftContract .metadatas = metadatas }
 
 		/* Get the dictionary mapping ponsArtistId to Capability of receiving Flow tokens */
-		pub fun getReceivePaymentCapsFlow () : {String: Capability<&{FungibleToken.Receiver}>} {
+		pub fun getReceivePaymentCapsFlow (): {String: Capability<&{FungibleToken.Receiver}>} {
 			return PonsNftContract .receivePaymentCapsFlow }
 
 		/* Get the dictionary mapping ponsArtistId to Capability of receiving Flow tokens */
-		pub fun getReceivePaymentCapsFusd () : {String: Capability<&{FungibleToken.Receiver}>} {
+		pub fun getReceivePaymentCapsFusd (): {String: Capability<&{FungibleToken.Receiver}>} {
 			return PonsNftContract .receivePaymentCapsFusd }
 		
 		/* Update the dictionary mapping ponsArtistId to Capability of receiving Flow tokens */
-		pub fun setReceivePaymentCapsFlow (_ receivePaymentCapsFlow : {String: Capability<&{FungibleToken.Receiver}>}) : Void {
+		pub fun setReceivePaymentCapsFlow (_ receivePaymentCapsFlow: {String: Capability<&{FungibleToken.Receiver}>}): Void {
 			PonsNftContract .receivePaymentCapsFlow = receivePaymentCapsFlow }
 
 		/* Update the dictionary mapping ponsArtistId to Capability of receiving FUSD tokens */
-		pub fun setReceivePaymentCapsFusd (_ receivePaymentCapsFusd : {String: Capability<&{FungibleToken.Receiver}>}) : Void {
+		pub fun setReceivePaymentCapsFusd (_ receivePaymentCapsFusd: {String: Capability<&{FungibleToken.Receiver}>}): Void {
 			PonsNftContract .receivePaymentCapsFusd = receivePaymentCapsFusd }
 
 		/* Recognise a new Pons artist, and store the PonsArtist resource instance */
 		pub fun recognisePonsArtist
-		( ponsArtistId : String
-		, metadata : {String: String}
-		, _ addressOptional : Address?
-		, _ receivePaymentCapOptionalFlow : Capability<&{FungibleToken.Receiver}>?
-		, _ receivePaymentCapOptionalFusd : Capability<&{FungibleToken.Receiver}>?
-		) : Void {
+		( ponsArtistId: String
+		, metadata: {String: String}
+		, _ addressOptional: Address?
+		, _ receivePaymentCapOptionalFlow: Capability<&{FungibleToken.Receiver}>?
+		, _ receivePaymentCapOptionalFusd: Capability<&{FungibleToken.Receiver}>?
+		): Void {
 			pre {
 				! PonsNftContract .ponsArtists .containsKey (ponsArtistId):
 					"Pons Artist with this ponsArtistId already exists" }
@@ -344,11 +344,11 @@ pub contract PonsNftContract {
 			emit PonsArtistRecognised (ponsArtistId: ponsArtistId, metadata: metadata, addressOptional: addressOptional) }
 
 		/* Create a PonsArtistCertificate authorisation, given a PonsArtist reference */
-		pub fun makePonsArtistCertificateFromArtistRef (_ ponsArtistRef : &PonsArtist) : @PonsArtistCertificate {
+		pub fun makePonsArtistCertificateFromArtistRef (_ ponsArtistRef: &PonsArtist): @PonsArtistCertificate {
 			return <- create PonsArtistCertificate (ponsArtistId: ponsArtistRef .ponsArtistId) }
 
 		/* Create a PonsArtistCertificate authorisation, given a ponsArtistId */
-		pub fun makePonsArtistCertificateFromId (ponsArtistId : String) : @PonsArtistCertificate {
+		pub fun makePonsArtistCertificateFromId (ponsArtistId: String): @PonsArtistCertificate {
 			return <- create PonsArtistCertificate (ponsArtistId: ponsArtistId) } }
 
 

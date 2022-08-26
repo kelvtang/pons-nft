@@ -8,4 +8,4 @@ deployment-contracts
 ./ethereum_polygon_tests/.secret
 ./truffle-config.js
 .secret
-./build/
+build/
