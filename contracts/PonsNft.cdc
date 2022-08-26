@@ -375,6 +375,4 @@ pub contract PonsNftContract {
         	self .account .save (<- create PonsArtistAuthority (), to: /storage/ponsArtistAuthority)
 
 		// Emit the PonsNft contract initialisation event
-		emit PonsNftContract.PonsNftContractInit () }
-
-	}
+		emit PonsNftContract.PonsNftContractInit () }}

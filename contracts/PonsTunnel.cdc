@@ -38,8 +38,7 @@ pub contract PonsTunnelContract{
 		pub let royalty: UFix64
 
 		pub fun setArtistAddressPolygon (artistAddressPolygon: String){
-			self .artistAddressPolygon = artistAddressPolygon;
-		}
+			self .artistAddressPolygon = artistAddressPolygon;}
 
 		init (nftId: String, nftSerialId: UInt64, metadata: {String: String}, artistAddressFlow: Address, royalty: UFix64, flowToken: PonsUtils.FlowUnits?, fusdToken: PonsUtils.FusdUnits?){
 			self .nftId = nftId
@@ -61,8 +60,7 @@ pub contract PonsTunnelContract{
 		pub let royalty: UFix64
 
 		pub fun setArtistAddressPolygon (artistAddressPolygon: String){
-			self .artistAddressPolygon = artistAddressPolygon;
-		}
+			self .artistAddressPolygon = artistAddressPolygon;}
 
 		init (nftId: String, nftSerialId: UInt64, metadata: {String: String}, artistAddressFlow: Address, royalty: UFix64){
 			self .nftId = nftId
@@ -86,8 +84,7 @@ pub contract PonsTunnelContract{
 
 		init(flowRecipientAddress: Address, nft: PonsTunnelContract.nftDetails_Market){
 			self .nft = nft
-			self .flowRecipientAddress = flowRecipientAddress}
-	}
+			self .flowRecipientAddress = flowRecipientAddress}}
 
 	pub struct sentTunnelData_User{
 		pub let nft: nftDetails_User
@@ -103,18 +100,15 @@ pub contract PonsTunnelContract{
 
 		init(flowRecipientAddress: Address, nft: PonsTunnelContract.nftDetails_User){
 			self .nft = nft
-			self .flowRecipientAddress = flowRecipientAddress}
-	}
+			self .flowRecipientAddress = flowRecipientAddress}}
 
 	// Holds the polygon address of PonsNftMarket.sol
 	access(self) var polygonMarketAddress: String
 
 	access(account) fun setPolygonMarketAddress(_polygonMarketAddress: String):Void{
-		PonsTunnelContract .polygonMarketAddress = _polygonMarketAddress
-	}
+		PonsTunnelContract .polygonMarketAddress = _polygonMarketAddress}
 	pub fun getPolygonMarketAddress():String{
-		return PonsTunnelContract .polygonMarketAddress
-	}
+		return PonsTunnelContract .polygonMarketAddress}
 
 	// add lister address for market send
 	access(self) fun generateNftEmitData_Market(nftRef: &PonsNftContractInterface.NFT): PonsTunnelContract.nftDetails_Market{
@@ -134,8 +128,7 @@ pub contract PonsTunnelContract{
 		let nftEmitData: PonsTunnelContract.nftDetails_Market = PonsTunnelContract .generateNftEmitData_Market(nftRef: nftRef)
 
 		if artistAddressPolygon != nil { 
-			nftEmitData .setArtistAddressPolygon (artistAddressPolygon: artistAddressPolygon!)
-		}
+			nftEmitData .setArtistAddressPolygon (artistAddressPolygon: artistAddressPolygon!)}
 
 		let sentData: PonsTunnelContract.sentTunnelData_Market = PonsTunnelContract .sentTunnelData_Market(polygonRecipientAddress: polygonRecipientAddress, nft: nftEmitData)
 
@@ -144,12 +137,10 @@ pub contract PonsTunnelContract{
 		let nftEmitData: PonsTunnelContract.nftDetails_Market = PonsTunnelContract .generateNftEmitData_Market(nftRef: nftRef)
 
 		if artistAddressPolygon != nil { 
-			nftEmitData .setArtistAddressPolygon (artistAddressPolygon: artistAddressPolygon!)
-		}
+			nftEmitData .setArtistAddressPolygon (artistAddressPolygon: artistAddressPolygon!)}
 
 		let recievedData: PonsTunnelContract.recieveTunnelData_Market = PonsTunnelContract .recieveTunnelData_Market(flowRecipientAddress: flowRecipientAddress, nft: nftEmitData)
-		return recievedData
-	}
+		return recievedData}
 
 	access(self) fun generateNftEmitData_User(nftRef: &PonsNftContractInterface.NFT): PonsTunnelContract.nftDetails_User{
 		let artistAddressFlow: Address = PonsNftContract .getArtistAddress (PonsNftContract .borrowArtistById (ponsArtistId: PonsNftContract .implementation .getArtistIdFromId(nftRef .nftId)))!;
@@ -162,8 +153,7 @@ pub contract PonsTunnelContract{
 		let nftEmitData: PonsTunnelContract.nftDetails_User = PonsTunnelContract .generateNftEmitData_User(nftRef: nftRef)
 
 		if artistAddressPolygon != nil { 
-			nftEmitData .setArtistAddressPolygon (artistAddressPolygon: artistAddressPolygon!)
-		}
+			nftEmitData .setArtistAddressPolygon (artistAddressPolygon: artistAddressPolygon!)}
 
 		let sentData: PonsTunnelContract.sentTunnelData_User = PonsTunnelContract .sentTunnelData_User(polygonRecipientAddress: polygonRecipientAddress, nft: nftEmitData)
 
@@ -172,12 +162,10 @@ pub contract PonsTunnelContract{
 		let nftEmitData: PonsTunnelContract.nftDetails_User = PonsTunnelContract .generateNftEmitData_User(nftRef: nftRef)
 
 		if artistAddressPolygon != nil { 
-			nftEmitData .setArtistAddressPolygon (artistAddressPolygon: artistAddressPolygon!)
-		}
+			nftEmitData .setArtistAddressPolygon (artistAddressPolygon: artistAddressPolygon!)}
 
 		let recievedData: PonsTunnelContract.recieveTunnelData_User = PonsTunnelContract .recieveTunnelData_User(flowRecipientAddress: flowRecipientAddress, nft: nftEmitData)
-		return recievedData
-	}
+		return recievedData}
 		
 
 
@@ -223,8 +211,7 @@ pub contract PonsTunnelContract{
 		return [
 			account .getCapability <&{FungibleToken.Receiver}> (PublicPath(identifier: uniqPathPrefix.concat("flowTokenReceiver"))!), 
 			account .getCapability <&{FungibleToken.Receiver}> (PublicPath(identifier: uniqPathPrefix.concat("fusdReceiver"))!)
-			]
-	}
+			]}
 
 
 
@@ -264,8 +251,7 @@ pub contract PonsTunnelContract{
 				/public/fusdBalance,
 				target: /storage/fusdVault ) }
 
-		return account .getCapability <&{FungibleToken.Receiver}> (/public/fusdReceiver)
-	}
+		return account .getCapability <&{FungibleToken.Receiver}> (/public/fusdReceiver)}
 
 	/* Ensures an account has a PonsCollection, creating one if it does not exist */
 	pub fun acquirePonsCollection (collector: AuthAccount): Void {
@@ -299,18 +285,15 @@ pub contract PonsTunnelContract{
 	/* Borrows a PonsCollection from an account, creating one if it does not exist */
 	pub fun borrowOwnPonsCollection (collector: AuthAccount): &PonsNftContractInterface.Collection {
 		PonsTunnelContract .acquirePonsCollection (collector: collector)
-		return collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) !
-	}
+		return collector .borrow <&PonsNftContractInterface.Collection> (from: PonsNftContract .CollectionStoragePath) !}
 
 
 
 	pub fun getNftSerialId (nftId: String, collector: AuthAccount) : UInt64{
 		let serialId = PonsTunnelContract .borrowOwnPonsCollection(collector: collector) .getNftSerialId (nftId: nftId);
 		if serialId == nil{
-			panic("Serial Id of this nft not found");
-		}
-		return serialId!;
-	}
+			panic("Serial Id of this nft not found");}
+		return serialId!;}
 	
 
 
@@ -330,8 +313,7 @@ pub contract PonsTunnelContract{
 		emit user_tunnel_submission(nftSerialId: nftSerialId, userAddress: userAccount.address)
 
 		let tunnelEmitData = PonsTunnelContract .generateSentTunnelEmitData_User(nftRef: nftRef, artistAddressPolygon:"", polygonRecipientAddress: polygonAddress);
-		emit nftSubmittedThroughTunnel_User(data: tunnelEmitData);
-	}
+		emit nftSubmittedThroughTunnel_User(data: tunnelEmitData);}
 
 	/* 
 		Nft withdrawal from tunnel is a two step process, 
@@ -348,8 +330,7 @@ pub contract PonsTunnelContract{
 		
 		if self .escrow[userAddress] == nil{
 			let des <- self .escrow .insert(key: userAddress, <- {});
-			destroy des;
-		}
+			destroy des;}
 
 		let tmp <- self .escrow .remove(key: userAddress)!;
 		let des1 <- tmp .insert(key: nftSerialId, <-nft);
@@ -358,8 +339,7 @@ pub contract PonsTunnelContract{
 		destroy des2;
 
 		let tunnelEmitData = PonsTunnelContract .generateRecieveTunnelEmitData_User(nftRef: nftRef, artistAddressPolygon:"", flowRecipientAddress: userAddress);
-		emit nftRecievedThroughTunnel_User(data: tunnelEmitData);
-	}
+		emit nftRecievedThroughTunnel_User(data: tunnelEmitData);}
 	/* 
 	Called by User (recipient) to withdraw nft held in escrow.
 	 */
@@ -378,10 +358,7 @@ pub contract PonsTunnelContract{
 				let des <- self .escrow .insert(key: userAccount.address, <- tmp);
 				destroy des;
 				emit user_tunnel_retrieval(nftSerialId: nftSerialId, userAddress: userAccount.address);
-				return <- nft;
-			}
-		}
-	}
+				return <- nft;}}}
 
 
 
@@ -399,16 +376,14 @@ pub contract PonsTunnelContract{
 		let nftId = PonsTunnelContract .borrowOwnPonsCollection (collector: ponsAccount) .getNftId (serialId: nftSerialId)!
 		let nftRef = PonsNftMarketContract .borrowNft (nftId: nftId);
 		if nftRef == nil{
-			panic("Pons NFT with this nftId is not available on the market");
-		}
+			panic("Pons NFT with this nftId is not available on the market");}
 		let tunnelData = PonsTunnelContract .generateSentTunnelEmitData_Market(nftRef: nftRef!, artistAddressPolygon: nil, polygonRecipientAddress: PonsTunnelContract .polygonMarketAddress);
 		
 		let nft <- PonsNftMarketContract .ponsMarket .unlist_onlyParameters(nftId: nftId);
 		
 		PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .depositNft (<- nft);
 
-		emit nftSubmittedThroughTunnel_Market (data: tunnelData)
-	}
+		emit nftSubmittedThroughTunnel_Market (data: tunnelData)}
 
 	pub fun recieveNftFromTunnel_market_flow (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePrice: UFix64){
 
@@ -418,8 +393,7 @@ pub contract PonsTunnelContract{
 		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdrawNft (nftId : nftId);
 		let paymentCapability = PonsTunnelContract .prepareCapabilityForPolygonLister(account: ponsAccount, polygonAddress: polygonListingAddress);
 		let listingCertificate <- PonsNftMarketContract .ponsMarket .listForSaleFlow(<-nft, salePriceFlow, paymentCapability[0])
-		PonsNftMarketContract .ponsMarket .setPolygonListingCertificate(nftSerialId: nftSerialId, polygonAddress: polygonListingAddress, listingCertificate: <-listingCertificate);
-	}
+		PonsNftMarketContract .ponsMarket .setPolygonListingCertificate(nftSerialId: nftSerialId, polygonAddress: polygonListingAddress, listingCertificate: <-listingCertificate);}
 	pub fun recieveNftFromTunnel_market_fusd (nftSerialId: UInt64, ponsAccount: AuthAccount, ponsHolderAccount: AuthAccount, polygonListingAddress: String, salePrice: UFix64){
 
 		let salePriceFUSD = PonsUtils .FusdUnits(fusdAmount: salePrice);
@@ -428,11 +402,9 @@ pub contract PonsTunnelContract{
 		let nft <- PonsTunnelContract .borrowOwnPonsCollection (collector: ponsHolderAccount) .withdrawNft (nftId : nftId);
 		let paymentCapability = PonsTunnelContract .prepareCapabilityForPolygonLister(account: ponsAccount, polygonAddress: polygonListingAddress);
 		let listingCertificate <- PonsNftMarketContract .ponsMarket .listForSaleFusd(<-nft, salePriceFUSD, paymentCapability[1]);
-		PonsNftMarketContract .ponsMarket .setPolygonListingCertificate(nftSerialId: nftSerialId, polygonAddress: polygonListingAddress, listingCertificate: <-listingCertificate);
-	}
+		PonsNftMarketContract .ponsMarket .setPolygonListingCertificate(nftSerialId: nftSerialId, polygonAddress: polygonListingAddress, listingCertificate: <-listingCertificate);}
 
 	init(){
 		self .polygonMarketAddress = "";
-		self .escrow <- {};
-	}
+		self .escrow <- {};}
 }

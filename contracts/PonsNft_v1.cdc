@@ -241,16 +241,12 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			// Get list of keys. Each key is a nftId string.
 			for id in PonsNftContract_v1 .ponsNftSerialNumbers .keys{ // Iterate through dictionary
 				if PonsNftContract_v1 .ponsNftSerialNumbers[id] == serialId{ 
-					return id; // return the nftId if it points to the same serialId
-				}
-			}
-			return nil;
-		}
+					return id; /* return the nftId if it points to the same serialId */}}
+			return nil;}
 
 		/* Get NFT serialNumber from its NftId */
 		pub fun getNftSerialId (nftId: String) : UInt64?{
-			return PonsNftContract_v1 .ponsNftSerialNumbers[nftId];
-		}
+			return PonsNftContract_v1 .ponsNftSerialNumbers[nftId];}
 
 		/* Borrow a reference to a NFT in the PonsCollection, given its serialNumber */
 		pub fun borrowNFT (id : UInt64) : &NonFungibleToken.NFT {
