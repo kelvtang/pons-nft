@@ -2,7 +2,7 @@ import FungibleToken from 0xFUNGIBLETOKEN
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsNftContractInterface from 0xPONS
 import PonsUtils from 0xPONS
-
+import MetadataViews from 0xMETADATAVIEWS
 
 
 /*
@@ -48,7 +48,7 @@ pub contract PonsNftContract {
 	pub event PonsNftContractInit ()
 
 	/* PonsNftMinted is emitted on minting of new Pons NFTs */
-	pub event PonsNftMinted (nftId: String, serialNumber: UInt64, artistId: String, royalty: PonsUtils.Ratio, editionLabel: String, metadata: {String: String})
+	pub event PonsNftMinted (nftId: String, serialNumber: UInt64, artistId: String, royalty: PonsUtils.Ratio, editionLabel: String, metadata: {String:String})
 
 	/* PonsNftWithdrawFromCollection is emitted on withdrawal of Pons NFTs from its colllection */
 	pub event PonsNftWithdrawFromCollection (nftId: String, serialNumber: UInt64, from: Address?)
@@ -60,7 +60,7 @@ pub contract PonsNftContract {
 
 
 	/* Allow the PonsNft events to be emitted by implementations of Pons NFTs from the Pons account */
-	access(account) fun emitPonsNftMinted (nftId: String, serialNumber: UInt64, artistId: String, royalty: PonsUtils.Ratio, editionLabel: String, metadata: {String: String}): Void {
+	access(account) fun emitPonsNftMinted (nftId: String, serialNumber: UInt64, artistId: String, royalty: PonsUtils.Ratio, editionLabel: String, metadata: {String:String}): Void {
 		emit PonsNftMinted (nftId: nftId, serialNumber: serialNumber, artistId: artistId, royalty: royalty, editionLabel: editionLabel, metadata: metadata) }
 
 	access(account) fun emitPonsNftWithdrawFromCollection (nftId: String, serialNumber: UInt64, from: Address?): Void {
@@ -107,7 +107,7 @@ pub contract PonsNftContract {
 		return PonsNftContract .implementation .getEditionLabel (ponsNftRef) }
 
 	/* Gets any other metadata of a Pons NFT (e.g. IPFS media url) */
-	pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String: String} {
+	pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String:String} {
 		return PonsNftContract .implementation .getMetadata (ponsNftRef) }
 
 
@@ -134,7 +134,7 @@ pub contract PonsNftContract {
 		pub fun borrowArtist (_ ponsNftRef: &PonsNftContractInterface.NFT): &PonsArtist 
 		pub fun getRoyalty (_ ponsNftRef: &PonsNftContractInterface.NFT): PonsUtils.Ratio 
 		pub fun getEditionLabel (_ ponsNftRef: &PonsNftContractInterface.NFT): String 
-		pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String: String} 
+		pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String:String}
 
 		pub fun getArtistIdFromId (_ nftId: String): String
 
@@ -166,7 +166,7 @@ pub contract PonsNftContract {
 			panic ("not implemented") }
 		pub fun getEditionLabel (_ ponsNftRef: &PonsNftContractInterface.NFT): String {
 			panic ("not implemented") }
-		pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String: String} {
+		pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String:String} {
 			panic ("not implemented") }
 
 		pub fun getArtistIdFromId (_ nftId: String): String{

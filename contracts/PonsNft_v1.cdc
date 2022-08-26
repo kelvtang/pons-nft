@@ -3,7 +3,7 @@ import PonsCertificationContract from 0xPONS
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsUtils from 0xPONS
-
+import MetadataViews from 0xMETADATAVIEWS
 
 
 /*
@@ -12,13 +12,13 @@ import PonsUtils from 0xPONS
 	This smart contract contains the concrete functionality of Pons NFT v1.
 	In the v1 implementation, all Pons NFT information is straightforwardly stored inside the contract, and a Pons NFT minter is created and stored in the Pons account.
 */
-pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
+pub contract PonsNftContract_v1: PonsNftContractInterface, NonFungibleToken {
 
 	/* Storage path at which the Minter will be stored */
-	access(account) let MinterStoragePath : StoragePath
+	access(account) let MinterStoragePath: StoragePath
 
 	/* Capability to the Pons NFT Minter, for convenience of usage */
-	access(account) let MinterCapability : Capability<&NftMinter_v1>
+	access(account) let MinterCapability: Capability<&NftMinter_v1>
 
 
 	/* PonsNftContractInit_v1 is emitted on initialisation of this contract */
@@ -27,73 +27,68 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 	/* ContractInitialized is emitted on initilisation of this contract likewise, this variant satisfies requirements from the NonFungibleToken interface */
 	pub event ContractInitialized ()
 	/* Withdraw is emitted on withdrawals of Pons NFTs from a PonsCollection, this event satisfying requirements from the NonFungibleToken interface */
-	pub event Withdraw (id : UInt64, from : Address?)
+	pub event Withdraw (id: UInt64, from: Address?)
 	/* Withdraw is emitted on deposits of Pons NFTs to a PonsCollection, this event satisfying requirements from the NonFungibleToken interface */
-	pub event Deposit (id : UInt64, to : Address?)
+	pub event Deposit (id: UInt64, to: Address?)
 
 
 
 
 	/* Represents the total number of Pons NFTs (v1) created, satisfying requirements from the NonFungibleToken interface */
-	pub var totalSupply : UInt64
+	pub var totalSupply: UInt64
 
 	/* Map from nftId to serialNumber */
-	access(account) var ponsNftSerialNumbers : {String: UInt64}
+	access(account) var ponsNftSerialNumbers: {String: UInt64}
 
 	/* Map from serialNumber to nftId */
-	access(account) var ponsNftIds : {UInt64: String}
+	access(account) var ponsNftIds: {UInt64: String}
 
 	/* Map from nftId to ponsArtistId */
-	access(account) var ponsNftArtistIds : {String: String}
+	access(account) var ponsNftArtistIds: {String: String}
 
-	/* Map from nftId to royalties ratio */
-	access(account) var ponsNftRoyalties : {String: PonsUtils.Ratio}
-
-	/* Map from nftId to edition label */
-	access(account) var ponsNftEditionLabels : {String: String}
-
-	/* Map from nftId to metadata */
-	access(account) var ponsNftMetadatas : {String: {String: String}}
-
-
-	/* Inserts or updates the royalty for a NFT */
-	access(account) fun insertRoyalty (nftId : String, royalty : PonsUtils.Ratio) : PonsUtils.Ratio? {
-		return self .ponsNftRoyalties .insert (key: nftId, royalty) }
-
-	/* Inserts or updates the edition label for a NFT */
-	access(account) fun insertEditionLabel (nftId : String, editionLabel : String) : String? {
-		return self .ponsNftEditionLabels .insert (key: nftId, editionLabel) }
-
-	/* Inserts or updates the metadata for a NFT */
-	access(account) fun insertMetadata (nftId : String, metadata : {String: String}) : {String: String}? {
-		return self .ponsNftMetadatas .insert (key: nftId, metadata) }
-
-	/* Removes the royalty for a NFT */
-	access(account) fun removeRoyalty (nftId : String) : PonsUtils.Ratio? {
-		return self .ponsNftRoyalties .remove (key: nftId) }
-
-	/* Removes the edition label for a NFT */
-	access(account) fun removeEditionLabel (nftId : String) : String? {
-		return self .ponsNftEditionLabels .remove (key: nftId) }
-
-	/* Removes the metadata for a NFT */
-	access(account) fun removeMetadata (nftId : String) : {String: String}? {
-		return self .ponsNftMetadatas .remove (key: nftId) }
 	
+
+	pub struct rareTraitDescription {
+		pub let traitName: String;
+		pub let traitValue: AnyStruct;
+
+		pub let score: UFix64;
+		pub let max: UFix64;
+		pub let description: String?
+		init(traitName: String, traitValue: String, score:UFix64, max:UFix64, description:String?){
+			self .traitName = traitName; self .traitValue = traitValue;
+			self.score = score; self.max = max; self.description = description;
+		}
+	}
 
 
 	/* The concrete Pons NFT resource. Striaghtforward implementation of the PonsNft and INFT interfaces */
-	pub resource NFT : PonsNftContractInterface.PonsNft, NonFungibleToken.INFT {
+	pub resource NFT: PonsNftContractInterface.PonsNft, NonFungibleToken.INFT, MetadataViews.Resolver {
 		/* Ensures the authenticity of this PonsNft; requirement by PonsNft */
-		pub let ponsCertification : @PonsCertificationContract.PonsCertification
+		pub let ponsCertification: @PonsCertificationContract.PonsCertification
 
 		/* Unique identifier for the NFT; requirement by PonsNft */
-		pub let nftId : String
+		pub let nftId: String
 
 		/* Unique identifier for the NFT; requirement by INFT */
-		pub let id : UInt64
+		pub let id: UInt64
 
-		init (nftId : String, serialNumber : UInt64) {
+		pub let name: String?
+        pub let description: String?
+        pub let thumbnail: String?
+        access(self) let royalties: [MetadataViews.Royalty]?
+        access(self) let metadata: {String: AnyStruct}
+
+		
+		init (
+			nftId: String, 
+			serialNumber: UInt64,
+            name: String?,
+            description: String?,
+            thumbnail: String?,
+            royalties: [MetadataViews.Royalty]?,
+            metadata: {String: AnyStruct}
+		) {
 			pre {
 				! PonsNftContract_v1 .ponsNftSerialNumbers .containsKey (nftId): 
 					"Pons NFT with this nftId already taken"
@@ -109,34 +104,152 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			self .ponsCertification <- PonsCertificationContract .makePonsCertification ()
 			self .nftId = nftId
 			self .id = serialNumber
+			self .name = name
+            self .description = description
+            self .thumbnail = thumbnail
+            self .royalties = royalties
+            self .metadata = metadata
 
 			/* For the sake of consistency, the link between nftId and serialNumber should be established once it is known */
 			PonsNftContract_v1 .ponsNftSerialNumbers .insert (key: nftId, serialNumber)
 			PonsNftContract_v1 .ponsNftIds .insert (key: serialNumber, nftId) }
+		
+		pub fun getViews(): [Type] {
+            return [
+                Type<MetadataViews.Display>(),
+                Type<MetadataViews.Royalties>(),
+                Type<MetadataViews.Editions>(),
+                Type<MetadataViews.ExternalURL>(),
+                Type<MetadataViews.NFTCollectionData>(),
+                Type<MetadataViews.NFTCollectionDisplay>(),
+                Type<MetadataViews.Serial>(),
+                Type<MetadataViews.Traits>()
+            ]
+        }
+
+
+		pub fun resolveView(_ view: Type): AnyStruct? {
+            switch view {
+                case Type<MetadataViews.Display>(): 
+                    return MetadataViews.Display(
+                        name: self.name ?? "",
+                        description: self.description ?? "",
+                        thumbnail: MetadataViews.HTTPFile(
+                            url: self.thumbnail ?? ""
+                        )
+                    )
+                case Type<MetadataViews.Editions>(): 
+                    // There is no max number of NFTs that can be minted from this contract
+                    // so the max edition field value is set to nil
+                    let editionInfo = MetadataViews.Edition(
+						name: "NFT Edition: ".concat(self .name ?? "_"), 
+						number: (self .metadata["editionNumber"] != nil ? (self .metadata["editionNumber"] as? UInt64)! : UInt64(1)), 
+						max: (self .metadata["editionMax"] != nil ? (self .metadata["editionMax"] as? UInt64)! : nil)
+					)
+                    let editionList: [MetadataViews.Edition] = [editionInfo]
+                    return MetadataViews.Editions(
+                        editionList
+                    )
+                case Type<MetadataViews.Serial>(): 
+                    return MetadataViews.Serial(
+                        self.id
+                    )
+                case Type<MetadataViews.Royalties>(): 
+                    return self.royalties != nil ? MetadataViews.Royalties(self.royalties!): nil
+
+                case Type<MetadataViews.ExternalURL>(): 
+                    return MetadataViews.ExternalURL(((self .metadata["externalURL"] as? String) ?? "")!)
+                
+				case Type<MetadataViews.NFTCollectionData>(): 
+                    // TODO: 
+					return MetadataViews.NFTCollectionData(
+                        storagePath: PonsNftContract .CollectionStoragePath,
+                        publicPath: PublicPath(identifier: "ponsCollection")!, /* Hard coded */
+                        providerPath: PrivatePath(identifier: "ponsCollection")!, /* Hard coded */
+                        
+						publicCollection: Type<&PonsNftContract_v1.Collection{PonsNftContractInterface.PonsCollection}>(),
+                        publicLinkedType: Type<&PonsNftContract_v1.Collection{PonsNftContractInterface.PonsCollection,NonFungibleToken.CollectionPublic,NonFungibleToken.Receiver,MetadataViews.ResolverCollection}>(),
+                        providerLinkedType: Type<&PonsNftContract_v1.Collection{PonsNftContractInterface.PonsCollection,NonFungibleToken.CollectionPublic,NonFungibleToken.Provider,MetadataViews.ResolverCollection}>(),
+                        
+						createEmptyCollectionFunction: (fun (): @PonsNftContract_v1.Collection {
+                            return <- PonsNftContract_v1.createEmptyCollection()
+                        })
+                    )
+                
+				case Type<MetadataViews.NFTCollectionDisplay>(): 
+                    let media = MetadataViews.Media(
+                        file: MetadataViews.HTTPFile(
+                            url: ((self .metadata["url"] as? String) ?? "")!
+                        ),
+                        mediaType: ((self .metadata["mediaType"] as? String) ?? "image/svg+xml")!
+                    )
+                    return MetadataViews.NFTCollectionDisplay(
+                        name: ((self .metadata["collectionName"] as? String) ?? "")!,
+                        description: ((self .metadata["description"] as? String) ?? "")!,
+                        externalURL: (self .resolveView(Type<MetadataViews.ExternalURL>()) as? MetadataViews.ExternalURL)!,//MetadataViews.ExternalURL("https: //example-nft.onflow.org"),
+                        squareImage: media,
+                        bannerImage: media,
+                        socials: ((self .metadata["social"] as? {String:MetadataViews.ExternalURL}) ?? 
+						{"instagram": MetadataViews.ExternalURL("https://www.instagram.com/pons.ai/"), 
+						"linkedin": MetadataViews.ExternalURL("https://www.linkedin.com/company/pons-ai/about/"), 
+						"email": MetadataViews.ExternalURL("mailto:support@pons.ai"), 
+						"website": MetadataViews.ExternalURL("https://www.pons.ai/")})
+                    )
+                case Type<MetadataViews.Traits>(): 
+                    // exclude mintedTime and foo to show other uses of Traits
+                    let excludedTraits = ["mintedTime", "rareTraits", "editionNumber", "editionMax", "externalURL", "url", "mediaType", "collectionName", "description", "social"]
+                    let traitsView = MetadataViews.dictToTraits(dict: self .metadata, excludedNames: excludedTraits)
+
+                    // mintedTime is a unix timestamp, we should mark it with a displayType so platforms know how to show it.
+                    if self.metadata["mintedTime"]!=nil{
+						let mintedTimeTrait = MetadataViews.Trait(name: "mintedTime", value: self.metadata["mintedTime"]!, displayType: "Date", rarity: nil)
+                    	traitsView.addTrait(mintedTimeTrait)
+					}
+
+                    // foo is a trait with its own rarity
+					if self .metadata["rareTraits"] != nil {
+						// asumming self .metadata["rareTraits"]: [PonsNftContract_v1 .rareTraitDescription]?
+						let traitArr = (self .metadata["rareTraits"] as? [PonsNftContract_v1.rareTraitDescription])!
+						for trait in traitArr{
+							let tempTraitRarity = MetadataViews.Rarity(score: trait.score, max: trait.max, description: trait.description)
+							let tempTrait = MetadataViews.Trait(name: trait.traitName, value: trait.traitValue, displayType: nil, rarity: tempTraitRarity)
+							traitsView.addTrait(tempTrait)
+						}
+					}
+                    
+                    return traitsView
+            }
+            return nil
+        }
 
 		destroy () {
 			destroy self .ponsCertification } }
 
+
+
+	
+
 	/* The concrete Pons Collection resource. Striaghtforward implementation of the PonsCollection, Provider, Receiver, and Collection interfaces */
-	pub resource Collection :
+	pub resource Collection: 
 		PonsNftContractInterface.PonsCollection, PonsNftContractInterface.PonsNftReceiver,
-		NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic
+		NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, 
+		MetadataViews.ResolverCollection
 	{
 
 		/* Ensures the authenticity of this PonsCollection; requirement from PonsCollection */
-		pub let ponsCertification : @PonsCertificationContract.PonsCertification
+		pub let ponsCertification: @PonsCertificationContract.PonsCertification
 
 		/* Stores the owned NFT resources; requirement from NonFungibleToken.Collection */
-		pub var ownedNFTs : @{UInt64: NonFungibleToken.NFT}
+		pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
 
 		/* Withdraw an NFT from the PonsCollection, given its nftId */
-		pub fun withdrawNft (nftId : String) : @PonsNftContractInterface.NFT {
+		pub fun withdrawNft (nftId: String): @PonsNftContractInterface.NFT {
 			pre {
-				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !):
+				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !): 
 					"Pons NFT with this nftId not found" }
 			post {
-				! self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !):
+				! self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !): 
 					"Failed to withdraw Pons NFT with this nftId" }
 
 			// Find the serialNumber of the NFT given its nftId
@@ -144,7 +257,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 			// Retrieve the NFT by removing it from the collection's ownedNFTs
 			// We know it is a PonsNftContractInterface.NFT, and we cast it
-			var ponsNft : @PonsNftContractInterface.NFT <-
+			var ponsNft: @PonsNftContractInterface.NFT <-
 				(self .ownedNFTs .remove (key: serialNumber) ! as! @PonsNftContractInterface.NFT)
 
 			// Emit the PonsNft_v1 Withdraw event (due to the NonFungibleToken contract)
@@ -156,12 +269,12 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			return <- PonsNftContract .updatePonsNft (<- ponsNft) }
 
 		/* Deposit a NFT from the PonsCollection, given its nftId */
-		pub fun depositNft (_ ponsNft : @PonsNftContractInterface.NFT) : Void {
+		pub fun depositNft (_ ponsNft: @PonsNftContractInterface.NFT): Void {
 			pre {
-				! self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [ponsNft .nftId] !):
+				! self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [ponsNft .nftId] !): 
 					"Pons NFT with this nftId already in this collection" }
 			/*post {
-				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [before (ponsNft .nftId)] !):
+				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [before (ponsNft .nftId)] !): 
 					"" }*/
 
 			let nftId = ponsNft .nftId
@@ -184,10 +297,10 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
             		PonsNftContract .emitPonsNftDepositToCollection (nftId: nftId, serialNumber: serialNumber, to: self .owner ?.address) }
 
 		/* Get a list of nftIds stored in the PonsCollection */
-		pub fun getNftIds () : [String] {
+		pub fun getNftIds (): [String] {
 			// Iterate over the keys of ownedNFTs, convert them to nftIds, and put them in an array
 			let serialNumbers = self .ownedNFTs .keys
-			var nftIds : [String] = []
+			var nftIds: [String] = []
 			var index = 0
 			while index < serialNumbers .length {
 				let serialNumber = serialNumbers [index] !
@@ -197,9 +310,9 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			return nftIds }
 
 		/* Borrow a reference to a NFT in the PonsCollection, given its nftId */
-		pub fun borrowNft (nftId : String) : &PonsNftContractInterface.NFT {
+		pub fun borrowNft (nftId: String): &PonsNftContractInterface.NFT {
 			pre {
-				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !):
+				self .ownedNFTs .containsKey (PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !): 
 					"Pons NFT with this nftId not found" }
 
 			let serialNumber = PonsNftContract_v1 .ponsNftSerialNumbers [nftId] !
@@ -222,22 +335,22 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 
 		/* Withdraw an NFT from the PonsCollection, given its serialNumber */
-		pub fun withdraw (withdrawID : UInt64) : @NonFungibleToken.NFT {
+		pub fun withdraw (withdrawID: UInt64): @NonFungibleToken.NFT {
 			let nftId = PonsNftContract_v1 .ponsNftIds [withdrawID] !
 			var nft <- self .withdrawNft (nftId: nftId) as! @NonFungibleToken.NFT
 			return <- nft }
 
 		/* Deposit an NFT to the PonsCollection */
-		pub fun deposit (token : @NonFungibleToken.NFT) : Void {
+		pub fun deposit (token: @NonFungibleToken.NFT): Void {
 			var nft <- token as! @PonsNftContractInterface.NFT
 			self .depositNft (<- nft) }
 
 		/* Get a list of serialNumbers stored in the PonsCollection */
-		pub fun getIDs () : [UInt64] {
+		pub fun getIDs (): [UInt64] {
 			return self .ownedNFTs .keys }
 
 		/* Get NFT serialNumber from its NftId */
-		pub fun getNftId (serialId: UInt64) : String?{
+		pub fun getNftId (serialId: UInt64): String?{
 			// Get list of keys. Each key is a nftId string.
 			for id in PonsNftContract_v1 .ponsNftSerialNumbers .keys{ // Iterate through dictionary
 				if PonsNftContract_v1 .ponsNftSerialNumbers[id] == serialId{ 
@@ -245,13 +358,13 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			return nil;}
 
 		/* Get NFT serialNumber from its NftId */
-		pub fun getNftSerialId (nftId: String) : UInt64?{
+		pub fun getNftSerialId (nftId: String): UInt64?{
 			return PonsNftContract_v1 .ponsNftSerialNumbers[nftId];}
 
 		/* Borrow a reference to a NFT in the PonsCollection, given its serialNumber */
-		pub fun borrowNFT (id : UInt64) : &NonFungibleToken.NFT {
+		pub fun borrowNFT (id: UInt64): &NonFungibleToken.NFT {
 			pre {
-				self .ownedNFTs .containsKey (id):
+				self .ownedNFTs .containsKey (id): 
 					"Pons NFT with this serialNumber not found" }
 
 			let serialNumber = id
@@ -272,6 +385,13 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 
 
+		pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver}{
+			let nft = (&self .ownedNFTs[id] as auth &NonFungibleToken.NFT?)!;
+			let ponsNft = nft as! &PonsNftContractInterface.NFT;
+			return ponsNft as &AnyResource{MetadataViews.Resolver};
+		}
+
+
 		init () {
 			self .ponsCertification <- PonsCertificationContract .makePonsCertification ()
 			self .ownedNFTs <- {} }
@@ -285,7 +405,7 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			destroy self .ownedNFTs } }
 
 	/* Create a empty Pons Collection */
-	pub fun createEmptyCollection () : @Collection {
+	pub fun createEmptyCollection (): @Collection {
 		return <- create Collection () }
 
 
@@ -300,10 +420,10 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 */
 	pub resource NftMinter_v1 {
 		/* Stores available nftIds for new new NFTs */
-		access(account) var nftIds : [String]
+		access(account) var nftIds: [String]
 
 		/* Adds nftIds to the pool of available nftIds */
-		pub fun refillMintIds (mintIds : [String]) {
+		pub fun refillMintIds (mintIds: [String]) {
 			var idIndex = 0
 			while idIndex < mintIds .length {
 				let mintId = mintIds [idIndex]
@@ -316,13 +436,15 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 		/* Mints a new Pons NFT v1 */
 		pub fun mintNft
-		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, royalty : PonsUtils.Ratio
-		, editionLabel : String
-		, metadata : {String: String}
-		) : @PonsNftContractInterface.NFT {
+		( _ artistCertificate: &PonsNftContract.PonsArtistCertificate
+		, royalty: MetadataViews.Royalty?
+		, name: String
+		, description: String
+		, thumbnail: String
+		, metadata: {String: AnyStruct}
+		): @PonsNftContractInterface.NFT {
 			pre {
-				self .nftIds .length > 0:
+				self .nftIds .length > 0: 
 					"Pons NFT Minter out of nftIds" }
 
 			// Takes the next available nftId
@@ -330,26 +452,38 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 			// Takes the next available serialNumber
 			let serialNumber = PonsNftContract .takeSerialNumber ()
 
-			var nft <- create NFT (nftId: nftId, serialNumber: serialNumber)
+			var nft <- create NFT (
+				nftId: nftId, 
+				serialNumber: serialNumber,
+				name: name,
+				description: description,
+				thumbnail: thumbnail,
+				royalties: [royalty!],
+				metadata: metadata
+			)
 			let nftRef = & nft as &PonsNftContractInterface.NFT
 
 			// Associate the specified data with the NFT
 			PonsNftContract_v1 .ponsNftArtistIds .insert (key: nftId, artistCertificate .ponsArtistId)
-			PonsNftContract_v1 .ponsNftRoyalties .insert (key: nftId, royalty)
-			PonsNftContract_v1 .ponsNftEditionLabels .insert (key: nftId, editionLabel)
-			PonsNftContract_v1 .ponsNftMetadatas .insert (key: nftId, metadata)
 
 			// Increment the totalSupply of Pons NFT v1
 			PonsNftContract_v1 .totalSupply = PonsNftContract_v1 .totalSupply + UInt64 (1)
+
+			let traits = (nftRef .resolveView(Type<MetadataViews.Traits>())! as? MetadataViews.Traits)!.traits
+			var _traits:{String:String} = {}
+			for trait in traits{
+				_traits.insert(key: trait.name, ((trait.value as? String) ?? (trait.value as? UInt)!.toString())!)
+			}
 
 			// Emit the PonsNft Minted event
 			PonsNftContract .emitPonsNftMinted (
 				nftId: nft .nftId,
 				serialNumber: nft .id,
 				artistId: PonsNftContract .borrowArtist (nftRef) .ponsArtistId,
-				royalty : PonsNftContract .getRoyalty (nftRef),
-				editionLabel : PonsNftContract .getEditionLabel (nftRef),
-				metadata : PonsNftContract .getMetadata (nftRef) )
+				royalty: PonsUtils.Ratio(amount: royalty !.cut),
+				editionLabel: "NFT Edition: ".concat(name),
+				metadata: _traits
+			)
 
 			return <- nft }
 
@@ -360,24 +494,41 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 
 
 	/* A straightforward instance of PonsNftContractImplementation which utilises PonsNftContract_v1 for all its functionality, used on initialization of the PonsNftContract_v1 contract. */
-	pub resource PonsNftContractImplementation_v1 : PonsNftContract.PonsNftContractImplementation {
-		pub fun borrowArtist (_ ponsNftRef : &PonsNftContractInterface.NFT) : &PonsNftContract.PonsArtist {
+	pub resource PonsNftContractImplementation_v1: PonsNftContract.PonsNftContractImplementation {
+		pub fun borrowArtist (_ ponsNftRef: &PonsNftContractInterface.NFT): &PonsNftContract.PonsArtist {
 			let ponsArtistId = PonsNftContract_v1 .ponsNftArtistIds [ponsNftRef .nftId] !
 			return PonsNftContract .borrowArtistById (ponsArtistId: ponsArtistId) }
-		pub fun getRoyalty (_ ponsNftRef : &PonsNftContractInterface.NFT) : PonsUtils.Ratio {
-			return PonsNftContract_v1 .ponsNftRoyalties [ponsNftRef .nftId] ! }
-		pub fun getEditionLabel (_ ponsNftRef : &PonsNftContractInterface.NFT) : String {
-			return PonsNftContract_v1 .ponsNftEditionLabels [ponsNftRef .nftId] ! }
-		pub fun getMetadata (_ ponsNftRef : &PonsNftContractInterface.NFT) : {String: String} {
-			return PonsNftContract_v1 .ponsNftMetadatas [ponsNftRef .nftId] ! }
+		
+		// TODO: make new using metadataviews
+		pub fun getRoyalty (_ ponsNftRef: &PonsNftContractInterface.NFT): PonsUtils.Ratio {
+			let royalties = (ponsNftRef .resolveView(Type<MetadataViews.Royalties>()) as? MetadataViews.Royalties)!
+			var total:UFix64 = 0.0;
+			for royal in royalties.getRoyalties(){
+				total = total + royal.cut;
+			}
+			return PonsUtils.Ratio(amount: total);
+		}
+		pub fun getEditionLabel (_ ponsNftRef: &PonsNftContractInterface.NFT): String {
+			let editionLabel = (ponsNftRef .resolveView(Type<MetadataViews.Editions>()) as? MetadataViews.Editions) !.infoList[0] .name!;
+			return editionLabel;
+		}
+		pub fun getMetadata (_ ponsNftRef: &PonsNftContractInterface.NFT): {String:String} {
+			let traits = (ponsNftRef .resolveView(Type<MetadataViews.Traits>())! as? MetadataViews.Traits)!.traits
+			var _traits:{String:String} = {}
+			for trait in traits{
+				_traits.insert(key: trait.name, ((trait.value as? String) ?? (trait.value as? UInt)!.toString())!)
+			}
+			return _traits;
+		}
 
-		pub fun getArtistIdFromId (_ nftId: String) : String {
+
+		pub fun getArtistIdFromId (_ nftId: String): String {
 			return PonsNftContract_v1 .ponsNftArtistIds [nftId] !}
 
-		access(account) fun createEmptyPonsCollection () : @PonsNftContractInterface.Collection {
+		access(account) fun createEmptyPonsCollection (): @PonsNftContractInterface.Collection {
 			return <- create Collection () }
 
-		pub fun updatePonsNft (_ ponsNft : @PonsNftContractInterface.NFT) : @PonsNftContractInterface.NFT {
+		pub fun updatePonsNft (_ ponsNft: @PonsNftContractInterface.NFT): @PonsNftContractInterface.NFT {
 			return <- ponsNft } }
 
 
@@ -392,12 +543,9 @@ pub contract PonsNftContract_v1 : PonsNftContractInterface, NonFungibleToken {
 		self .ponsNftSerialNumbers = {}
 		self .ponsNftIds = {}
 		self .ponsNftArtistIds = {}
-		self .ponsNftRoyalties = {}
-		self .ponsNftEditionLabels = {}
-		self .ponsNftMetadatas = {}
 
 		// Save a NFT v1 Minter to the specified storage path
-        	self .account .save (<- create NftMinter_v1 (), to: self .MinterStoragePath)
+        self .account .save (<- create NftMinter_v1 (), to: self .MinterStoragePath)
 
 		// Create and save a capability to the minter for convenience
 		self .MinterCapability = self .account .link <&NftMinter_v1> (/private/ponsMinter, target: self .MinterStoragePath) !

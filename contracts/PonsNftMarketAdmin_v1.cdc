@@ -36,18 +36,6 @@ pub contract PonsNftMarketAdminContract_v1 {
 */
 	pub resource NftMarketAdmin_v1 {
 
-		/* Updates the royalty of the Pons NFT */
-		pub fun updatePonsNftRoyalty (nftId : String, royalty : PonsUtils.Ratio) : Void {
-			PonsNftContract_v1 .insertRoyalty (nftId: nftId, royalty: royalty) }
-
-		/* Updates the edition label of the Pons NFT */
-		pub fun updatePonsEditionLabel (nftId : String, editionLabel : String) : Void {
-			PonsNftContract_v1 .insertEditionLabel (nftId: nftId, editionLabel: editionLabel) }
-
-		/* Updates the metadata of the Pons NFT */
-		pub fun updatePonsNftMetadata (nftId : String, metadata : {String: String}) : Void {
-			PonsNftContract_v1 .insertMetadata (nftId: nftId, metadata: metadata) }
-
 		/* Updates the price of the Pons NFT on the marketplace */
 		pub fun updateSalePriceFlow (nftId : String, price : PonsUtils.FlowUnits) : Void {
 			let ponsNftMarketRef = & PonsNftMarketContract .ponsMarket as auth &{PonsNftMarketContract.PonsNftMarket}

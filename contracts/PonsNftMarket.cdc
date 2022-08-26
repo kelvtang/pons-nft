@@ -107,7 +107,7 @@ pub contract PonsNftMarketContract {
 		/* When the Pons marketplace mints multiple editions of NFTs, the market price of each successive NFT is incremented by the incrementalPrice */
 		pub fun mintForSaleFlow
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, metadata : {String: String}
+		, metadata : {String: AnyStruct}?
 		, quantity : Int
 		, basePrice : PonsUtils.FlowUnits
 		, incrementalPrice : PonsUtils.FlowUnits
@@ -137,7 +137,7 @@ pub contract PonsNftMarketContract {
 			So the only real way to enable fusd is to create a separate minting function. */
 		pub fun mintForSaleFusd
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, metadata : {String: String}
+		, metadata : {String: AnyStruct}?
 		, quantity : Int
 		, basePrice : PonsUtils.FusdUnits
 		, incrementalPrice : PonsUtils.FusdUnits
@@ -300,7 +300,7 @@ pub contract PonsNftMarketContract {
 	/* Public API to allow for minting nft */
 	pub fun mintForSaleFlow
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, metadata : {String: String}
+		, metadata : {String: AnyStruct}?
 		, quantity : Int
 		, basePrice : PonsUtils.FlowUnits
 		, incrementalPrice : PonsUtils.FlowUnits
@@ -320,7 +320,7 @@ pub contract PonsNftMarketContract {
 	/* Public API to allow for minting nft */
 	pub fun mintForSaleFusd
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, metadata : {String: String}
+		, metadata : {String: AnyStruct}?
 		, quantity : Int
 		, basePrice : PonsUtils.FusdUnits
 		, incrementalPrice : PonsUtils.FusdUnits
@@ -418,7 +418,7 @@ pub contract PonsNftMarketContract {
 
 		pub fun mintForSaleFlow
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, metadata : {String: String}
+		, metadata : {String: AnyStruct}?
 		, quantity : Int
 		, basePrice : PonsUtils.FlowUnits
 		, incrementalPrice : PonsUtils.FlowUnits
@@ -428,7 +428,7 @@ pub contract PonsNftMarketContract {
 			panic ("not implemented") }
 		pub fun mintForSaleFusd
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, metadata : {String: String}
+		, metadata : {String: AnyStruct}?
 		, quantity : Int
 		, basePrice : PonsUtils.FusdUnits
 		, incrementalPrice : PonsUtils.FusdUnits

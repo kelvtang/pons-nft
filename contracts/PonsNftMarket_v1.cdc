@@ -5,6 +5,7 @@ import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
+import MetadataViews from 0xMETADATAVIEWS
 import PonsNftMarketContract from 0xPONS
 import PonsUtils from 0xPONS
 
@@ -142,7 +143,7 @@ pub contract PonsNftMarketContract_v1 {
 		/* When the Pons marketplace mints multiple editions of NFTs, the market price of each succeesive NFT is incremented by the incrementalPrice */
 		pub fun mintForSaleFlow
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, metadata : {String: String}
+		, metadata : {String: AnyStruct}?
 		, quantity : Int
 		, basePrice : PonsUtils.FlowUnits
 		, incrementalPrice : PonsUtils.FlowUnits
@@ -160,19 +161,28 @@ pub contract PonsNftMarketContract_v1 {
 			var salePrice = basePrice
 			while mintIndex < quantity {
 				// Define the NFT editionLabel
-				let editionLabel =
+				let nameLabel =
 					quantity == 1
 					? "One of a kind"
 					: "Edition " .concat ((mintIndex + 1) .toString ())
+
+				let royalty: MetadataViews.Royalty = MetadataViews.Royalty(
+					receiver: receivePaymentCap, 
+					cut: royaltyRatio.amount, 
+					description: "Royalty due to: ".concat(artistCertificate.ponsArtistId)
+				)
 
 				// Mint the NFT using the Pons NFT v1 minter capability
 				var nft : @PonsNftContractInterface.NFT <-
 					PonsNftContract_v1 .MinterCapability
 					.borrow () !.mintNft (
 						artistCertificate,
-						royalty: royaltyRatio,
-						editionLabel: editionLabel,
-						metadata: metadata )
+						royalty: royalty,
+						name: nameLabel,
+						description: "", // no description provided yet (empty string hardcoded)
+						thumbnail: "", // no thumbnail provided yet (empty string hardcoded)
+						metadata: metadata!
+					)
 
 				let nftId = nft .nftId
 				let nftRef = & nft as &PonsNftContractInterface.NFT
@@ -189,7 +199,7 @@ pub contract PonsNftMarketContract_v1 {
 				PonsNftMarketContract .emitPonsNFTListedFlow (
 					nftId: nftId,
 					serialNumber: serialNumber,
-					editionLabel: editionLabel,
+					editionLabel: nameLabel,
 					price: salePrice )
 
 
@@ -213,7 +223,7 @@ pub contract PonsNftMarketContract_v1 {
 			So the only real way to enable fusd is to create a separate minting function. */
 		pub fun mintForSaleFusd
 		( _ artistCertificate : &PonsNftContract.PonsArtistCertificate
-		, metadata : {String: String}
+		, metadata : {String: AnyStruct}?
 		, quantity : Int
 		, basePrice : PonsUtils.FusdUnits
 		, incrementalPrice : PonsUtils.FusdUnits
@@ -231,19 +241,28 @@ pub contract PonsNftMarketContract_v1 {
 			var salePrice = basePrice
 			while mintIndex < quantity {
 				// Define the NFT editionLabel
-				let editionLabel =
+				let nameLabel =
 					quantity == 1
 					? "One of a kind"
 					: "Edition " .concat ((mintIndex + 1) .toString ())
+
+				let royalty: MetadataViews.Royalty = MetadataViews.Royalty(
+					receiver: receivePaymentCap, 
+					cut: royaltyRatio.amount, 
+					description: "Royalty due to: ".concat(artistCertificate.ponsArtistId)
+				)
 
 				// Mint the NFT using the Pons NFT v1 minter capability
 				var nft : @PonsNftContractInterface.NFT <-
 					PonsNftContract_v1 .MinterCapability
 					.borrow () !.mintNft (
 						artistCertificate,
-						royalty: royaltyRatio,
-						editionLabel: editionLabel,
-						metadata: metadata )
+						royalty: royalty,
+						name: nameLabel,
+						description: "", // no description provided yet (empty string hardcoded)
+						thumbnail: "", // no thumbnail provided yet (empty string hardcoded)
+						metadata: metadata!
+					)
 
 				let nftId = nft .nftId
 				let nftRef = & nft as &PonsNftContractInterface.NFT
@@ -260,7 +279,7 @@ pub contract PonsNftMarketContract_v1 {
 				PonsNftMarketContract .emitPonsNFTListedFusd (
 					nftId: nftId,
 					serialNumber: serialNumber,
-					editionLabel: editionLabel,
+					editionLabel: nameLabel,
 					price: salePrice )
 
 

@@ -22,9 +22,9 @@ pub contract interface PonsNftContractInterface {
 	PonsNft resources must contain a nftId, a globally unique ID identifying the Pons NFT.
 	Usage of the nftId is encouraged, as 1) it is much more difficult to unintentionally specify a nftId, and 2) the nftId is integrated with the Pons App system.
 */
-	pub resource interface PonsNft {
+	pub resource interface PonsNft{
 		pub ponsCertification : @PonsCertificationContract.PonsCertification
-		pub nftId : String }
+		pub nftId : String}
 
 /*
 	PonsCollection resource interface definition
