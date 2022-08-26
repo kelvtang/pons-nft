@@ -174,7 +174,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         require(listingCertificateCollection[tokenId].listingCount >= 1, "Market: NFT not listed");
         require(msg.value >= (nftSalesPrice[tokenId]/10_000), "Market: Value offered is too low");
         
-
+        
         // extract the royalty details
         (address royaltyRecipient, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo(tokenId, nftSalesPrice[tokenId]);
         if (royaltyRecipient != address(this)){
@@ -213,8 +213,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
     */
     function getPrice(uint256 tokenId) public view returns (uint256) {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
-        require(tokenOwner(tokenId) == address(this), "Market: Nft not transfered to Market");
-        return nftSalesPrice[tokenId];
+        return nftSalesPrice[tokenId]/10_000;
     }
 
     function isForSale(uint256 tokenId) public view returns (bool){
