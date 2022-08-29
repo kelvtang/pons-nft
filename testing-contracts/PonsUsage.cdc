@@ -199,7 +199,7 @@ pub contract PonsUsage {
 	/* Mint new NFTs for sale for Pons artists */
 	pub fun mintForSaleFlow 
 	( minter : AuthAccount
-	, metadata : {String: String}
+	, metadata : {String: AnyStruct}?
 	, quantity : Int
 	, basePrice : PonsUtils.FlowUnits
 	, incrementalPrice : PonsUtils.FlowUnits
@@ -234,12 +234,15 @@ pub contract PonsUsage {
 		PonsUsage .depositListingCertificates (minter, <- listingCertificates)
 
 		// Return list of minted nftIds
-		return nftIds}
+		return nftIds
+	}
+
+
 
 	/* Mint new NFTs for sale for Pons artists */
 	pub fun mintForSaleFusd 
 	( minter : AuthAccount
-	, metadata : {String: String}
+	, metadata : {String: AnyStruct}?
 	, quantity : Int
 	, basePrice : PonsUtils.FusdUnits
 	, incrementalPrice : PonsUtils.FusdUnits
