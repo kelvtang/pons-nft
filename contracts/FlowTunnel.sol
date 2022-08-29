@@ -107,6 +107,9 @@ contract FlowTunnel is Initializable, OwnableUpgradeable, IERC721ReceiverUpgrade
         delete tunnelUserAddress[tokenId];
     }
 
+    receive() external payable {
+    }
+
     function getFromTunnel(uint256 tokenId, address to, bytes calldata data, uint256 tokenPrice) public onlyOwner {
         require(to != address(0x0), "Tunnel: NFT being transfered to 0x0 address.");
         if (!tokenExists(tokenId)){

@@ -15,7 +15,6 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
     event nftListed(address by, uint256 tokenId, uint256 amount);
     event nftUnlisted(uint256 tokenId);
 
-
     struct listingCertificate {
         address payable listerAddress;
         uint256 tokenId;
@@ -29,7 +28,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
 
     address private tokenContractAddress;
     address private fxManagerContractAddress;
-    address private tunnelContractAddress;
+    address payable tunnelContractAddress;
 
     constructor() {
         _disableInitializers();
@@ -154,7 +153,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         require(tunnelContractAddress != address(0x0), "Market: Tunnel contract address not set");
         require(isListed(tokenId), "Market: Cannot send an unlisted nft");
 
-        FlowTunnel(tunnelContractAddress).setupTunnel(tokenId);             // setup tunnel for use
+        FlowTunnel(payable(tunnelContractAddress)).setupTunnel(tokenId);             // setup tunnel for use
         FxERC721(tokenContractAddress).safeTransferFrom(
                 address(this), tunnelContractAddress, tokenId);             // transfer nft to tunnel
         FlowTunnel(tunnelContractAddress).sendThroughTunnel(tokenId, "", flowTokenFlag);   // empty flowAddress goes to PonsNftMarket in Flow blockchain.
@@ -177,7 +176,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
 
         // extract the royalty details
         (address royaltyRecipient, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo(tokenId, nftSalesPrice[tokenId]);
-        if (royaltyRecipient != address(this)){
+        if (royaltyRecipient != address(this) && royaltyRecipient != address(0x0)){
             // if recipient is not this contract itself then payout immediately
             payable(royaltyRecipient).transfer(_royaltyAmount);
         }else{
@@ -190,18 +189,20 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
                 FxERC721FxManager(fxManagerContractAddress).appendFlowRoyaltyDue(tokenId, (_royaltyAmount*10_000));
             }
         }
-        
+
         // Deduct royalty value before transfering 
-        listingCertificateCollection[tokenId].listerAddress.transfer((msg.value - _royaltyAmount)); 
-        
+        if (listingCertificateCollection[tokenId].listerAddress != address(0x0) && listingCertificateCollection[tokenId].listerAddress != address(this)){
+            (bool success, ) = listingCertificateCollection[tokenId].listerAddress.call{value: (msg.value - _royaltyAmount)}("");
+            require(success, "Transfer failed.");
+        }
+
         // Initiate transfer of nft from listed seller to new owner.
         FxERC721(tokenContractAddress).safeTransferFrom(address(this),msg.sender,tokenId);
 
         emit nftPurchased(listingCertificateCollection[tokenId].listerAddress,msg.sender,tokenId,msg.value);
         unlist(tokenId);
-        
-    }
 
+    }
 
     function getForSaleIds() public view returns (uint256[] memory) {
         return nftForSale;
@@ -233,7 +234,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
     
     function setTunnelContractAddress(address _tunnelContractAddress) public onlyOwner{
         require(_tunnelContractAddress != address(0x0), "Market: Cannot set tunnel to empty address");
-        tunnelContractAddress = _tunnelContractAddress;
+        tunnelContractAddress = payable(_tunnelContractAddress);
     }
 
     function getLister(uint256 tokenId) public view returns (address){
