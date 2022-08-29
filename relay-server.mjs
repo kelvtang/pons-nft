@@ -57,8 +57,8 @@ app.post("/market/revert", async (req, res) => {
     const tokenId = req.body["tokenId"]
 
     // TODO: Get it from file logs
-    await marketPlaceInstance.sendThroughTunnel(tokenId, FLOW_MARKETPLACE_ADDRESS, currency[((transactionLedger[tokenId]).at(-1))["tokenType"]])
-    res.send({ message: 'Transaction reverted on polygon. It will be reflected on flow once the transcation event is picked up and processed' });
+    await marketPlaceInstance.sendThroughTunnel(tokenId, currency[((transactionLedger[tokenId]).at(-1))["tokenType"]])
+    res.status(200).send(JSON.stringify({ message: 'Transaction reverted on polygon. It will be reflected on flow once the transcation event is picked up and processed' }));
 })
 
 /*
@@ -108,8 +108,8 @@ app.listen(3010, () => console.log(`app running on 3010`))
 * The token is then received on the polygon side
 */
 fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
-    console.log("----------------------------------------------- Event listener -------------------------------------------------")
-    console.log(event)
+    // console.log("----------------------------------------------- Event listener -------------------------------------------------")
+
     let { nft, polygonRecipientAddress } = event.data
     let { nftSerialId, metadata, artistAddressFlow, artistAddressPolygon, flowToken, fusdToken, royalty } = nft
 
@@ -121,15 +121,15 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
         tokenType: flowToken ? "flowToken" : "FUSD"
     }
 
+    // TODO: Figure out file logs stuff
     // const prevLogs = JSON.parse(fs.readFileSync('./logs/transfers.log', 'utf8'))
     // fs.writeFileSync("./logs/tempFile.log", JSON.stringify(ledgerEntry))
-    // // save to back up file then merge to big file
-    // if (transactionLedger[nftSerialId]){
-    //     transactionLedger[nftSerialId].push(ledgerEntry)
-    // } else {
-    //     transactionLedger[nftSerialId] = [ledgerEntry]
-    // }
-
+    // save to back up file then merge to big file
+    if (transactionLedger[nftSerialId]){
+        transactionLedger[nftSerialId].push(ledgerEntry)
+    } else {
+        transactionLedger[nftSerialId] = [ledgerEntry]
+    }
     // TODO: Change based on actual directory/folder name
     const path = `./token-metadata/${nftSerialId}`
 
@@ -155,16 +155,18 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
 
         royalty = Math.ceil(royalty * 10000)
 
-        let NftMetadata
+        let NftMetadata = {}
         // TODO: Edit this based on how urls are actually stored plus where we want to point it to
         if (url.startsWith('ipfs')) {
             url = "https://" + url
         } else {
             url = "https://ipfs.io/" + url
         }
+
         const response = await fetch(url)
         const urlContent = await response.arrayBuffer()
         const ext = (await fileTypeFromBuffer(urlContent))?.ext;
+
         if (ext === 'mp4') {
             NftMetadata['animation_url'] = url
         } else {
@@ -176,7 +178,6 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
             name: title,
             description: description,
             attributes: tags,
-            image: url,
         }
 
         fs.writeFileSync(`${path}.json`, JSON.stringify(NftMetadata, null, 2))
@@ -213,7 +214,8 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
         polygonRecipientAddress = POLYGON_MARKETPLACE_ADDRESS
     }
 
-    await ponsNftTunnelProxy.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, polygonPrice)
+    const tx = await ponsNftTunnelProxy.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, polygonPrice)
+    // console.log(await tx.wait())
 })
 
 /*
@@ -310,26 +312,24 @@ flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, s
     }
 
     await
-        send_transaction_
-            (known_account_('0xPROPOSER'))
-            (known_account_('0xPROPOSER'))
-            ([known_account_('0xPROPOSER'), known_account_('0xPROPOSER')])
+        send_proposed_transaction_
+            ('0xPONS')
             (`
                 import PonsTunnelContract from 0xPONS
                 import PonsUtils from 0xPONS
             
                 transaction(
                 nftSerialId: UInt64,
-                salePriceFUSD: UFix64,
+                salePrice: UFix64,
                 polygonListingAddress: String
                 ) {
-                    prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount){
-                        PonsTunnelContract .recieveNftFromTunnel_market_fusd (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePriceFUSD: salePriceFUSD);
+                    prepare (ponsAccount : AuthAccount){
+                        PonsTunnelContract .recieveNftFromTunnel_market_fusd (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsAccount, polygonListingAddress: polygonListingAddress, salePrice: salePrice);
                     }
                 }
             `)
             ([flow_sdk_api.arg(tokenId, flow_types.UInt64),
-            flow_sdk_api.arg("" + price, flow_types.UFix64),
+            flow_sdk_api.arg('' + Number(price).toFixed(1), flow_types.UFix64),
             flow_sdk_api.arg(polygonLister, flow_types.String),
             ])
 })
@@ -342,7 +342,7 @@ flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, s
 * A transaction is then sent to the flow side receive the nft and list it flow tokens
 */
 flowTunnelProxyInstance.on(POLYGON_FLOW_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price) => {
-
+    // console.log("----------------------------------------- POLYGON listener -----------------------------------------")
     tokenId = tokenId.toString()
     price = price.toString()
 
@@ -351,26 +351,24 @@ flowTunnelProxyInstance.on(POLYGON_FLOW_MARKET_TRANSFER_EVENT, async (tokenId, s
     }
 
     await
-        send_transaction_
-            (known_account_('0xPROPOSER'))
-            (known_account_('0xPROPOSER'))
-            ([known_account_('0xPROPOSER'), known_account_('0xPROPOSER')])
+    send_proposed_transaction_
+            (['0xPONS'])
             (`
                 import PonsTunnelContract from 0xPONS
                 import PonsUtils from 0xPONS
             
                 transaction(
                 nftSerialId: UInt64,
-                salePriceFlow: UFix64,
+                salePrice: UFix64,
                 polygonListingAddress: String
                 ) {
-                    prepare (ponsAccount : AuthAccount, ponsHolderAccount : AuthAccount){
-                        PonsTunnelContract .recieveNftFromTunnel_market_flow (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsHolderAccount, polygonListingAddress: polygonListingAddress, salePriceFlow: salePriceFlow);
+                    prepare (ponsAccount : AuthAccount){
+                        PonsTunnelContract .recieveNftFromTunnel_market_flow (nftSerialId: nftSerialId, ponsAccount: ponsAccount, ponsHolderAccount: ponsAccount, polygonListingAddress: polygonListingAddress, salePrice: salePrice);
                     }
                 }
             `)
             ([flow_sdk_api.arg(tokenId, flow_types.UInt64),
-            flow_sdk_api.arg("" + price, flow_types.UFix64),
+            flow_sdk_api.arg('' + Number(price).toFixed(1), flow_types.UFix64),
             flow_sdk_api.arg(polygonLister, flow_types.String),
             ])
 })
@@ -389,10 +387,8 @@ flowTunnelProxyInstance.on(POLYGON_FLOW_USER_TRANSFER_EVENT, async (tokenId, sen
 
     if (flowAddress) {
         await
-            send_transaction_
-                (known_account_('0xPROPOSER'))
-                (known_account_('0xPROPOSER'))
-                ([known_account_('0xPROPOSER'), known_account_('0xPROPOSER')])
+        send_proposed_transaction_
+                (['0xPONS'])
                 (`
                 import PonsTunnelContract from 0xPONS
                             

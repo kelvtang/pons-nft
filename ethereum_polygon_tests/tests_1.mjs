@@ -154,6 +154,7 @@ const deploy_contracts_ = (tokenName) => async (tokenSymbol) => {
         // TODO: add tests for flow tunnel and marketplace contracts
         await ponsNftMarketplaceProxyInstance.setTunnelContractAddress(flowTunnelProxy.contractAddress)
         await childFxManagerProxyInstance.addApproval(flowTunnelProxy.contractAddress)
+        await childFxManagerProxyInstance.addApproval(ponsNftMarketProxy.contractAddress)
 
         _test.test("Owner adding Approval for the child tunnel proxy", async _test => {
             try {

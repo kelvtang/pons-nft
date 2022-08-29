@@ -179,6 +179,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         (address royaltyRecipient, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo(tokenId, nftSalesPrice[tokenId]);
         if (royaltyRecipient != address(this)){
             // if recipient is not this contract itself then payout immediately
+            // TODO: This part fails as well
             payable(royaltyRecipient).transfer(_royaltyAmount);
         }else{
             address _royaltyRecipient = FxERC721(tokenContractAddress).getPolygonFromFlow_tokenID(tokenId);
@@ -192,14 +193,14 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         }
         
         // Deduct royalty value before transfering 
-        listingCertificateCollection[tokenId].listerAddress.transfer((msg.value - _royaltyAmount)); 
-        
+        // TODO: this is failing as well
+        listingCertificateCollection[tokenId].listerAddress.transfer((msg.value - _royaltyAmount));
         // Initiate transfer of nft from listed seller to new owner.
         FxERC721(tokenContractAddress).safeTransferFrom(address(this),msg.sender,tokenId);
 
         emit nftPurchased(listingCertificateCollection[tokenId].listerAddress,msg.sender,tokenId,msg.value);
         unlist(tokenId);
-        
+
     }
 
 
@@ -213,8 +214,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
     */
     function getPrice(uint256 tokenId) public view returns (uint256) {
         require(tokenExists(tokenId), "Market: NFT by this token ID does not exist");
-        require(tokenOwner(tokenId) == address(this), "Market: Nft not transfered to Market");
-        return nftSalesPrice[tokenId];
+        return nftSalesPrice[tokenId]/10_000;
     }
 
     function isForSale(uint256 tokenId) public view returns (bool){
