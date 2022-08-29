@@ -62,12 +62,12 @@ contract FxERC721ChildTunnel is Initializable, FxBaseChildTunnelUpgradeable, IER
     * @param tokenId uint256 representing the Id of the token the user wants to have to transferred to ethereum
     * @param data bytes representing the extra information needed for the mint to happen
     */
-    function mintToken(uint256 tokenId, bytes memory data) public {
-        FxERC721FxManager childFxManagerProxyContract = FxERC721FxManager(childFxManagerProxy);
+    // function mintToken(uint256 tokenId, bytes memory data) public {
+    //     FxERC721FxManager childFxManagerProxyContract = FxERC721FxManager(childFxManagerProxy);
 
-        //mint token
-        childFxManagerProxyContract.mintToken(msg.sender, tokenId, data);
-    }
+    //     //mint token
+    //     childFxManagerProxyContract.mintToken(msg.sender, tokenId, data);
+    // }
 
     /**
     * @dev public function that the user calls to transfer a token from polygon to his account address on ethereum
