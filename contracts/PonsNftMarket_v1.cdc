@@ -5,9 +5,9 @@ import NonFungibleToken from 0xNONFUNGIBLETOKEN
 import PonsNftContractInterface from 0xPONS
 import PonsNftContract from 0xPONS
 import PonsNftContract_v1 from 0xPONS
-import MetadataViews from 0xMETADATAVIEWS
 import PonsNftMarketContract from 0xPONS
 import PonsUtils from 0xPONS
+import MetadataViews from 0xMETADATAVIEWS
 
 
 /*
@@ -402,10 +402,14 @@ pub contract PonsNftMarketContract_v1 {
 
 			// Check whether the purchase is an original sale or resale, and calculate commissions and royalties accordingly
 			let primarySale = (self .listingCounts [nftId] == 0)
-			let royalties =
-				primarySale
-				? (nil as! PonsUtils.FlowUnits?)
-				: purchasePrice .scale (ratio: PonsNftContract .getRoyalty (nftRef))
+
+			let royalties = nftRef.resolveView(Type<MetadataViews.Royalties>()) as? MetadataViews.Royalties
+
+			var totalCut:UFix64 = 0.0;
+			for royalty in royalties!.getRoyalties(){
+				totalCut = totalCut + royalty.cut;
+			}
+
 			let commissionPrice =
 				primarySale
 				? purchasePrice .scale (ratio: self .primaryCommissionRatio)
@@ -413,24 +417,32 @@ pub contract PonsNftMarketContract_v1 {
 			let sellerPrice =
 				purchasePrice
 				.cut (commissionPrice)
-				.cut (royalties ?? PonsUtils .FlowUnits (0.0))
+				.cut (royalties != nil ? PonsUtils .FlowUnits (flowAmount: totalCut) : PonsUtils .FlowUnits (flowAmount: 0.0))
+
 
 			// If royalties are due, pay the royalties
 			if royalties != nil {
-				// Withdraw royalties from the purchase funds
-				var royaltiesVault <- purchaseVault .withdraw (amount: royalties !.flowAmount)
 				let artistRef = PonsNftContract .borrowArtist (nftRef)
-				let artistReceivePaymentCapOptional = PonsNftContract .getArtistReceivePaymentCapFlow (artistRef)
+				for royalty in royalties!.getRoyalties(){
+					var royaltyAmount = purchasePrice.scale(ratio: PonsUtils.Ratio(amount: royalty.cut))
+					// Withdraw royalties from the purchase funds
+					var royaltiesVault <- purchaseVault .withdraw (amount: royaltyAmount.flowAmount)
 
-				// If the artist's Capability for receiving Flow tokens is valid
-				if artistReceivePaymentCapOptional != nil && artistReceivePaymentCapOptional !.check () {
-					// Deposit royalty funds to the artist
-					artistReceivePaymentCapOptional !.borrow () !.deposit (from: <- royaltiesVault) }
-				else {
-					// If the artist does not have a valid Capability to receive payments, hold the funds on behalf of the artist
-					// Emit the funds held on behalf of artist event
-					emit FundsHeldOnBehalfOfArtistFlow (ponsArtistId: artistRef .ponsArtistId, nftId: nftId, flowUnits: royalties !)
-					self .marketReceivePaymentCapFlow .borrow () !.deposit (from: <- royaltiesVault) } }
+					if royalty.receiver != nil && royalty.receiver !.check () {
+						// Deposit royalty funds to the artist
+						royalty.receiver !.borrow () !.deposit (from: <- royaltiesVault) }
+					else {
+						// If the artist does not have a valid Capability to receive payments, hold the funds on behalf of the artist
+						// Emit the funds held on behalf of artist event
+						emit FundsHeldOnBehalfOfArtistFlow (ponsArtistId: artistRef .ponsArtistId, nftId: nftId, flowUnits: royaltyAmount)
+						self .marketReceivePaymentCapFlow .borrow () !.deposit (from: <- royaltiesVault) } 
+				}					
+			}
+
+
+
+
+
 
 			// Pay the seller the amount due
 			let sellerReceivePaymentCap = self .saleReceivePaymentCapsFlow [nftId] !
@@ -477,10 +489,14 @@ pub contract PonsNftMarketContract_v1 {
 
 			// Check whether the purchase is an original sale or resale, and calculate commissions and royalties accordingly
 			let primarySale = (self .listingCounts [nftId] == 0)
-			let royalties =
-				primarySale
-				? (nil as! PonsUtils.FusdUnits?)
-				: purchasePrice .scale (ratio: PonsNftContract .getRoyalty (nftRef))
+			
+			let royalties = nftRef.resolveView(Type<MetadataViews.Royalties>()) as? MetadataViews.Royalties
+
+			var totalCut:UFix64 = 0.0;
+			for royalty in royalties!.getRoyalties(){
+				totalCut = totalCut + royalty.cut;
+			}
+
 			let commissionPrice =
 				primarySale
 				? purchasePrice .scale (ratio: self .primaryCommissionRatio)
@@ -488,24 +504,30 @@ pub contract PonsNftMarketContract_v1 {
 			let sellerPrice =
 				purchasePrice
 				.cut (commissionPrice)
-				.cut (royalties ?? PonsUtils .FusdUnits (0.0))
+				.cut (royalties != nil ? PonsUtils .FusdUnits (fusdAmount: totalCut) : PonsUtils .FusdUnits (fusdAmount: 0.0))
+
 
 			// If royalties are due, pay the royalties
 			if royalties != nil {
-				// Withdraw royalties from the purchase funds
-				var royaltiesVault <- purchaseVault .withdraw (amount: royalties !.fusdAmount)
 				let artistRef = PonsNftContract .borrowArtist (nftRef)
-				let artistReceivePaymentCapOptional = PonsNftContract .getArtistReceivePaymentCapFusd (artistRef)
+				for royalty in royalties!.getRoyalties(){
+					var royaltyAmount = purchasePrice.scale(ratio: PonsUtils.Ratio(amount: royalty.cut))
+					// Withdraw royalties from the purchase funds
+					var royaltiesVault <- purchaseVault .withdraw (amount: royaltyAmount.fusdAmount)
 
-				// If the artist's Capability for receiving Flow tokens is valid
-				if artistReceivePaymentCapOptional != nil && artistReceivePaymentCapOptional !.check () {
-					// Deposit royalty funds to the artist
-					artistReceivePaymentCapOptional !.borrow () !.deposit (from: <- royaltiesVault) }
-				else {
-					// If the artist does not have a valid Capability to receive payments, hold the funds on behalf of the artist
-					// Emit the funds held on behalf of artist event
-					emit FundsHeldOnBehalfOfArtistFusd (ponsArtistId: artistRef .ponsArtistId, nftId: nftId, fusdUnits: royalties !)
-					self .marketReceivePaymentCapFusd .borrow () !.deposit (from: <- royaltiesVault) } }
+					if royalty.receiver != nil && royalty.receiver !.check () {
+						// Deposit royalty funds to the artist
+						royalty.receiver !.borrow () !.deposit (from: <- royaltiesVault) }
+					else {
+						// If the artist does not have a valid Capability to receive payments, hold the funds on behalf of the artist
+						// Emit the funds held on behalf of artist event
+						emit FundsHeldOnBehalfOfArtistFusd (ponsArtistId: artistRef .ponsArtistId, nftId: nftId, fusdUnits: royaltyAmount)
+						self .marketReceivePaymentCapFusd .borrow () !.deposit (from: <- royaltiesVault) } 
+				}					
+			}
+			
+			
+			
 
 			// Pay the seller the amount due
 			let sellerReceivePaymentCap = self .saleReceivePaymentCapsFusd [nftId] !
