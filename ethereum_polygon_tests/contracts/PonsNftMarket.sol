@@ -177,7 +177,7 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
 
         // extract the royalty details
         (address royaltyRecipient, uint256 _royaltyAmount) = FxERC721(tokenContractAddress).royaltyInfo(tokenId, nftSalesPrice[tokenId]);
-        if (royaltyRecipient != address(this)){
+        if (royaltyRecipient != address(this) && royaltyRecipient != address(0x0)){
             // if recipient is not this contract itself then payout immediately
             // TODO: This part fails as well
             payable(royaltyRecipient).transfer(_royaltyAmount);
@@ -194,7 +194,10 @@ contract PonsNftMarket is Initializable, OwnableUpgradeable, IERC721ReceiverUpgr
         
         // Deduct royalty value before transfering 
         // TODO: this is failing as well
-        listingCertificateCollection[tokenId].listerAddress.transfer((msg.value - _royaltyAmount));
+        if (listingCertificateCollection[tokenId].listerAddress != address(0x0) && listingCertificateCollection[tokenId].listerAddress != address(this)){
+            listingCertificateCollection[tokenId].listerAddress.transfer((msg.value - _royaltyAmount));
+        }
+
         // Initiate transfer of nft from listed seller to new owner.
         FxERC721(tokenContractAddress).safeTransferFrom(address(this),msg.sender,tokenId);
 
