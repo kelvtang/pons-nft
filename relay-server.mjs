@@ -33,6 +33,8 @@ const currency = {
     FUSD: 1
 }
 
+const startBlockNumber = await polygonProvider.getBlockNumber();
+
 // Returns token metadata information stored in the JSON file
 app.get("/metadata/:nftSerialId", async (req, res) => {
     const nftSerialId = req.params.nftSerialId
@@ -108,7 +110,7 @@ app.listen(3010, () => console.log(`app running on 3010`))
 * The token is then received on the polygon side
 */
 fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
-    // console.log("----------------------------------------------- Event listener -------------------------------------------------")
+    console.log("----------------------------------------------- Event listener -------------------------------------------------")
 
     let { nft, polygonRecipientAddress } = event.data
     let { nftSerialId, metadata, artistAddressFlow, artistAddressPolygon, flowToken, fusdToken, royalty } = nft
@@ -215,7 +217,7 @@ fcl_api.events(FLOW_MARKET_TRANSFER_EVENT).subscribe(async (event) => {
     }
 
     const tx = await ponsNftTunnelProxy.getFromTunnel(nftSerialId, polygonRecipientAddress, depositData, polygonPrice)
-    // console.log(await tx.wait())
+    console.log(await tx.wait())
 })
 
 /*
@@ -302,8 +304,8 @@ fcl_api.events(FLOW_USER_TRANSFER_EVENT).subscribe(async (event) => {
 * flowAddress should be the flowMarketplace address
 * A transaction is then sent to the flow side receive the nft and list it FUSD
 */
-flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price) => {
-
+flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price,event) => {
+    if(event.blockNumber <= startBlockNumber) return;
     tokenId = tokenId.toString()
     price = price.toString()
 
@@ -341,8 +343,9 @@ flowTunnelProxyInstance.on(POLYGON_FUSD_MARKET_TRANSFER_EVENT, async (tokenId, s
 * flowAddress should be the flowMarketplace address
 * A transaction is then sent to the flow side receive the nft and list it flow tokens
 */
-flowTunnelProxyInstance.on(POLYGON_FLOW_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price) => {
-    // console.log("----------------------------------------- POLYGON listener -----------------------------------------")
+
+flowTunnelProxyInstance.on(POLYGON_FLOW_MARKET_TRANSFER_EVENT, async (tokenId, sender, flowAddress, polygonLister, price, event) => {
+    if(event.blockNumber <= startBlockNumber) return;
     tokenId = tokenId.toString()
     price = price.toString()
 
@@ -381,8 +384,8 @@ flowTunnelProxyInstance.on(POLYGON_FLOW_MARKET_TRANSFER_EVENT, async (tokenId, s
 * flowAddress should be the recepient's address on flow
 * A transaction is then sent to the flow side to send the token to the PONSHOLDER account till the user redeems it
 */
-flowTunnelProxyInstance.on(POLYGON_FLOW_USER_TRANSFER_EVENT, async (tokenId, sender, flowAddress) => {
-
+flowTunnelProxyInstance.on(POLYGON_FLOW_USER_TRANSFER_EVENT, async (tokenId, sender, flowAddress, event) => {
+    if(event.blockNumber <= startBlockNumber) return;
     tokenId = tokenId.toString()
 
     if (flowAddress) {
