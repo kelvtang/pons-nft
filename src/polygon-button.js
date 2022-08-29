@@ -50,9 +50,9 @@ function App() {
   
       const executePoll = async (resolve, reject) => {
   
-        const result = await marketplaceInstance.getPrice(tokenId);
-  
-        if (result !== 0) {
+        const result = await marketplaceInstance.tokenExists(tokenId);
+        console.log(result)
+        if (result) {
           // if user rejects the purchase transaction, revert everything
           marketplaceInstance.purchase(tokenId)
             .then(_ => {
@@ -60,7 +60,7 @@ function App() {
             })
             .catch(_ => {
               // TODO: Based on actual path
-              fetch(`http://localhost:3010/market/revert`, { method: 'POST', body: { tokenId: tokenId } })
+              fetch(`http://localhost:3010/market/revert`, { method: 'POST', body: { tokenId: tokenId, marketPlaceInstance: marketplaceInstance } })
             })
         } else {
           setTimeout(executePoll, 1000, resolve, reject);
@@ -112,8 +112,7 @@ function App() {
     } else if (!window.ethereum && isMobile()) {
       return (
         <page>
-          // TODO: Add correct dapp URL
-          <button onClick={() => window.location.assign(`https://metamask.app.link/dapp/{DAPP_URL}`)} disabled={pollInfo.poll}>
+          <button onClick={() => window.location.assign('https://metamask.app.link/dapp/858a-61-244-192-118.ap.ngrok.io')} disabled={pollInfo.poll}>
             Buy on Polygon
           </button>
         </page>
